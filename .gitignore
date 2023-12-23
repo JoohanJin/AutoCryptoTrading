@@ -1,0 +1,5 @@
+# ignore config files
+config.*
+
+# virtual environment directory
+venv/
