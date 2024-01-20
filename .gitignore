@@ -1,0 +1,14 @@
+# ignore config files
+config.*
+
+# virtual environment directory
+venv/
+
+# ignore every test files
+*test*
+
+# ignore market data directory
+market_data/
+
+# ignore archieve data
+*archieve*
