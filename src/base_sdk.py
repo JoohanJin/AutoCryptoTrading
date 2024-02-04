@@ -5,8 +5,12 @@ from urllib.parse import urlencode
 import logging
 import time
 import logging
+import json
+from typing import Union, Literal
 
 logger = logging.getLogger("__name__")
+
+
 '''
 Class for Base SDK for MEXC APIs including Spot V3, Spot V2, Futures V1 and so on
 '''
@@ -41,17 +45,17 @@ class MEXCBASE():
             self.session.proxies.update(proxies)
 
 
-class _FutureV1(MEXCBASE):
+class FutureBase(MEXCBASE):
     '''
     Function Name: __init__
 
     Initializes a new instance for the class with the given "apiKey" and "secretKey"
 
-    Parameters
-    ::api_key: str, personal api_key
-    ::secret_key: str, personal api_secret_key
-    ::base_url: str, base endpoint for each API
-    ::proxies
+    Parameters:
+        # api_key: str, personal api_key
+        # secret_key: str, personal api_secret_key
+        # base_url: str, base endpoint for each API
+        # proxies
     '''
     def __init__(self, api_key: str = None, secret_key: str = None, proxies: dict = None):
         super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://contract.mexc.com", proxies=proxies)
@@ -85,17 +89,17 @@ class _FutureV1(MEXCBASE):
     The function makes a request to the given url using the specified method and args.
 
     Parameters
-    ::method: str, should be one of elements in the following:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-    ::url: str
-    ::*args
-    ::**kwagrs
+        # method: str, should be one of elements in the following:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+        # url: str
+        # *args: list, arbitrary arguments representing request parameters.
+        # **kwagrs: dict, arbitrary keyword representing request parameters.
 
     '''
-    def call(self, method: str, url: str, *args, **kwagrs):
+    def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwagrs):
         if (not url.startswith("/")):
             url = f"/{url}"
         
@@ -103,7 +107,7 @@ class _FutureV1(MEXCBASE):
 
         for i in ('params', 'json'):
             if kwagrs.get(i):
-                kwagrs[i] = {x:y for x,y in kwagrs[i].items if v is not None}
+                kwagrs[i] = {x:y for x,y in kwagrs[i].items if y is not None}
 
                 if self.api_key and self.secret_key:
                     timestamp: str = str(int(time.time() * 1000))
@@ -114,4 +118,4 @@ class _FutureV1(MEXCBASE):
                     }
 
         response: str = self.session.request(method, f"{self.base_url}{url}", *args, **kwagrs)
-        return response
+        return response.json()
