@@ -78,9 +78,9 @@ class FutureBase(MEXCBASE):
     def generate_signature(self, timestamp: str, **kwagrs):
         # generating signature
         query: str = "&".join(f"{x}={y}" for x, y in sorted(kwagrs.items()))
-        query_string = self.api_key + timestamp + query
+        query_string: str = self.api_key + timestamp + query
         
-        return hmac.new(self.secret_key.encode("utf-8"), query.encode("utf-8"), hashlib.sha256).hexdigest()
+        return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
     
 
     '''
@@ -99,23 +99,23 @@ class FutureBase(MEXCBASE):
         # **kwagrs: dict, arbitrary keyword representing request parameters.
 
     '''
-    def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwagrs):
+    def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwargs):
         if (not url.startswith("/")):
             url = f"/{url}"
         
-        kwagrs = {x:y for x, y in kwagrs.items() if y is not None}
+        kwargs = {x:y for x, y in kwargs.items() if y is not None}
 
         for i in ('params', 'json'):
-            if kwagrs.get(i):
-                kwagrs[i] = {x:y for x,y in kwagrs[i].items if y is not None}
+            if kwargs.get(i):
+                kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
 
                 if self.api_key and self.secret_key:
                     timestamp: str = str(int(time.time() * 1000))
 
-                    kwagrs[i] = {
+                    kwargs[i] = {
                         "Request-Time": timestamp,
-                        "Signature": self.generate_signature(timestamp, **kwagrs[i])
+                        "Signature": self.generate_signature(timestamp, **kwargs[i])
                     }
 
-        response: str = self.session.request(method, f"{self.base_url}{url}", *args, **kwagrs)
+        response = self.session.request(method, f"{self.base_url}{url}", *args, **kwargs)
         return response.json()
