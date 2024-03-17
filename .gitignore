@@ -2,7 +2,7 @@
 config.*
 
 # virtual environment directory
-venv/
+gazua/
 
 # ignore every test files
 *test*
@@ -12,3 +12,6 @@ market_data/
 
 # ignore archieve data
 *archieve*
+
+# ignore pymexc
+pymexc-1.0.10/
