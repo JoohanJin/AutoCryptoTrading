@@ -3,6 +3,7 @@ config.*
 
 # virtual environment directory
 gazua/
+venv/
 
 # ignore every test files
 *test*
