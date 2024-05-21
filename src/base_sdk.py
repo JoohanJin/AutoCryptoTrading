@@ -7,6 +7,7 @@ import time
 import logging
 import json
 from typing import Union, Literal
+import websocket # as recommended
 
 logger = logging.getLogger("__name__")
 
@@ -57,7 +58,7 @@ class FutureBase(MEXCBASE):
         # base_url: str, base endpoint for each API
         # proxies
     '''
-    def __init__(self, api_key: str = None, secret_key: str = None, proxies: dict = None):
+    def __init__(self, api_key: str, secret_key: str, proxies: dict = None):
         super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://contract.mexc.com", proxies=proxies)
 
         self.session.headers.update({
@@ -83,33 +84,35 @@ class FutureBase(MEXCBASE):
         return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
     
 
-    '''
-    Function Name: call()
-
-    The function makes a request to the given url using the specified method and args.
-
-    Parameters
-        # method: str, should be one of elements in the following:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-        # url: str
-        # *args: list, arbitrary arguments representing request parameters.
-        # **kwagrs: dict, arbitrary keyword representing request parameters.
-
-    '''
+    
     def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwargs):
+        '''
+        Function Name: call()
+
+        The function makes a request to the given url using the specified method and args.
+
+        Parameters
+            # method: str, should be one of elements in the following:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+            # url: str
+            # *args: list, arbitrary arguments representing request parameters.
+            # **kwagrs: dict, arbitrary keyword representing request parameters.
+        '''
         if (not url.startswith("/")):
             url = f"/{url}"
         
         kwargs = {x:y for x, y in kwargs.items() if y is not None}
+        print(kwargs.get('params'))
 
         for i in ('params', 'json'):
             if kwargs.get(i):
                 kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
 
                 if self.api_key and self.secret_key:
+                    print("api_key has been added")
                     timestamp: str = str(int(time.time() * 1000))
 
                     kwargs[i] = {
