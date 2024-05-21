@@ -387,4 +387,64 @@ class FutureMarket(FutureBase):
 
     # need to authenticate, i.e., need to have apiKey and secretKey
     def assets(self):
+        """
+        # method: assets()
+            # Getting all information of user's asset
+            # Required Permissions: Trade reading permission
+
+        # Rate limit: 20 times / 2 seconds
+
+        # Request parameters
+            # None
+
+        # documnetation link:
+            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-all-informations-of-user-39-s-asset
+        """
         return self.call("GET", "api/v1/private/account/assets")
+    
+    # function override
+    def asset(self, currency: str):
+        """
+        # method: assets(currency: str)
+            # get the user's single currency asset information
+            # Required Permissions: Account reading permission
+
+        # Rate Limit: 20 times / 2 seconds
+
+        # Request Parameters
+            # currency: str, mandatory
+
+        # documenation link:
+            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-39-s-single-currency-asset-information
+        """
+        return self.call("GET", f"api/v1/private/account/asset/{currency}")
+
+
+    def history_position(
+            self,
+            symbol: Optional[str] = None,
+            type:   Optional[int] = None,
+            page_num: Optional[int] = 1,
+            page_size: Optional[int] = 100
+            ):
+        """
+        # method: history_position()
+            # get the user's history position information
+            # trade reading permission
+        
+        # Rate Limit: 20 times / 2 seconds
+
+        # Request Parameters
+            # symbol: str, optional, the name of the contract
+            # type: int, optional, position type i.e. 1 - long, 2 - short
+            # page_num: current page, default is 1
+            # page_size
+        """
+        return self.call("GET",
+                         "api/v1/private/position/list/history_positions",
+                         params = dict(
+                            symbol = symbol,
+                            type = type,
+                            page_num = page_num,
+                            page_size = page_size
+                         ))

@@ -47,18 +47,18 @@ class MEXCBASE():
 
 
 class FutureBase(MEXCBASE):
-    '''
-    Function Name: __init__
-
-    Initializes a new instance for the class with the given "apiKey" and "secretKey"
-
-    Parameters:
-        # api_key: str, personal api_key
-        # secret_key: str, personal api_secret_key
-        # base_url: str, base endpoint for each API
-        # proxies
-    '''
     def __init__(self, api_key: str, secret_key: str, proxies: dict = None):
+        '''
+        Function Name: __init__
+
+        Initializes a new instance for the class with the given "apiKey" and "secretKey"
+
+        Parameters:
+            # api_key: str, personal api_key
+            # secret_key: str, personal api_secret_key
+            # base_url: str, base endpoint for each API
+            # proxies
+        '''
         super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://contract.mexc.com", proxies=proxies)
 
         self.session.headers.update({
@@ -67,24 +67,25 @@ class FutureBase(MEXCBASE):
         })
     
 
-    '''
-    Function Name: generate_signature()
-
-    Generates a signature for an API request using HMAC SHA256 encryption.
-
-    Parameters
-    ::timestamp: str, timestamp in ms of the request.
-    ::**kwargs: dict, arbitrary keyword arguments representing request parameters.
-    '''
+    
     def generate_signature(self, timestamp: str, **kwagrs):
+        '''
+        Function Name: generate_signature()
+
+        Generates a signature for an API request using HMAC SHA256 encryption.
+
+        Parameters
+        ::timestamp: str, timestamp in ms of the request.
+        ::**kwargs: dict, arbitrary keyword arguments representing request parameters.
+        '''
         # generating signature
         query: str = "&".join(f"{x}={y}" for x, y in sorted(kwagrs.items()))
+        print(query)
         query_string: str = self.api_key + timestamp + query
         
         return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
     
 
-    
     def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwargs):
         '''
         Function Name: call()
@@ -92,7 +93,7 @@ class FutureBase(MEXCBASE):
         The function makes a request to the given url using the specified method and args.
 
         Parameters
-            # method: str, should be one of elements in the following:
+            # method: str, should be one of following elements:
                 - GET
                 - POST
                 - PUT
@@ -104,20 +105,25 @@ class FutureBase(MEXCBASE):
         if (not url.startswith("/")):
             url = f"/{url}"
         
-        kwargs = {x:y for x, y in kwargs.items() if y is not None}
-        print(kwargs.get('params'))
+        kwargs = {x:y for x, y in kwargs.items() if y}
 
         for i in ('params', 'json'):
             if kwargs.get(i):
-                kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
+                kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
 
                 if self.api_key and self.secret_key:
-                    print("api_key has been added")
                     timestamp: str = str(int(time.time() * 1000))
 
-                    kwargs[i] = {
+                    kwargs['headers'] = {
                         "Request-Time": timestamp,
                         "Signature": self.generate_signature(timestamp, **kwargs[i])
+                    }
+            else:
+                if self.api_key and self.secret_key:
+                    timestamp: str = str(int(time.time() * 1000))
+                    kwargs['headers'] = {
+                        "Request-Time": timestamp,
+                        "Signature": self.generate_signature(timestamp)
                     }
 
         response = self.session.request(method, f"{self.base_url}{url}", *args, **kwargs)
