@@ -2,6 +2,7 @@ from base_sdk import *
 import logging
 import threading
 import logging
+import websocket # as recommended in the API page
 
 logger = logging.getLogger(__name__)
 
