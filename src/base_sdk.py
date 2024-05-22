@@ -7,7 +7,6 @@ import time
 import logging
 import json
 from typing import Union, Literal
-import websocket # as recommended
 
 logger = logging.getLogger("__name__")
 
@@ -15,7 +14,7 @@ logger = logging.getLogger("__name__")
 '''
 Class for Base SDK for MEXC APIs including Spot V3, Spot V2, Futures V1 and so on
 '''
-class MEXCBASE():
+class _MEXCBASE():
     '''
     Function Name: __init__
 
@@ -46,7 +45,7 @@ class MEXCBASE():
             self.session.proxies.update(proxies)
 
 
-class FutureBase(MEXCBASE):
+class FutureBase(_MEXCBASE):
     def __init__(self, api_key: str, secret_key: str, proxies: dict = None):
         '''
         Function Name: __init__
@@ -61,13 +60,14 @@ class FutureBase(MEXCBASE):
         '''
         super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://contract.mexc.com", proxies=proxies)
 
-        self.session.headers.update({
+        self.session.headers.update(
+            {
             "Content-Type": "application/json",
             "ApiKey": self.api_key
-        })
+            }
+        )
     
 
-    
     def generate_signature(self, timestamp: str, **kwagrs):
         '''
         Function Name: generate_signature()
@@ -80,7 +80,6 @@ class FutureBase(MEXCBASE):
         '''
         # generating signature
         query: str = "&".join(f"{x}={y}" for x, y in sorted(kwagrs.items()))
-        print(query)
         query_string: str = self.api_key + timestamp + query
         
         return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
@@ -105,7 +104,8 @@ class FutureBase(MEXCBASE):
         if (not url.startswith("/")):
             url = f"/{url}"
         
-        kwargs = {x:y for x, y in kwargs.items() if y}
+        kwargs = {x:y for x, y in kwargs.items() if y is not None}
+        # print(kwargs['params'])
 
         for i in ('params', 'json'):
             if kwargs.get(i):
@@ -118,7 +118,7 @@ class FutureBase(MEXCBASE):
                         "Request-Time": timestamp,
                         "Signature": self.generate_signature(timestamp, **kwargs[i])
                     }
-            else:
+            elif not kwargs.get('headers'):
                 if self.api_key and self.secret_key:
                     timestamp: str = str(int(time.time() * 1000))
                     kwargs['headers'] = {

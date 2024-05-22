@@ -340,7 +340,12 @@ class FutureMarket(FutureBase):
         return self.call("GET", url)
     
 
-    def risk_reverse_history(self, symbol: str, page_num: int, page_size: int) -> dict:
+    def risk_reverse_history(
+        self, 
+        symbol: str, 
+        page_num: int, 
+        page_size: int
+    ) -> dict:
         """
         function name: risk_reverse_history
 
@@ -363,7 +368,12 @@ class FutureMarket(FutureBase):
         ))
     
 
-    def funding_rate_history(self, symbol: str, page_num: int, page_size: int) -> dict:
+    def funding_rate_history(
+        self,
+        symbol: str,
+        page_num: int,
+        page_size: int
+    ) -> dict:
         """
         function name: funding_rate_history
 
@@ -403,7 +413,7 @@ class FutureMarket(FutureBase):
         return self.call("GET", "api/v1/private/account/assets")
     
     # function override
-    def asset(self, currency: str):
+    def asset(self, currency: str = "USDT"):
         """
         # method: assets(currency: str)
             # get the user's single currency asset information
@@ -422,11 +432,11 @@ class FutureMarket(FutureBase):
 
     def history_position(
             self,
-            symbol: Optional[str] = None,
+            symbol: Optional[str] = "BTC_USDT",
             type:   Optional[int] = None,
             page_num: Optional[int] = 1,
             page_size: Optional[int] = 100
-            ):
+    ):
         """
         # method: history_position()
             # get the user's history position information
@@ -439,6 +449,9 @@ class FutureMarket(FutureBase):
             # type: int, optional, position type i.e. 1 - long, 2 - short
             # page_num: current page, default is 1
             # page_size
+
+        # documentation link:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-s-history-position-information
         """
         return self.call("GET",
                          "api/v1/private/position/list/history_positions",
@@ -448,3 +461,233 @@ class FutureMarket(FutureBase):
                             page_num = page_num,
                             page_size = page_size
                          ))
+
+
+    def current_position(
+        self,
+        symbol: Optional[str] = "BTC_USDT"
+    ):
+        """
+        # method: current_position()
+            # get the user's current holding position
+            # trade reading permission
+
+        # Rate Limit: 20 times / 2 seconds
+
+        # request parameters:
+            # symbol: str, optional, the name of the contract
+
+        # documentation link
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-39-s-current-holding-position
+        """
+        return self.call(
+            "GET",
+            "api/v1/private/position/open_positions",
+            params = dict(
+                symbol = symbol
+            )
+        )
+    
+
+    def pending_order(
+        self,
+        symbol: Optional[str] = "BTC_USDT",
+        page_num: Optional[int] = 1,
+        page_size: Optional[int] = 100
+    ):
+        """
+        # method: pending_order
+            # get the user's current pending order
+            # trade reading permission
+
+        # Rate Limit: 20 times / 2 seconds
+
+        # request parameters
+            # symbol: str, optional, the name of the contract, return all the contract parameters if there are no fill in
+            # page_num: int, required, 
+            # page_size: int, required
+
+        # documentation link
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-39-s-current-pending-order
+        """
+        return self.call(
+            "GET",
+            f"api/v1/private/order/list/open_orders/{symbol}",
+            parmas = dict(
+                symbol = symbol,
+                page_num = page_num,
+                page_size = page_size
+            )
+        )
+    
+    
+    def risk_limit(
+        self,
+        symbol: Optional[str] = "BTC_USDT"
+    ):
+        """
+        # method: risk_limit()
+            # get the user's current pending order
+            # trade reading permission
+
+        # Rate Limit: 20 times / 2 seconds
+
+        # request parameters:
+            # symbol: str, optional, the name of the contract, not uploaded will return all
+
+        # documentation link
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-risk-limits
+        """
+        return self.call(
+            "GET",
+            "api/v1/private/account/risk_limit",
+            params = dict(
+                symbol = symbol
+            )
+        )
+    
+
+    def fee_rete(
+        self,
+        symbol: Optional[str] = "BTC_USDT"
+    ):
+        """
+        # method: fee_rate()
+            # get the user's current rading fee rate
+            # trade reading permission
+
+        # Rate Limit: 20 times / 2 seconds
+
+        # request parameters:
+            # symbol: str, optional, the nmae of the contract
+
+        # documenation link
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#gets-the-user-39-s-current-trading-fee-rate
+        """
+        return self.call(
+            "GET",
+            "api/v1/private/account/tiered_fee_rate",
+            params = dict(
+                symbol = symbol
+            )
+        )
+    
+
+    def order(
+        self,
+        price: float,
+        vol: float,
+        side: int, # 1 and 3
+        type: int = 5, # 5 for market, need to test 6
+        openType: int = 2, # 2 for cross
+        positionId: Optional[int] = None,
+        externalOid: Optional[int] = None,
+        stopLossPrice: Optional[float] = None,
+        takeProfitPrice: Optional[float] = None,
+        positionMode: Optional[int] = None,
+        reduceOnly: Optional[bool] = False,
+        symbol: str = "BTC_USDT",
+        leverage: Optional[int] = 50,
+    ):
+        """
+        # Under-Maintanence on Broker Side
+        # method: order()
+            # USDT perpetual contract trading offers limit and market orders.
+            # POST
+        
+        # Rate Limit: 20 times / 2 seconds
+
+        # Request Parameters
+            # symbol
+                # str
+                # Optional, BTC_USDT
+                # the name of the contract
+            # price
+                # decimal
+                # Required
+                # price
+            # vol
+                # decimal
+                # Required, 10%
+                # volume
+            # leverage
+                # int
+                # optional, 50
+                # leverage, leverage is necessary on isolated margin
+            # side
+                # int
+                # required
+                # order direction
+                    # 1: open long
+                    # 2: close short
+                    # 3: open short
+                    # 4: close long
+            # type
+                # int
+                # required
+                # ordertype
+                    # 1: price limited order
+                    # 2: post only maker
+                    # 3: transact or cancel instantly
+                    # 4: transact completely or cancel completely
+                    # 5: market orders
+                    # 6: conver market price to current price
+            # openType
+                # int
+                # required
+                # open type
+                    # 1: isolated
+                    # 2: cross
+            # positionId
+                # long
+                # optional
+                # position id
+                    # recommended to fill in this parameter when closing a position
+            # externalOid
+                # str
+                # optional
+                # external order ID
+            # stopLossPrice
+                # decimal
+                # optional, -5%
+                # stop-loss price
+            # takeProfitPrice
+                # decimal
+                # optional, +15%
+                # take-profit price
+            # positionMode
+                # int
+                # optional
+                # position mode
+                    # 1: hedge
+                    # 2: one-way
+                    # default: user's current config
+            # reduceOnly
+                # bool
+                # optional
+                # defualt false
+                    # one-way positions: if you need to only reduce positions, pass in true
+                    # two-way positions: will not accept this parameter.
+
+        # documentation link
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#order-under-maintenance
+        """
+        return self.call(
+            "POST",
+            "api/v1/private/order/submit",
+            params = dict(
+                symbol = symbol,
+                price = price,
+                vol = vol,
+                leverage = leverage,
+                side = side,
+                type = type,
+                openType= openType,
+                positionId = positionId,
+                externalOid = externalOid,
+                stopLossPrice = stopLossPrice,
+                takeProfitPrice = takeProfitPrice,
+                positionMode = positionMode,
+                reduceOnly = reduceOnly
+            )
+        )
