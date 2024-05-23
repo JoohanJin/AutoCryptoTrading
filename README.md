@@ -94,7 +94,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 ### Built With
 
 * [![Python3][Python3-img]][Python3-url]
-* [![Jupyter Notebook][https://img.shields.io/badge/jupyter-%23FA0F00.svg?style=for-the-badge&logo=jupyter&logoColor=white]][Jupyter-url]
+* [![Jupyter Notebook][Jupyter-img]][Jupyter-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -137,16 +137,16 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 
 <!-- ROADMAP -->
-## Roadmap
+<!-- ## Roadmap
 
 - [ ] Feature 1
 - [ ] Feature 2
 - [ ] Feature 3
     - [ ] Nested Feature
 
-See the [open issues](https://github.com/JoohanJin/AutoCryptoTrading/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/JoohanJin/AutoCryptoTrading/issues) for a full list of proposed features (and known issues). -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 
@@ -184,7 +184,7 @@ Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_
 
 Project Link: [https://github.com/JoohanJin/AutoCryptoTrading](https://github.com/JoohanJin/AutoCryptoTrading) -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 
@@ -195,7 +195,7 @@ Project Link: [https://github.com/JoohanJin/AutoCryptoTrading](https://github.co
 * []()
 * []() -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 
@@ -232,5 +232,5 @@ Project Link: [https://github.com/JoohanJin/AutoCryptoTrading](https://github.co
 [JQuery-url]: https://jquery.com 
 [Python3-img]: https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
 [Python3-url]: https://www.python.org/
-[Juypter-img]: https://img.shields.io/badge/Jupyter-notebook-brightgreen
+[Jupyter-img]: https://img.shields.io/badge/jupyter-%23FA0F00.svg?style=for-the-badge&logo=jupyter&logoColor=white
 [Jupyter-url]: https://jupyter.org/
