@@ -10,7 +10,6 @@ logging.basicConfig(
 logger = logging.getLogger("mexc_client_logger")
 
 
-logger.info("test")
 """
 # testing logging library
 

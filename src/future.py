@@ -174,7 +174,7 @@ class FutureMarket(FutureBase):
 
     
     def kline(self,
-              interval: Optional[Union[Literal["Min1"], Literal["Min5"], Literal["Min15"], Literal["Min30"], Literal["Min60"], Literal["Hour4"], Literal["Hour8"], Literal["Day1"], Literal["Week1"], Literal["Month1"]]] = None,
+              interval: Optional[Union[Literal["Min1"], Literal["Min5"], Literal["Min15"], Literal["Min30"], Literal["Min60"], Literal["Hour4"], Literal["Hour8"], Literal["Day1"], Literal["Week1"], Literal["Month1"]]] = "Min5",
               start: Optional[int] = None,
               end: Optional[int] = None,
               symbol: str = "BTC_USDT"
@@ -305,7 +305,7 @@ class FutureMarket(FutureBase):
 
 
     
-    def ticker(self, symbol: Optional[str]):
+    def ticker(self, symbol: Optional[str] = "BTC_USDT"):
         """
         function name: ticker
 
@@ -319,9 +319,13 @@ class FutureMarket(FutureBase):
             20 times / 2 seconds
         """
         url: str = "api/v1/contract/ticker"
-        return self.call("GET", url, params = dict(
-            symbol = symbol
-        ))
+        return self.call(
+            "GET",
+            url,
+            params = dict(
+                symbol = symbol
+            )
+        )
     
     
     def risk_reverse(self):
@@ -547,7 +551,7 @@ class FutureMarket(FutureBase):
         )
     
 
-    def fee_rete(
+    def fee_rate(
         self,
         symbol: Optional[str] = "BTC_USDT"
     ):
