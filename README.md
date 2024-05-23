@@ -95,6 +95,8 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 * [![Python3][Python3-img]][Python3-url]
 * [![Jupyter Notebook][Jupyter-img]][Jupyter-url]
+* [![Pandas][Pandas-img]][Pandas-url]
+* [![NumPy][Numpy-img]][Numpy-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -234,3 +236,7 @@ Project Link: [https://github.com/JoohanJin/AutoCryptoTrading](https://github.co
 [Python3-url]: https://www.python.org/
 [Jupyter-img]: https://img.shields.io/badge/jupyter-%23FA0F00.svg?style=for-the-badge&logo=jupyter&logoColor=white
 [Jupyter-url]: https://jupyter.org/
+[Numpy-img]: https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white
+[Numpy-url]: https://numpy.org/
+[Pandas-img]: https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white
+[Pandas-url]: https://pandas.pydata.org/
