@@ -7,7 +7,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
     )
-logger = logging.getLogger("mexc_client_logger")
+logger = logging.getLogger("base_logger")
 
 
 """
