@@ -26,7 +26,7 @@ class _MEXCBASE():
     ::base_url: str, base endpoint for each API
     ::proxies
     '''
-    def __init__(self, api_key: str, secret_key: str, base_url: str, proxies: dict = None):
+    def __init__(self, api_key: str, secret_key: str, base_url: str, proxies: dict = None) -> None:
         self.api_key = api_key
         self.secret_key = secret_key
 
@@ -46,7 +46,7 @@ class _MEXCBASE():
 
 
 class FutureBase(_MEXCBASE):
-    def __init__(self, api_key: str, secret_key: str, proxies: dict = None):
+    def __init__(self, api_key: str, secret_key: str, proxies: dict = None) -> None:
         '''
         Function Name: __init__
 
@@ -68,7 +68,7 @@ class FutureBase(_MEXCBASE):
         )
     
 
-    def generate_signature(self, timestamp: str, **kwagrs):
+    def generate_signature(self, timestamp: str, **kwagrs) -> str:
         '''
         Function Name: generate_signature()
 
