@@ -17,9 +17,6 @@ def on_message(wsapp, message):
 link = "wss://contract.mexc.com/edge"
 ws = websocket.create_connection(link)
 
-api_key: str = "mx0vgl6H0i2s8AvgOa"
-secret_key: str = "234fcb65a0e541e29790a5834a32e9e4"
-
 
 def ping():
     query = dict(
