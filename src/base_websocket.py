@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 FUTURES: str = "wss://contract.mexc.com/edge"
 SPOT: str = None # for now
 
+# TODO: implement the logging functionality -> send the log to the telegram for making an order
+# logging file
+# telegram
 
 class __BasicWebSocketManager:
     """
@@ -31,16 +34,17 @@ class __BasicWebSocketManager:
     # _is_connected
     """
     def __init__(
-            self,
-            # callback_function,
-            api_key: Optional[str] = None,
-            secret_key: Optional[str] = None,
-            ping_interval: Optional[int] = 30,
-            ping_timeout: Optional[int] = 10,
-            retries: Optional[bool] = True,
-            restart_on_error: Optional[bool] = True,
-            log_or_not: Optional[bool] = True
-        ):
+        self,
+        # callback_function,
+        api_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        ping_interval: Optional[int] = 30,
+        ping_timeout: Optional[int] = 10,
+        retries: Optional[bool] = True,
+        restart_on_error: Optional[bool] = True,
+        log_or_not: Optional[bool] = True,
+        conn_timeout: Optional[int] = 30
+    ):
 
         # Set API key
         self.api_key = api_key
@@ -59,6 +63,9 @@ class __BasicWebSocketManager:
         self.ping_interval = ping_interval
         self.ping_timeout = ping_timeout
         self.retry_count = retries
+
+        # connection timeout interval
+        self.conn_timeout = 30
 
         # to save the list of subcriptions and the function for each subcription
         """
@@ -79,33 +86,49 @@ class __BasicWebSocketManager:
         if self.retries:
             infinite_reconnect = True
 
-        while (infinite_reconnect) and not self._is_connected():
+        while (infinite_reconnect or self.conn_timeout) and not self._is_connected():
+            # will make the WebSocketApp and will try to connect to the host
             self.ws = websocket.WebSocketApp(
                 url = self.endpoint,
                 on_message=self._on_message(),
                 on_open=self._on_open(),
                 on_close=self._on_close(),
                 on_error=self._on_error()
-                )
+            )
             
+            # TODO: implement timeout for connection
+
             # thread for connection
-            self.wst = threading.Thread(target = lambda: self.ws.run_forever(
-                ping_interval = self.ping_interval,
-                ping_timeout = self.ping_timeout
-            ))
+            self.wst = threading.Thread(
+                target = lambda: self.ws.run_forever(
+                    ping_interval = self.ping_interval,
+                    ping_timeout = self.ping_timeout
+                )
+            )
+
+            # set this as the background program where it tries to connect
             self.wst.daemon = True
+
+            # start the thread for making a connection
             self.wst.start()
 
             # thread for ping
-            self.wsp = threading.Thread(target = lambda: self._ping_loop(
-                ping_interval=30
-            ))
+            self.wsp = threading.Thread(
+                target = lambda: self._ping_loop(
+                    ping_interval=30
+                )
+            )
+
+            # set as the background thread
             self.wsp.daemon = True
+            
+            # start the thread accordingly
             self.wsp.start()
+
+            self.conn_timeout -= 1
 
         # logger.INFO("")
 
-        # TODO: implement timeout for connection
 
 
         return
@@ -117,12 +140,14 @@ class __BasicWebSocketManager:
                 return True
             else:
                 return False
-        except:
+        except: # exception handling, if there is any error occurred just return False
+            # TODO: logging
             return False
+        
 
     def _generate_signature(self):
         """
-        # make a signatrue for future 
+        # make a signature for future 
         """
         timestamp = str(int(time.time() * 1000))
         _query_str = self.api_key + timestamp
@@ -137,21 +162,38 @@ class __BasicWebSocketManager:
     
     def _on_message(self, message):
         """
-        Parsing the message from the server
+        # Parsing the message from the server
         """
+        # parsing the message into the json
+        response = json.loads(message)
 
+        # now response is parsed as a dictionary so that we can do something with it.
         return
 
 
     def _on_error(self, message):
+        """
+        # when there is an error
+        # Exit and raise errors or attempt to reconnect
+        """
+        # TODO: logging
+        # TODO: 
         return
     
 
     def _on_open(self):
+        """
+        # when the websocket is open
+        """
+        # TODO: logging
         return
     
 
     def _on_close(self):
+        """
+        # websocket close
+        # logging
+        """
         return
 
     
@@ -171,6 +213,11 @@ class __BasicWebSocketManager:
         close the websocket
         """
         self.ws.close()
+
+        # TODO: need to add a logger
+
+        while self.ws.sock:
+            continue
     
 
 class _FutureWebsocketManager(__BasicWebSocketManager):

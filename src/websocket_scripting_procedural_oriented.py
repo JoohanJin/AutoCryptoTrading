@@ -63,15 +63,15 @@ def connect():
     wst.daemon = True
     wst.start()
 
-    wsl = Thread(target=lambda: ping_loop(
-        ws,
-        '{"method":"ping"}',
-        30
-    ))
+    wsl = Thread(
+        target=lambda: ping_loop(
+            ws,
+            '{"method":"ping"}',
+            30
+        )
+    )
     wsl.daemon = True
     wsl.start()
-
-
 
     conn_timeout = 30
     while (not ws.sock or not ws.sock.connected) and conn_timeout:
