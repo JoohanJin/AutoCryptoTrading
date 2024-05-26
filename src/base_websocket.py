@@ -10,7 +10,7 @@ import hashlib
 import threading
 
 # Customized Library
-from setup_logger import logger
+from set_logger import logger
 
 # Global Variables
 # ENDPOINTS
