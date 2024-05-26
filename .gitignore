@@ -1,5 +1,5 @@
-# ignore config files
-src/config.*
+# ignore json
+src/*.json
 
 # virtual environment directory
 gazua/
@@ -14,8 +14,8 @@ market_data/
 # ignore archieve data
 *archieve*
 
-# ignore pymexc
-pymexc-1.0.10/
+# ignore mexc test files
+*mexc*/
 
 # auto-generated directories
 src/__pycache__/

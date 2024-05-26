@@ -1,5 +1,5 @@
+# Built-in Library
 from base_sdk import *
-import logging
 import asyncio
 import threading
 import logging
@@ -9,7 +9,8 @@ import time
 import hashlib
 import threading
 
-logger = logging.getLogger(__name__)
+# Customized Library
+from setup_logger import logger
 
 # Global Variables
 # ENDPOINTS
@@ -32,10 +33,11 @@ class __BasicWebSocketManager:
     # _on_error
     # _ping_loop
     # _is_connected
+    # _authenticate
     """
     def __init__(
         self,
-        # callback_function,
+        callback_function: Optional[function] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 30,
@@ -43,9 +45,11 @@ class __BasicWebSocketManager:
         retries: Optional[bool] = True,
         restart_on_error: Optional[bool] = True,
         log_or_not: Optional[bool] = True,
-        conn_timeout: Optional[int] = 30
+        conn_timeout: Optional[int] = 30,
     ):
-
+        """
+        # 
+        """
         # Set API key
         self.api_key = api_key
         self.secret_key = secret_key
@@ -78,11 +82,14 @@ class __BasicWebSocketManager:
         self.retries = True
         self.restart_on_error = restart_on_error
     
+
+    def _subscribe(self):
+        return
+
     
     def _connect(self):
-        infinite_reconnect: bool = False
-
         # if there is no retries attribute set to True, then no need to try, but we will anyway
+        infinite_reconnect: bool = False
         if self.retries:
             infinite_reconnect = True
 
@@ -106,11 +113,8 @@ class __BasicWebSocketManager:
                 )
             )
 
-            # set this as the background program where it tries to connect
-            self.wst.daemon = True
-
-            # start the thread for making a connection
-            self.wst.start()
+            self.wst.daemon = True # set this as the background program where it tries to connect
+            self.wst.start() # start the thread for making a connection
 
             # thread for ping
             self.wsp = threading.Thread(
@@ -119,18 +123,42 @@ class __BasicWebSocketManager:
                 )
             )
 
-            # set as the background thread
-            self.wsp.daemon = True
-            
-            # start the thread accordingly
-            self.wsp.start()
+            self.wsp.daemon = True # set as the background thread
+            self.wsp.start() # start the thread for ping
 
-            self.conn_timeout -= 1
+            if not infinite_reconnect:
+                self.conn_timeout -= 1
 
         # logger.INFO("")
+        return
+    
+    
+    def _authenticate(self):
+        """
+        # method: _authenticate
+        # login for the websocket
+        """
+        timestamp: str = str(int(time.time() * 1000))
+        _signature: str = self.api_key + timestamp
 
+        signature = hmac.new(
+            self.secret_key.encode("utf-8"),
+            _signature.encode("utf-8"),
+            hashlib.sha256
+        ).hexdigest()
 
-
+        header = json.dumps(
+            dict(
+                subscribe = False,
+                method = "login",
+                param = dict(
+                    apiKey = self.api_key,
+                    reqTime = timestamp,
+                    signature = signature
+                )
+            )
+        )
+        self.ws.send(header)
         return
     
 
@@ -147,7 +175,7 @@ class __BasicWebSocketManager:
 
     def _generate_signature(self):
         """
-        # make a signature for future 
+        # make a signature for future private websocket API
         """
         timestamp = str(int(time.time() * 1000))
         _query_str = self.api_key + timestamp
@@ -201,8 +229,11 @@ class __BasicWebSocketManager:
             self,
             ping_interval: int,
             ping_payload: str = '{"method":"ping"}',
-
         ) -> None:
+        """
+        # method: _ping_loop
+        # for the ping thread of WebSocketApp
+        """
         time.sleep(ping_interval)
         while True:
             self.ws.send(ping_payload)
@@ -214,7 +245,7 @@ class __BasicWebSocketManager:
         """
         self.ws.close()
 
-        # TODO: need to add a logger
+        # TODO: need to add a logging
 
         while self.ws.sock:
             continue
