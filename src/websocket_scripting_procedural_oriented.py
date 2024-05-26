@@ -9,13 +9,23 @@ import hmac
 import hashlib
 from threading import Thread
 
+# initialize
+f = open('keys.json')
+data = json.load(f)
+api_key: str = data['api_key']
+secret_key: str = data['secret_key']
+
+
+
 
 def on_message(wsapp, message):
     m = json.loads(message)
     print(m)
 
 link = "wss://contract.mexc.com/edge"
-ws = websocket.create_connection(link)
+# ws = websocket.create_connection(link)
+
+ws = websocket.WebSocketApp(link, on_message=on_message)
 
 
 def ping():
@@ -56,7 +66,6 @@ def ping_loop(
 
 
 def connect():
-    ws = websocket.WebSocketApp(link, on_message=on_message)
     wst = Thread(target=lambda: ws.run_forever(
         ping_interval=30,
         ))
@@ -139,5 +148,8 @@ def main():
     
 
 if __name__ == "__main__":
-    connect()
-    
+    try:
+        connect()
+    except Exception as e:
+        ws.close()
+        print(e)
