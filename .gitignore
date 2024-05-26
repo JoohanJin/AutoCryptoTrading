@@ -20,3 +20,6 @@ pymexc-1.0.10/
 # auto-generated directories
 src/__pycache__/
 src/.ipynb_checkpoints/
+
+# logging
+src/*.log*
