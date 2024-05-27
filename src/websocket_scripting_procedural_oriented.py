@@ -16,14 +16,13 @@ api_key: str = data['api_key']
 secret_key: str = data['secret_key']
 
 
+link = "wss://contract.mexc.com/edge"
+# ws = websocket.create_connection(link)
 
 
 def on_message(wsapp, message):
     m = json.loads(message)
     print(m)
-
-link = "wss://contract.mexc.com/edge"
-# ws = websocket.create_connection(link)
 
 ws = websocket.WebSocketApp(link, on_message=on_message)
 
