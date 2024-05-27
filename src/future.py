@@ -3,10 +3,8 @@ Future Trade API
 Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#access-to-url
 """
 
-import logging
 from typing import Optional, Literal, Union
-
-logger = logging.getLogger(__name__)
+from set_logger import logger
 
 try:
     from base_sdk import FutureBase
@@ -653,11 +651,11 @@ class FutureMarket(FutureBase):
                 # external order ID
             # stopLossPrice
                 # decimal
-                # optional, -5%
+                # optional, default -5%
                 # stop-loss price
             # takeProfitPrice
                 # decimal
-                # optional, +15%
+                # optional, default +15%
                 # take-profit price
             # positionMode
                 # int
