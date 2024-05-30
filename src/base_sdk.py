@@ -26,7 +26,13 @@ class _MEXCBASE():
     ::base_url: str, base endpoint for each API
     ::proxies
     '''
-    def __init__(self, api_key: str, secret_key: str, base_url: str, proxies: dict = None) -> None:
+    def __init__(
+            self,
+            api_key: str,
+            secret_key: str,
+            base_url: str,
+            proxies: dict = None
+    ) -> None:
         self.api_key = api_key
         self.secret_key = secret_key
 
@@ -68,9 +74,9 @@ class FutureBase(_MEXCBASE):
         )
     
 
-    def generate_signature(self, timestamp: str, **kwagrs) -> str:
+    def generate_signature_get_del(self, timestamp: str, **kwargs) -> str:
         '''
-        Function Name: generate_signature()
+        Function Name: generate_signature_get_del()
 
         Generates a signature for an API request using HMAC SHA256 encryption.
 
@@ -79,9 +85,16 @@ class FutureBase(_MEXCBASE):
         ::**kwargs: dict, arbitrary keyword arguments representing request parameters.
         '''
         # generating signature
-        query: str = "&".join(f"{x}={y}" for x, y in sorted(kwagrs.items()))
+        query: str = "&".join(f"{x}={y}" for x, y in sorted(kwargs.items()))
         query_string: str = self.api_key + timestamp + query
         
+        return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
+    
+
+    def generate_signature_post(self, timestamp: str, param) -> str:
+        query: str = param
+        query_string: str = self.api_key + timestamp + query
+
         return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
     
 
@@ -104,27 +117,64 @@ class FutureBase(_MEXCBASE):
         if (not url.startswith("/")):
             url = f"/{url}"
         
-        kwargs = {x:y for x, y in kwargs.items() if y is not None}
+        kwargs = {x:y for x, y in kwargs.items() if y}
         # print(kwargs['params'])
 
-        for i in ('params', 'json'):
-            if kwargs.get(i):
-                kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
+        timestamp: str = str(int(time.time() * 1000))
 
-                if self.api_key and self.secret_key:
-                    timestamp: str = str(int(time.time() * 1000))
 
-                    kwargs['headers'] = {
-                        "Request-Time": timestamp,
-                        "Signature": self.generate_signature(timestamp, **kwargs[i])
-                    }
-            elif not kwargs.get('headers'):
-                if self.api_key and self.secret_key:
-                    timestamp: str = str(int(time.time() * 1000))
-                    kwargs['headers'] = {
-                        "Request-Time": timestamp,
-                        "Signature": self.generate_signature(timestamp)
-                    }
+        if (method == "GET" or method == "DELETE"):
+            for i in ('params', 'json'):
+                if kwargs.get(i):
+                    kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
+                    if self.api_key and self.secret_key:
+                        kwargs['headers'] = {
+                            "Request-Time": timestamp,
+                            "Signature": self.generate_signature_get_del(timestamp, **kwargs[i])
+                        }
+                elif not kwargs.get('headers') and i == "json":
+                    if self.api_key and self.secret_key:
+                        kwargs['headers'] = {
+                            "Request-Time": timestamp,
+                            "Signature": self.generate_signature_get_del(timestamp)
+                        }
+        
+        elif (method == "POST"):
+            for i in ('params', 'json'):
+                if kwargs.get(i):
+                    kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
+                    siganture_param = json.dumps(kwargs, ensure_ascii=True)
+                    if self.api_key and self.secret_key:
+                        kwargs['headers'] = {
+                            "Request-Time" : timestamp,
+                            "Signature": self.generate_signature_get_del(timestamp, param=siganture_param),
+                            # "Signature": siganture_param
+                        }
+                elif not kwargs.get('headers') and i == 'json':
+                    if self.api_key and self.secret_key:
+                        kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
+                        siganture_param = json.dumps(kwargs, ensure_ascii=True)
+                        kwargs['headers'] = {
+                            "Request-Time" : timestamp,
+                            "Signature": self.generate_signature_get_del(timestamp=timestamp)
+                        }
+            # print(kwargs.pop("params"))
+            # print(kwargs)
+
+        # for i in ('params', 'json'):
+        #     if kwargs.get(i):
+        #         kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
+        #         if self.api_key and self.secret_key:
+        #             kwargs['headers'] = {
+        #                 "Request-Time": timestamp,
+        #                 "Signature": self.generate_signature_get_del(timestamp, **kwargs[i])
+        #             }
+        #     elif not kwargs.get('headers') and i == "json":
+        #         if self.api_key and self.secret_key:
+        #             kwargs['headers'] = {
+        #                 "Request-Time": timestamp,
+        #                 "Signature": self.generate_signature_get_del(timestamp)
+        #             }
 
         response = self.session.request(method, f"{self.base_url}{url}", *args, **kwargs)
         return response.json()
