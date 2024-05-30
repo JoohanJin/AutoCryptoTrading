@@ -117,12 +117,13 @@ class FutureBase(_MEXCBASE):
         if (not url.startswith("/")):
             url = f"/{url}"
         
+        # remove the elements if there is no corresponding value
         kwargs = {x:y for x, y in kwargs.items() if y}
-        # print(kwargs['params'])
 
+        # generating epoch timestamp generator for order
         timestamp: str = str(int(time.time() * 1000))
 
-
+        # if the method is "GET" or "DELETE"
         if (method == "GET" or method == "DELETE"):
             for i in ('params', 'json'):
                 if kwargs.get(i):
@@ -139,6 +140,7 @@ class FutureBase(_MEXCBASE):
                             "Signature": self.generate_signature_get_del(timestamp)
                         }
         
+        # if the method is "POST"
         elif (method == "POST"):
             for i in ('params', 'json'):
                 if kwargs.get(i):
@@ -158,8 +160,8 @@ class FutureBase(_MEXCBASE):
                             "Request-Time" : timestamp,
                             "Signature": self.generate_signature_get_del(timestamp=timestamp)
                         }
-            # print(kwargs.pop("params"))
-            # print(kwargs)
+
+        # TODO need to test if the authentication is working or not for the order API
 
         # for i in ('params', 'json'):
         #     if kwargs.get(i):
@@ -176,5 +178,6 @@ class FutureBase(_MEXCBASE):
         #                 "Signature": self.generate_signature_get_del(timestamp)
         #             }
 
+        # send the request to the endpoint to make the order
         response = self.session.request(method, f"{self.base_url}{url}", *args, **kwargs)
         return response.json()

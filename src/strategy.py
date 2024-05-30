@@ -18,6 +18,10 @@ def update_df(msg):
     tmp = tmp.set_index("ts")
     df = pd.concat([df, tmp], ignore_index = False)
 
+def print_msg(msg):
+    print(msg.get("channel"))
+    print(msg.get("data"))
+
 async def print_df():
     global df
     await update_df
@@ -26,14 +30,19 @@ async def print_df():
 
 time.sleep(0.3)
 
-test.ticker(
-    callback=update_df
+
+test.kline(
+    callback=print_msg,
+    interval="Min1"
 )
 
 while True:
+    pass
     # print_df()
     # time.sleep(2)
     # pass
-    asyncio.run(print_df())
+    # asyncio.run(print_df())
     # print(df)
     # time.sleep(2)
+    # time.sleep(2)
+    # print(df)

@@ -12,6 +12,7 @@ except:
     from .base_sdk import FutureBase
 
 from future_websocket import FutureWebSocket
+from typing import Union, Literal
 
 
 # no need to authenticate
@@ -808,10 +809,19 @@ class webSocket(FutureWebSocket):
     def kline(
         self,
         callback,
-        param: Optional[dict] = dict(
-            symbol = "BTC_USDT",
-            interval = "Min15"
-        )
+        symbol: Optional[str] = "BTC_USDT",
+        interval: Union[
+            Literal["Min1"],
+            Literal["Min5"],
+            Literal["Min15"],
+            Literal["Min30"],
+            Literal["Min60"],
+            Literal["Hour4"],
+            Literal["Hour8"],
+            Literal["Day1"],
+            Literal["Week1"],
+            Literal["Month1"]
+        ] = "Min15"
     ):
         """
         # Get the k-line data of the contract and keep updating.
@@ -828,6 +838,10 @@ class webSocket(FutureWebSocket):
             # Week1
             # Month1
         """
+        param = dict(
+            symbol = symbol,
+            interval = interval
+        )
         method = "sub.kline"
         self._method_subscribe(
             method=method,
