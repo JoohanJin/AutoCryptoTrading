@@ -3,13 +3,15 @@ Future Trade API
 Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#access-to-url
 """
 
-from typing import Optional, Literal, Union
+from typing import Optional, Literal, Union, Callable
 from set_logger import logger
 
 try:
     from base_sdk import FutureBase
 except:
     from .base_sdk import FutureBase
+
+from future_websocket import FutureWebSocket
 
 
 # no need to authenticate
@@ -693,3 +695,263 @@ class FutureMarket(FutureBase):
                 reduceOnly = reduceOnly
             )
         )
+    
+
+class webSocket(FutureWebSocket):
+    def __init__(
+        ws_name: Optional[str],
+        api_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        ping_interval: Optional[int] = 20, # as it is recommended
+        ping_timeout: Optional[int] = 20,
+        retries: Optional[bool] = True,
+        restart_on_error: Optional[bool] = True,
+        log_or_not: Optional[bool] = True,
+        conn_timeout: Optional[int] = 30,
+    ) -> None:
+        
+        kwargs = dict(
+            api_key = api_key,
+            secret_key = secret_key,
+            ping_interval = ping_interval,
+            ping_timeout = ping_timeout,
+            retries = retries,
+            restart_on_error= restart_on_error,
+            log_or_not = log_or_not,
+            conn_timeout = conn_timeout,
+        )
+
+        super().__init__(**kwargs)
+        return
+    
+    """
+    # Public Endpoint
+        # Tickers
+        # Ticker
+        # Transaction
+        # Depth
+        # k-line
+        # Funding Rate
+        # Index Price
+        # Fair Price
+    """
+    def tickers(
+        self,
+        callback
+    ):
+        """
+        # Get the latest transaction price, buy-price, sell-price and 24 transaction volume
+        # of all the perpetual contracts on the platform without login.
+        # Send once a second after subscribing
+        """
+        method = "sub.tickers"
+        self._method_subscribe(
+            method = method,
+            callback= callback,
+            param={}
+        )
+        return
+    
+    def ticker(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol="BTC_USDT"
+        )
+    ):
+        """
+        # Get the latest transaction price, buy price, sell price and 24 transaction volume
+        # of a contract, send the transaction data without users' login.
+        # Send once a second after subscription.
+        """
+        method = "sub.ticker"
+        self._method_subscribe(
+            method = method,
+            callback= callback,
+            param = param
+        )
+        return
+    
+    def transaction(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol="BTC_USDT"
+        )
+    ):
+        """
+        # Access to the latest data without login, and keep updating
+        """
+        method = "sub.deal"
+        self._method_subscribe(
+            method=method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def depth(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol = "BTC_USDT"
+        )
+    ):
+        method = "sub.depth"
+        self._method_subscribe(
+            method = method,
+            callback=callback,
+            param= param
+        )
+        return
+
+    def kline(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol = "BTC_USDT",
+            interval = "Min15"
+        )
+    ):
+        """
+        # Get the k-line data of the contract and keep updating.
+        # subscribe, unsubscribe, example is shown on the right.
+        # interval optional parameters:
+            # Min1
+            # Min5
+            # Min15
+            # Min30
+            # Min60
+            # Hour4
+            # Hour8
+            # Day1
+            # Week1
+            # Month1
+        """
+        method = "sub.kline"
+        self._method_subscribe(
+            method=method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def funding_rate(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol = "BTC_USDT"
+        )
+    ):
+        """
+        # Get the contract funding rate and keep updating
+        """
+        method = "sub.funding.rate"
+        self._method_subscribe(
+            method= method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def index_price(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol = "BTC_USDT"
+        )
+    ):
+        """
+        # Get the index price and will keep updating if there is any changes
+        """
+        method = "sub.index.price"
+        self._method_subscribe(
+            method=method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def fair_price(
+        self,
+        callback,
+        param: Optional[dict] = dict(
+            symbol = "BTC_USDT"
+        )
+    ): 
+        """
+        # Get the fair price and will keep updating if there is any changes
+        """
+        method = "sub.fair_price"
+        self._method_subscribe(
+            method = method,
+            callback=callback,
+            param=param
+        )
+        return
+
+    """
+    # Private Endpoint
+        # Order
+        # Asset
+        # Position
+        # Risk Limitation
+        # Adl automatic reduction of position level
+        # Position Mode
+    """
+    def order(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        method = "sub.personal.order"
+        self._method_subscribe(
+            method = method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def asset(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        method = "sub.personal.asset"
+        self._method_subscribe(
+            method=method,
+            callback=callback,
+            param=param
+        )
+        return
+    
+    def position(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        method = "sub.personal.position"
+        return
+    
+    def risk_limitation(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        return
+    
+    def adl(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        method = "sub.personal.adl.level"
+        return
+    
+    def position_mode(
+        self,
+        callback,
+        param: Optional[dict] = dict()
+    ):
+        method = "sub.personal.position.mode"
+        return

@@ -20,6 +20,7 @@ market_data/
 # auto-generated directories
 src/__pycache__/
 src/.ipynb_checkpoints/
+.ipynb_checkpoints
 
 # logging
 src/*.log*
