@@ -14,7 +14,7 @@ logger = logging.getLogger("__name__")
 '''
 Class for Base SDK for MEXC APIs including Spot V3, Spot V2, Futures V1 and so on
 '''
-class _MEXCBASE():
+class _MexCBase():
     '''
     Function Name: __init__
 
@@ -51,7 +51,7 @@ class _MEXCBASE():
             self.session.proxies.update(proxies)
 
 
-class FutureBase(_MEXCBASE):
+class FutureBase(_MexCBase):
     def __init__(self, api_key: str, secret_key: str, proxies: dict = None) -> None:
         '''
         Function Name: __init__
@@ -64,7 +64,7 @@ class FutureBase(_MEXCBASE):
             # base_url: str, base endpoint for each API
             # proxies
         '''
-        super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://contract.mexc.com", proxies=proxies)
+        super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://fapi.binanace.com", proxies=proxies)
 
         self.session.headers.update(
             {

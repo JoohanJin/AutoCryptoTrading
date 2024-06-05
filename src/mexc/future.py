@@ -11,7 +11,7 @@ try:
 except:
     from .base_sdk import FutureBase
 
-from future_websocket import FutureWebSocket
+from websocket_base import _FutureWebSocket
 from typing import Union, Literal
 
 
@@ -698,19 +698,20 @@ class FutureMarket(FutureBase):
         )
     
 
-class webSocket(FutureWebSocket):
+class WebSocket(_FutureWebSocket):
     def __init__(
         ws_name: Optional[str],
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 20, # as it is recommended
-        ping_timeout: Optional[int] = 20,
+        ping_timeout: Optional[int] = 10,
         retries: Optional[bool] = True,
         restart_on_error: Optional[bool] = True,
         log_or_not: Optional[bool] = True,
         conn_timeout: Optional[int] = 30,
     ) -> None:
         
+        # pass the parameters to the FutureWebSocket
         kwargs = dict(
             api_key = api_key,
             secret_key = secret_key,

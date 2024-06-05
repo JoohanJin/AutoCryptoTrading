@@ -1,5 +1,7 @@
 # ignore json
-src/*.json
+src/mexc/*.json
+src/binance/*.json
+
 
 # virtual environment directory
 gazua/
@@ -15,7 +17,7 @@ market_data/
 *archieve*
 
 # ignore mexc test files
-*mexc*/
+
 
 # auto-generated directories
 src/__pycache__/
@@ -23,4 +25,4 @@ src/.ipynb_checkpoints/
 .ipynb_checkpoints
 
 # logging
-src/*.log*
+src/mexc/*.log*
