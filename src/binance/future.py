@@ -8,3 +8,5 @@ class BinanceFuture(_BinanceFutureSdk):
     # TODO need to implement the basic public
 
     # Private
+    def __init__(self):
+        return

@@ -1,16 +1,18 @@
 # Built-in Library
-from base_sdk import *
+from .base_sdk import *
 import asyncio
 import threading
 import logging
-import websocket_base # as 1.recommended in the API page, https://websocket-client.readthedocs.io/en/latest/index.html
 from typing import Literal, Union, Optional
 import time
 import hashlib
 import threading
+import hmac
+import json
+import websocket
 
 # Customized Library
-from set_logger import logger
+from .set_logger import logger
 
 
 class __BasicWebSocketManager:
@@ -87,7 +89,7 @@ class __BasicWebSocketManager:
         self.auth = False
 
         # enable logging -> TODO: Test
-        websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
+        # websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
 
     def _connect(self, url):
         """
@@ -102,7 +104,7 @@ class __BasicWebSocketManager:
             infinite_reconnect = True
 
         # will make the WebSocketApp and will try to connect to the host
-        self.ws = websocket_base.WebSocketApp(
+        self.ws = websocket.WebSocketApp(
             url= url,
             on_message=self.__on_message,
             on_open=self.__on_open,

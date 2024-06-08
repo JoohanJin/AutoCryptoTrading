@@ -26,3 +26,7 @@ src/.ipynb_checkpoints/
 
 # logging
 src/mexc/*.log*
+src/mexc/__pycache__
+src/binance/__pycache__
+src/binance/__pycache__
+src/*log

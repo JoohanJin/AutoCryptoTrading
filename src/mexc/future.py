@@ -4,14 +4,19 @@ Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#acce
 """
 
 from typing import Optional, Literal, Union, Callable
-from set_logger import logger
 
 try:
     from base_sdk import FutureBase
+    from websocket_base import _FutureWebSocket
+    from set_logger import logger
+
+
 except:
     from .base_sdk import FutureBase
+    from .websocket_base import _FutureWebSocket
+    from .set_logger import logger
 
-from websocket_base import _FutureWebSocket
+
 from typing import Union, Literal
 
 
@@ -700,7 +705,7 @@ class FutureMarket(FutureBase):
 
 class WebSocket(_FutureWebSocket):
     def __init__(
-        ws_name: Optional[str],
+        ws_name: Optional[str] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 20, # as it is recommended
