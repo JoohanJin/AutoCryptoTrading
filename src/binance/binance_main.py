@@ -1,4 +1,4 @@
-from future_websocket import _FutureWebsocketManager
+from websocket_base import _FutureWebsocketManager
 
 # Logger
 from set_logger import logger

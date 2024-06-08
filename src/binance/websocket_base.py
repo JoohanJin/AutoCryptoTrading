@@ -3,7 +3,7 @@ from base_sdk import *
 import asyncio
 import threading
 import logging
-import websocket # as 1.recommended in the API page, https://websocket-client.readthedocs.io/en/latest/index.html
+import websocket_base # as 1.recommended in the API page, https://websocket-client.readthedocs.io/en/latest/index.html
 from typing import Literal, Union, Optional
 import time
 import hashlib
@@ -87,8 +87,7 @@ class __BasicWebSocketManager:
         self.auth = False
 
         # enable logging -> TODO: Test
-        websocket.enableTrace(traceable=log_or_not, level='INFO')
-
+        websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
 
     def _connect(self, url):
         """
@@ -103,7 +102,7 @@ class __BasicWebSocketManager:
             infinite_reconnect = True
 
         # will make the WebSocketApp and will try to connect to the host
-        self.ws = websocket.WebSocketApp(
+        self.ws = websocket_base.WebSocketApp(
             url= url,
             on_message=self.__on_message,
             on_open=self.__on_open,
@@ -129,6 +128,7 @@ class __BasicWebSocketManager:
         self.wsp.daemon = True # set as the background thread
         self.wsp.start() # start the thread for ping
 
+        # wait until the websocket is connected to the endpoint
         while (infinite_reconnect or self.conn_timeout) and not self._is_connected():
             if not infinite_reconnect:
                 self.conn_timeout -= 1
@@ -142,29 +142,34 @@ class __BasicWebSocketManager:
             logger.info("connection timeout for the WebSocket")
             return
 
+        # log the connection result
         logger.info(f"WebSocket has been connected to {url}")
 
+        # if api_key and secret_key are given, login to the WebSocketApi
         if self.api_key and self.secret_key:
-            time.sleep(1)
+            time.sleep(0.5)
             self._authenticate()
 
         return
-    
     
     def _authenticate(self):
         """
         # method: _authenticate
         # login to the endpoint for private endpoint
         """
+        # create the timestamp
         timestamp: str = str(int(time.time() * 1000))
+        # basic signature
         _signature: str = self.api_key + timestamp
 
+        # hmac using sha256
         signature = hmac.new(
-            self.secret_key.encode("utf-8"),
-            _signature.encode("utf-8"),
+            self.secret_key.encode("utf-8"), # encoded secret key
+            _signature.encode("utf-8"), # encoded _signature
             hashlib.sha256
         ).hexdigest()
 
+        # make the parameter dictionary into json string
         header = json.dumps(
             dict(
                 subscribe = False,
@@ -176,15 +181,15 @@ class __BasicWebSocketManager:
                 )
             )
         )
-        self.ws.send(header)
-        logger.info("login request has been sent!")
+        self.ws.send(header) # send the header to the endpoint
+        logger.info("login request has been sent!") # log the request
         return
-
 
     def _are_connections_connected(
         self,
         connections: list
     ):
+        # if there is connection which is not active, return False
         for connection in connections:
             if not connection.is_connected():
                 return False
@@ -204,7 +209,7 @@ class __BasicWebSocketManager:
         self.callback_dictionary[topic] = callback_function
         return
 
-    
+    # get the callback function according to the topic
     def _get_callback(
         self,
         topic
@@ -215,7 +220,6 @@ class __BasicWebSocketManager:
         """
         return self.callback_dictionary.get(topic)
     
-
     def _is_connected(self):
         '''
         # method: _is_connected()
@@ -228,24 +232,27 @@ class __BasicWebSocketManager:
                 return False
         except AttributeError: # exception handling, if there is any error occurred just return False
             return False
-        
 
-    def _generate_signature(self):
-        """
-        # make a signature for future private websocket API
-        """
-        timestamp = str(int(time.time() * 1000))
-        _query_str = self.api_key + timestamp
-        signature = hmac.new(
-            self.secret_key.encode("utf-8"),
-            _query_str.encode("utf-8"),
-            hashlib.sha256
-            ).hexdigest()
+    # def _generate_signature(self):
+    #     """
+    #     # make a signature for future private websocket API
+    #     # Do we need this?
+    #     """
+    #     timestamp = str(int(time.time() * 1000))
+    #     _query_str = self.api_key + timestamp
+    #     signature = hmac.new(
+    #         self.secret_key.encode("utf-8"),
+    #         _query_str.encode("utf-8"),
+    #         hashlib.sha256
+    #         ).hexdigest()
     
-        return signature
+    #     return signature
     
-    
-    def __on_message(self, wsa, message):
+    def __on_message(
+        self,
+        wsa,
+        message
+    ):
         """
         # Parsing the message from the server
         """
@@ -255,34 +262,34 @@ class __BasicWebSocketManager:
         # now response is parsed as a dictionary so that we can do something with it.
         return self.callback_function(response)
 
-
     def __on_error(
-            self,
-            wsa,
-            exception
-        ):
+        self,
+        wsa,
+        exception
+    ):
         """
         # when there is an error
         # Exit and raise errors or attempt to reconnect
         """
         logger.error(f"Unknown Error Occurred: {exception}")
         return
-    
 
-    def __on_open(self, wsa):
+    def __on_open(
+        self,
+        wsa
+    ):
         """
         # when the websocket is open
         """
         logger.info("ws has been opened")
         return
-    
 
     def __on_close(
-            self,
-            wsa,
-            status_code,
-            close_msg
-        ):
+        self,
+        wsa,
+        status_code,
+        close_msg
+    ):
         """
         # websocket close
         # logging the status code and the msg into the logger
@@ -290,12 +297,11 @@ class __BasicWebSocketManager:
         logger.info(f"logger has been closed: status code - {status_code}, close message = {close_msg}")
         return
 
-    
     def _ping_loop(
-            self,
-            ping_interval: int,
-            ping_payload: str = '{"method":"ping"}',
-        ) -> None:
+        self,
+        ping_interval: int,
+        ping_payload: str = '{"method":"ping"}',
+    ) -> None:
         """
         # method: _ping_loop
         # for the ping thread of WebSocketApp
@@ -304,7 +310,6 @@ class __BasicWebSocketManager:
         while True:
             self.ws.send(ping_payload)
             time.sleep(ping_interval)
-
 
     def _reset(self):
         """
@@ -315,7 +320,6 @@ class __BasicWebSocketManager:
         self.callback_dictionary.clear()
         logger.info(f"WebSocketApp, {self.ws_name} has been reset.")
         return
-    
 
     def exit(self):
         """
@@ -332,7 +336,6 @@ class __BasicWebSocketManager:
 class _FutureWebSocketManager(__BasicWebSocketManager):
     def __init__(
         self,
-        # callback_fuction= None,
         ws_name = "FutureWebSocketV1",
         **kwargs
     ):
@@ -347,10 +350,10 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         return
 
     def subscribe(
-            self, 
-            method, 
-            callback_function, 
-            param: dict = {}
+        self, 
+        method, 
+        callback_function, 
+        param: dict = {}
     ):
         query = dict(
             method = method,
@@ -375,7 +378,6 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         # logger.info(f"new sub has been established: {self.subscriptions}")
 
         return
-
     
     def _deal_with_response(self, msg):
         # comprehensive callback function which can deal with all of the message
@@ -418,12 +420,11 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             self._deal_with_normal_msg(msg=msg)
 
         return
-    
 
     def _deal_with_auth_msg(
-            self,
-            msg
-        ):
+        self,
+        msg
+    ):
         """
         Determine if the login has been successful.
         # notify the result to the user by logger.
@@ -438,8 +439,10 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             )
         return
 
-    
-    def _deal_with_sub_msg(self, msg):
+    def _deal_with_sub_msg(
+        self,
+        msg
+    ):
         topic = msg.get("channel")
 
         if ((msg.get("channel", "").startswith("rs.") or
@@ -456,9 +459,11 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         elif msg.get("channel", "") == "rs.error":
             logger.debug(f"Subscription to {topic} has failed to establish")
         return
-    
 
-    def _deal_with_normal_msg(self, msg):
+    def _deal_with_normal_msg(
+        self,
+        msg
+    ):
         topic = msg.get("channel").replace("push.", "").replace("sub.", "")
 
         callback_function = self._get_callback(topic)
@@ -467,15 +472,17 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         return
     
-    
-    def _check_callback(self, topics):
+    def _check_callback(
+        self,
+        topics
+    ):
         for topic in topics:
             if topic in self.callback_dictionary:
                 logger.info(f"{topic} is already subscribed")
                 raise Exception
             
 
-class FutureWebSocket(_FutureWebSocketManager):
+class _FutureWebSocket(_FutureWebSocketManager):
     def __init__(
         self,
         ws_name: str = "FutureMarketWebSocketV1",
@@ -496,17 +503,18 @@ class FutureWebSocket(_FutureWebSocketManager):
             "personal.adl.level",
             "personal.position.mode"
         ]
-        # initialize the WebSocket for Future End-point
 
+        # initialize the WebSocket for Future End-point
         self.ws = _FutureWebSocketManager(
                 self.ws_name,
                 api_key = self.api_key,
                 secret_key = self.secret_key
             )
-        
+        # connect the WebSocket to the API
         self.ws._connect(self.endpoint)
 
-
+        return
+    
     def is_connected(self):
         return self._are_connections_connected(self.active_connections)
 

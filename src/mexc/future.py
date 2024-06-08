@@ -4,14 +4,20 @@ Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#acce
 """
 
 from typing import Optional, Literal, Union, Callable
-from set_logger import logger
 
 try:
     from base_sdk import FutureBase
+    from websocket_base import _FutureWebSocket
+    from set_logger import logger
+
+
 except:
     from .base_sdk import FutureBase
+    from .websocket_base import _FutureWebSocket
+    from .set_logger import logger
 
-from future_websocket import FutureWebSocket
+
+from typing import Union, Literal
 
 
 # no need to authenticate
@@ -697,19 +703,20 @@ class FutureMarket(FutureBase):
         )
     
 
-class webSocket(FutureWebSocket):
+class WebSocket(_FutureWebSocket):
     def __init__(
-        ws_name: Optional[str],
+        ws_name: Optional[str] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 20, # as it is recommended
-        ping_timeout: Optional[int] = 20,
+        ping_timeout: Optional[int] = 10,
         retries: Optional[bool] = True,
         restart_on_error: Optional[bool] = True,
         log_or_not: Optional[bool] = True,
         conn_timeout: Optional[int] = 30,
     ) -> None:
         
+        # pass the parameters to the FutureWebSocket
         kwargs = dict(
             api_key = api_key,
             secret_key = secret_key,
@@ -808,10 +815,19 @@ class webSocket(FutureWebSocket):
     def kline(
         self,
         callback,
-        param: Optional[dict] = dict(
-            symbol = "BTC_USDT",
-            interval = "Min15"
-        )
+        symbol: Optional[str] = "BTC_USDT",
+        interval: Union[
+            Literal["Min1"],
+            Literal["Min5"],
+            Literal["Min15"],
+            Literal["Min30"],
+            Literal["Min60"],
+            Literal["Hour4"],
+            Literal["Hour8"],
+            Literal["Day1"],
+            Literal["Week1"],
+            Literal["Month1"]
+        ] = "Min15"
     ):
         """
         # Get the k-line data of the contract and keep updating.
@@ -828,6 +844,10 @@ class webSocket(FutureWebSocket):
             # Week1
             # Month1
         """
+        param = dict(
+            symbol = symbol,
+            interval = interval
+        )
         method = "sub.kline"
         self._method_subscribe(
             method=method,
