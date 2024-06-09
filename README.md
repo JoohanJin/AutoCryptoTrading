@@ -85,7 +85,14 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+This is a small project of mine, focused on automating the trading flow. As a personal trader and a Computer Engineering student who is not doing very well XD, it is challenging to balance both trading and studying simultaneously. Therefore, I decided to develop a program that can automate my trading activities.
+
+It is not a high-frequency trading system; rather, it is a simple tool that will execute orders based on a trading strategy I have established.
+
+Implemented Features So Far
+- MexC Broker connection
+  - Currently, the order placement functionality is not working but will be tested in the near future
+- Data Fetching using Websocket
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
