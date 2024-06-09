@@ -2,7 +2,6 @@
 Future Trade API
 Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#access-to-url
 """
-
 from typing import Optional, Literal, Union, Callable
 
 try:
@@ -10,15 +9,12 @@ try:
     from websocket_base import _FutureWebSocket
     from set_logger import logger
 
-
 except:
     from .base_sdk import FutureBase
     from .websocket_base import _FutureWebSocket
     from .set_logger import logger
 
-
 from typing import Union, Literal
-
 
 # no need to authenticate
 class FutureMarket(FutureBase):
@@ -38,8 +34,10 @@ class FutureMarket(FutureBase):
         url: str = "api/v1/contract/ping"
         return self.call('GET', url)
     
-    
-    def detail(self, symbol: Optional[str] = None) -> dict:
+    def detail(
+        self,
+        symbol: Optional[str] = "BTC_USDT",
+    ) -> dict:
         """
         Function Name: detail
 
@@ -54,10 +52,9 @@ class FutureMarket(FutureBase):
             https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-information
         """    
         url: str = "api/v1/contract/detail"
-        return self.call("GET", url, parmas = dict(
+        return self.call("GET", url, params = dict(
             symbol= symbol
         ))
-
 
     def support_currencies(self):
         """
@@ -76,7 +73,6 @@ class FutureMarket(FutureBase):
         """
         url: str = "/api/v1/contract/support_currencies"
         return self.call("GET", url)
-    
     
     def depth(self, symbol: str = "BTC_USDT", limit: Optional[int] = None) -> dict:
         """
@@ -99,8 +95,11 @@ class FutureMarket(FutureBase):
             limit = limit
         ))
 
-    
-    def depth_commits(self, limit: int, symbol: str = "BTC_USDT") -> dict:
+    def depth_commits(
+        self,
+        limit: int = 5,
+        symbol: str = "BTC_USDT"
+    ) -> dict:
         """
         function name: depth_commits
 
@@ -121,7 +120,6 @@ class FutureMarket(FutureBase):
             limit = limit
         ))
 
-    
     def index_price(self, symbol: str = "BTC_USDT"):
         """
         function name: index_price
@@ -140,7 +138,6 @@ class FutureMarket(FutureBase):
         url: str = f"api/v1/contract/index_price/{symbol}"
         return self.call("GET", url)
 
-    
     def fair_price(self, symbol: str = "BTC_USDT"):
         """
         function name: fair_price
@@ -159,7 +156,6 @@ class FutureMarket(FutureBase):
         url: str = f"api/v1/contract/fair_price/{symbol}"
         return self.call("GET", url)
 
-    
     def funding_rate(self, symbol: str = "BTC_USDT") -> dict:
         """
         function name: funding_rate
@@ -178,13 +174,25 @@ class FutureMarket(FutureBase):
         url: str = f"api/v1/contract/funding_rate/{symbol}"
         return self.call("GET", url)
 
-    
-    def kline(self,
-              interval: Optional[Union[Literal["Min1"], Literal["Min5"], Literal["Min15"], Literal["Min30"], Literal["Min60"], Literal["Hour4"], Literal["Hour8"], Literal["Day1"], Literal["Week1"], Literal["Month1"]]] = "Min5",
-              start: Optional[int] = None,
-              end: Optional[int] = None,
-              symbol: str = "BTC_USDT"
-              ):
+    def kline(
+        self,
+        interval:
+            Optional[
+                Union[Literal["Min1"],
+                    Literal["Min5"],
+                    Literal["Min15"],
+                    Literal["Min30"],
+                    Literal["Min60"],
+                    Literal["Hour4"],
+                    Literal["Hour8"],
+                    Literal["Day1"],
+                    Literal["Week1"],
+                    Literal["Month1"]]
+            ] = "Min1",
+            start: Optional[int] = None,
+            end: Optional[int] = None,
+            symbol: str = "BTC_USDT"
+        ):
         """
         function name: kline
 
@@ -220,14 +228,28 @@ class FutureMarket(FutureBase):
             start = start,
             end = end
         ))
-
     
-    def kline_index_price(self,
-                          interval: Optional[Union[Literal["Min1"], Literal["Min5"], Literal["Min15"], Literal["Min30"], Literal["Min60"], Literal["Hour4"], Literal["Hour8"], Literal["Day1"], Literal["Week1"], Literal["Month1"]]] = None,
-                          start: Optional[int] = None,
-                          end: Optional[int] = None,
-                          symbol: str = "BTC_USDT"
-                          ):
+    def kline_index_price(
+        self,
+        interval:
+            Optional[
+                Union[
+                    Literal["Min1"],
+                    Literal["Min5"],
+                    Literal["Min15"],
+                    Literal["Min30"],
+                    Literal["Min60"],
+                    Literal["Hour4"],
+                    Literal["Hour8"],
+                    Literal["Day1"],
+                    Literal["Week1"],
+                    Literal["Month1"]
+                ]
+            ] = "Min1",
+        start: Optional[int] = None,
+        end: Optional[int] = None,
+        symbol: str = "BTC_USDT"
+    ):
         """
         function name: kline_index_price
 
@@ -247,20 +269,34 @@ class FutureMarket(FutureBase):
             20 times / 2 seconds
         """
         url: str = f"api/v1/contract/kline/index_price/{symbol}"
-        return self.call("GET", url, parmas=dict(
+        return self.call("GET", url, params=dict(
             symbol = symbol,
             interval = interval,
             start = start,
             end = end
         ))
 
-
-    def kline_fair_price(self,
-                         interval: Optional[Union[Literal["Min1"], Literal["Min5"], Literal["Min15"], Literal["Min30"], Literal["Min60"], Literal["Hour4"], Literal["Hour8"], Literal["Day1"], Literal["Week1"], Literal["Month1"]]] = None,
-                         start: Optional[int] = None,
-                         end: Optional[int] = None,
-                         symbol: str = "BTC_USDT"
-                         ):
+    def kline_fair_price(
+        self,
+        interval:
+            Optional[
+                Union[
+                    Literal["Min1"],
+                    Literal["Min5"],
+                    Literal["Min15"],
+                    Literal["Min30"],
+                    Literal["Min60"],
+                    Literal["Hour4"],
+                    Literal["Hour8"],
+                    Literal["Day1"],
+                    Literal["Week1"],
+                    Literal["Month1"]
+                ]
+            ] = "Min1",
+        start: Optional[int] = None,
+        end: Optional[int] = None,
+        symbol: str = "BTC_USDT"
+    ):
         """
         function name: kline_fair_price
 
@@ -287,9 +323,11 @@ class FutureMarket(FutureBase):
             end = end
         ))
     
-
-    
-    def deals(self, symbol: str, limit: Optional[int]) -> dict:
+    def deals(
+        self,
+        limit: Optional[int] = 100,
+        symbol: str = "BTC_USDT",
+    ) -> dict:
         """
         function name: deals
 
@@ -308,10 +346,11 @@ class FutureMarket(FutureBase):
             symbol = symbol,
             limit = limit
         ))
-
-
     
-    def ticker(self, symbol: Optional[str] = "BTC_USDT"):
+    def ticker(
+        self,
+        symbol: Optional[str] = "BTC_USDT"
+    ):
         """
         function name: ticker
 
@@ -333,7 +372,6 @@ class FutureMarket(FutureBase):
             )
         )
     
-    
     def risk_reverse(self):
         """
         function name: risk_reverse
@@ -348,13 +386,12 @@ class FutureMarket(FutureBase):
         """
         url: str = "api/v1/contract/risk_reverse"
         return self.call("GET", url)
-    
 
     def risk_reverse_history(
         self, 
-        symbol: str, 
-        page_num: int, 
-        page_size: int
+        symbol: str = "BTC_USDT",
+        page_num: int = 1, 
+        page_size: int = 100,
     ) -> dict:
         """
         function name: risk_reverse_history
@@ -376,13 +413,12 @@ class FutureMarket(FutureBase):
             page_num = page_num,
             page_size = page_size
         ))
-    
 
     def funding_rate_history(
         self,
-        symbol: str,
-        page_num: int,
-        page_size: int
+        symbol: str = "BTC_USDT",
+        page_num: int = 1,
+        page_size: int  = 100,
     ) -> dict:
         """
         function name: funding_rate_history
@@ -422,7 +458,6 @@ class FutureMarket(FutureBase):
         """
         return self.call("GET", "api/v1/private/account/assets")
     
-    # function override
     def asset(self, currency: str = "USDT"):
         """
         # method: assets(currency: str)
@@ -439,13 +474,12 @@ class FutureMarket(FutureBase):
         """
         return self.call("GET", f"api/v1/private/account/asset/{currency}")
 
-
     def history_position(
-            self,
-            symbol: Optional[str] = "BTC_USDT",
-            type:   Optional[int] = None,
-            page_num: Optional[int] = 1,
-            page_size: Optional[int] = 100
+        self,
+        symbol: Optional[str] = "BTC_USDT",
+        type:   Optional[int] = None,
+        page_num: Optional[int] = 1,
+        page_size: Optional[int] = 100
     ):
         """
         # method: history_position()
@@ -463,15 +497,16 @@ class FutureMarket(FutureBase):
         # documentation link:
             # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-s-history-position-information
         """
-        return self.call("GET",
-                         "api/v1/private/position/list/history_positions",
-                         params = dict(
-                            symbol = symbol,
-                            type = type,
-                            page_num = page_num,
-                            page_size = page_size
-                         ))
-
+        return self.call(
+            "GET",
+            "api/v1/private/position/list/history_positions",
+            params = dict(
+                symbol = symbol,
+                type = type,
+                page_num = page_num,
+                page_size = page_size
+            ),
+        )
 
     def current_position(
         self,
@@ -497,7 +532,6 @@ class FutureMarket(FutureBase):
                 symbol = symbol
             )
         )
-    
 
     def pending_order(
         self,
@@ -523,13 +557,12 @@ class FutureMarket(FutureBase):
         return self.call(
             "GET",
             f"api/v1/private/order/list/open_orders/{symbol}",
-            parmas = dict(
+            params = dict(
                 symbol = symbol,
                 page_num = page_num,
                 page_size = page_size
             )
         )
-    
     
     def risk_limit(
         self,
@@ -556,7 +589,6 @@ class FutureMarket(FutureBase):
             )
         )
     
-
     def fee_rate(
         self,
         symbol: Optional[str] = "BTC_USDT"
@@ -581,9 +613,8 @@ class FutureMarket(FutureBase):
                 symbol = symbol
             )
         )
-    
 
-    def order(
+    def place_order(
         self,
         price: float,
         vol: float,
@@ -601,7 +632,7 @@ class FutureMarket(FutureBase):
     ):
         """
         # Under-Maintanence on Broker Side
-        # method: order()
+        # method: place_order()
             # USDT perpetual contract trading offers limit and market orders.
             # POST
         
@@ -924,6 +955,12 @@ class WebSocket(_FutureWebSocket):
         callback,
         param: Optional[dict] = dict()
     ):
+        '''
+            # place an order on the MexC broker
+            # currently on the maintanence
+                # tmeporarily closed
+                # TODO: keep checking the upload log of MEXC API and testing
+        '''
         method = "sub.personal.order"
         self._method_subscribe(
             method = method,

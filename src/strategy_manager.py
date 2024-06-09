@@ -13,8 +13,9 @@ from mexc import future
 class strategyManager:
     def __init__(
         self,
-        ws_name: Optional[str] = "test_strategy_manager",
-        # provide the list of strategy?
+        ws_name: Optional[str] = "strategyManager", # no need to authenticate
+        # provide the list of strategy as variable
+        # so that it can subscribe different values at the initiation.
     ) -> None:
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
@@ -28,11 +29,13 @@ class strategyManager:
         )
 
         # multi-thrading based queue
+        # used as a buffer for data fetching from the MEXC Endpoint
         self.q = Queue()
 
         # mutex lock
         self.df_lock = threading.Lock()
 
+        # default dataframe with the given columns
         self.dataFrame = pd.DataFrame(
             columns = [
                 'symbol',
@@ -58,6 +61,7 @@ class strategyManager:
             ]
         )
 
+        # start the thread for the data fetch from the API
         threading.Thread(target=self.append_df, daemon=True).start()
 
         return
@@ -74,8 +78,13 @@ class strategyManager:
             result = self.q.get()
             self.q.task_done()
             return result
+        else:
+            return result
 
     def append_df(self) -> None:
+        '''
+
+        '''
         while True:
             response = self.get_data_buffer()
             if response:
@@ -97,6 +106,10 @@ class strategyManager:
                 self.dataFrame=pd.concat([self.dataFrame, tmp], axis=0)
                 self.df_lock.release()
             else:
+                # just ignore if the response returned is None
                 pass
 
+        return
+    
+    def calculate_ma(self):
         return
