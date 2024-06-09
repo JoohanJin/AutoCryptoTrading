@@ -31,7 +31,7 @@ class _MexCBase():
             api_key: str,
             secret_key: str,
             base_url: str,
-            proxies: dict = None
+            # proxies: dict = None
     ) -> None:
         self.api_key = api_key
         self.secret_key = secret_key
@@ -47,12 +47,17 @@ class _MexCBase():
             }
         )
         
-        if (proxies):
-            self.session.proxies.update(proxies)
+        # if (proxies):
+        #     self.session.proxies.update(proxies)
 
 
 class FutureBase(_MexCBase):
-    def __init__(self, api_key: str, secret_key: str, proxies: dict = None) -> None:
+    def __init__(
+            self,
+            api_key: str,
+            secret_key: str,
+            # proxies: dict = None,
+        ) -> None:
         '''
         Function Name: __init__
 
@@ -64,7 +69,12 @@ class FutureBase(_MexCBase):
             # base_url: str, base endpoint for each API
             # proxies
         '''
-        super().__init__(api_key=api_key, secret_key=secret_key, base_url="https://fapi.binanace.com", proxies=proxies)
+        super().__init__(
+            api_key=api_key,
+            secret_key=secret_key,
+            base_url="https://contract.mexc.com",
+            # proxies=proxies,
+        )
 
         self.session.headers.update(
             {
@@ -98,8 +108,21 @@ class FutureBase(_MexCBase):
         return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
     
 
-    def call(self, method: Union[Literal["GET"], Literal["POST"], Literal["PUT"], Literal["DELETE"]], url: str, *args, **kwargs):
+    def call(
+        self,
+        method: Union[
+            Literal["GET"],
+            Literal["POST"],
+            Literal["PUT"],
+            Literal["DELETE"]
+        ],
+        url: str,
+        *args,
+        **kwargs
+    ):
         '''
+        # MEXC place/cancel Order Endpoint is under maintanence, 
+        
         Function Name: call()
 
         The function makes a request to the given url using the specified method and args.
@@ -123,61 +146,21 @@ class FutureBase(_MexCBase):
         # generating epoch timestamp generator for order
         timestamp: str = str(int(time.time() * 1000))
 
-        # if the method is "GET" or "DELETE"
-        if (method == "GET" or method == "DELETE"):
-            for i in ('params', 'json'):
-                if kwargs.get(i):
-                    kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
-                    if self.api_key and self.secret_key:
-                        kwargs['headers'] = {
-                            "Request-Time": timestamp,
-                            "Signature": self.generate_signature_get_del(timestamp, **kwargs[i])
-                        }
-                elif not kwargs.get('headers') and i == "json":
-                    if self.api_key and self.secret_key:
-                        kwargs['headers'] = {
-                            "Request-Time": timestamp,
-                            "Signature": self.generate_signature_get_del(timestamp)
-                        }
+        for i in ('params', 'json'):
+            if kwargs.get(i):
+                kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
+                if self.api_key and self.secret_key:
+                    kwargs['headers'] = {
+                        "Request-Time": timestamp,
+                        "Signature": self.generate_signature_get_del(timestamp, **kwargs[i])
+                    }
+            elif not kwargs.get('headers') and i == "json":
+                if self.api_key and self.secret_key:
+                    kwargs['headers'] = {
+                        "Request-Time": timestamp,
+                        "Signature": self.generate_signature_get_del(timestamp)
+                    }
         
-        # if the method is "POST"
-        elif (method == "POST"):
-            for i in ('params', 'json'):
-                if kwargs.get(i):
-                    kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
-                    siganture_param = json.dumps(kwargs, ensure_ascii=True)
-                    if self.api_key and self.secret_key:
-                        kwargs['headers'] = {
-                            "Request-Time" : timestamp,
-                            "Signature": self.generate_signature_get_del(timestamp, param=siganture_param),
-                            # "Signature": siganture_param
-                        }
-                elif not kwargs.get('headers') and i == 'json':
-                    if self.api_key and self.secret_key:
-                        kwargs[i] = {x:y for x,y in kwargs[i].items() if y is not None}
-                        siganture_param = json.dumps(kwargs, ensure_ascii=True)
-                        kwargs['headers'] = {
-                            "Request-Time" : timestamp,
-                            "Signature": self.generate_signature_get_del(timestamp=timestamp)
-                        }
-
-        # TODO need to test if the authentication is working or not for the order API
-
-        # for i in ('params', 'json'):
-        #     if kwargs.get(i):
-        #         kwargs[i] = {x:y for x,y in kwargs[i].items() if y}
-        #         if self.api_key and self.secret_key:
-        #             kwargs['headers'] = {
-        #                 "Request-Time": timestamp,
-        #                 "Signature": self.generate_signature_get_del(timestamp, **kwargs[i])
-        #             }
-        #     elif not kwargs.get('headers') and i == "json":
-        #         if self.api_key and self.secret_key:
-        #             kwargs['headers'] = {
-        #                 "Request-Time": timestamp,
-        #                 "Signature": self.generate_signature_get_del(timestamp)
-        #             }
-
         # send the request to the endpoint to make the order
         response = self.session.request(method, f"{self.base_url}{url}", *args, **kwargs)
         return response.json()
