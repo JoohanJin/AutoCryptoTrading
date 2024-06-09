@@ -54,8 +54,8 @@ class _MexCBase():
 class FutureBase(_MexCBase):
     def __init__(
             self,
-            api_key: str,
-            secret_key: str,
+            api_key: str = None,
+            secret_key: str = None,
             # proxies: dict = None,
         ) -> None:
         '''

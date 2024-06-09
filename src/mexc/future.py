@@ -475,11 +475,11 @@ class FutureMarket(FutureBase):
         return self.call("GET", f"api/v1/private/account/asset/{currency}")
 
     def history_position(
-            self,
-            symbol: Optional[str] = "BTC_USDT",
-            type:   Optional[int] = None,
-            page_num: Optional[int] = 1,
-            page_size: Optional[int] = 100
+        self,
+        symbol: Optional[str] = "BTC_USDT",
+        type:   Optional[int] = None,
+        page_num: Optional[int] = 1,
+        page_size: Optional[int] = 100
     ):
         """
         # method: history_position()
@@ -497,14 +497,16 @@ class FutureMarket(FutureBase):
         # documentation link:
             # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-user-s-history-position-information
         """
-        return self.call("GET",
-                         "api/v1/private/position/list/history_positions",
-                         params = dict(
-                            symbol = symbol,
-                            type = type,
-                            page_num = page_num,
-                            page_size = page_size
-                         ))
+        return self.call(
+            "GET",
+            "api/v1/private/position/list/history_positions",
+            params = dict(
+                symbol = symbol,
+                type = type,
+                page_num = page_num,
+                page_size = page_size
+            ),
+        )
 
     def current_position(
         self,
