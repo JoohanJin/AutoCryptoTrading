@@ -1,8 +1,13 @@
+'''
+For Strategy Manager for the Auto-Trading Bot, the MexC websocket api will be used for
+continous data fetching to establish the trading strategy.
+'''
+
 # Standard Module
 import time
 import asyncio
 from typing import Literal, Optional
-import pandas as pd
+import pandas as pd 
 import numpy as np
 import threading
 from queue import Queue
@@ -89,7 +94,6 @@ class strategyManager:
             response = self.get_data_buffer()
             if response:
                 # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
-
                 timestamp = response.pop('timestamp')
                 riseFallRates = response.pop('riseFallRates')
                 riseFallRatesOfTimezone = response.pop('riseFallRatesOfTimezone')
