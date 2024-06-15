@@ -1,15 +1,3 @@
-# from strategy_manager import strategyManager
-# import threading
-# import time
-
-
-# strategy_manager = strategyManager()
-# # ticker has been subscribed as well
-
-
-# strategy_manager.append_df()
-
-from mexc.set_logger import logger
 import unittest
 
 from mexc import future

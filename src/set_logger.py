@@ -3,7 +3,7 @@ import time
 
 # config the basic log format
 logging.basicConfig(
-    filename=f"{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.log",
+    filename=f"log/{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.log",
     encoding='utf-8',
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO

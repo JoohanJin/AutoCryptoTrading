@@ -1,8 +1,7 @@
 # Built-in Library
+import sys
 from .base_sdk import *
-import asyncio
 import threading
-import logging
 from typing import Literal, Union, Optional
 import time
 import hashlib
@@ -11,8 +10,9 @@ import hmac
 import json
 import websocket
 
-# Customized Library
-from .set_logger import logger
+# get the Logger
+sys.path.append('..')
+from set_logger import logger
 
 
 class __BasicWebSocketManager:

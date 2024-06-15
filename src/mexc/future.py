@@ -12,7 +12,6 @@ try:
 except:
     from .base_sdk import FutureBase
     from .websocket_base import _FutureWebSocket
-    from .set_logger import logger
 
 from typing import Union, Literal
 

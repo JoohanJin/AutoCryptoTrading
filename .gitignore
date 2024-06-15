@@ -7,8 +7,8 @@ src/binance/*.json
 gazua/
 venv/
 
-# ignore every test files
-*test*
+# ignore every tmp files
+*tmp*
 
 # ignore market data directory
 market_data/
