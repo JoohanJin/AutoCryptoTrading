@@ -8,11 +8,9 @@ import logging
 import json
 from typing import Union, Literal
 
-logger = logging.getLogger("__name__")
-
 
 '''
-Class for Base SDK for MEXC APIs including Spot V3, Spot V2, Futures V1 and so on
+Class for Base SDK for MEXC APIs including SpotV3, Spot V2, Futures V1 and so on
 '''
 class _MexCBase():
     '''

@@ -29,13 +29,14 @@ class strategyManager:
 
         time.sleep(1)
 
-        self.ws.ticker(
-            callback=self.put_data_buffer
-        )
-
         # multi-thrading based queue
         # used as a buffer for data fetching from the MEXC Endpoint
         self.q = Queue()
+
+        self.ws.ticker(
+            callback = print,
+            # callback=self.put_data_buffer
+        )
 
         # mutex lock
         self.df_lock = threading.Lock()
@@ -67,7 +68,7 @@ class strategyManager:
         )
 
         # start the thread for the data fetch from the API
-        threading.Thread(target=self.append_df, daemon=True).start()
+        # threading.Thread(target=self.append_df, daemon=True).start()
 
         return
     
@@ -75,7 +76,8 @@ class strategyManager:
         self,
         msg,
     ) -> None:
-        self.q.put(msg.get('data'), block=False, timeout=None)
+        print(msg.get('data'))
+        # self.q.put(msg.get('data'), block=False, timeout=None)
         return
     
     def get_data_buffer(self) -> dict:
