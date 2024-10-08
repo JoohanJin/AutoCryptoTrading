@@ -1,8 +1,3 @@
-'''
-For Strategy Manager for the Auto-Trading Bot, the MexC websocket api will be used for
-continous data fetching to establish the trading strategy.
-'''
-
 # Standard Module
 import time
 import asyncio
