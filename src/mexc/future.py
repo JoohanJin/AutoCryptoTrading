@@ -5,13 +5,17 @@ Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#acce
 from typing import Optional, Literal, Union, Callable
 
 try:
-    from base_sdk import FutureBase
-    from websocket_base import _FutureWebSocket
-    from set_logger import logger
-
-except:
+    from mexc.base_sdk import FutureBase
+    from mexc.websocket_base import _FutureWebSocket
+    from set_logger import logger, log_decorator
+except Exception as e:
+    print(f"Error occured: {e}")
     from .base_sdk import FutureBase
     from .websocket_base import _FutureWebSocket
+
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from typing import Union, Literal
 
@@ -457,7 +461,10 @@ class FutureMarket(FutureBase):
         """
         return self.call("GET", "api/v1/private/account/assets")
     
-    def asset(self, currency: str = "USDT"):
+    def asset(
+        self, 
+        currency: str = "USDT"
+    ):
         """
         # method: assets(currency: str)
             # get the user's single currency asset information
