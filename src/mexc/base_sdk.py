@@ -2,10 +2,7 @@ import requests
 import hmac
 import hashlib
 from urllib.parse import urlencode
-import logging
 import time
-import logging
-import json
 from typing import Union, Literal
 
 

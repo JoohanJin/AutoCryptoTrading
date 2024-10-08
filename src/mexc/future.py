@@ -7,7 +7,7 @@ from typing import Optional, Literal, Union, Callable
 try:
     from mexc.base_sdk import FutureBase
     from mexc.websocket_base import _FutureWebSocket
-    from set_logger import logger
+    from set_logger import logger, log_decorator
 except Exception as e:
     print(f"Error occured: {e}")
     from .base_sdk import FutureBase
