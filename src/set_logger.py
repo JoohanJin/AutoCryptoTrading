@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger("future logger")
 
 # define log_decorator for the function, future usage consideration
-def log_decorator(func: function) -> function:
+def log_decorator(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
@@ -27,6 +27,8 @@ def log_decorator(func: function) -> function:
 
 
 """
+# Sample Usage
+
 @log_decorator
 def sample_function(list_of_params):
     do something
