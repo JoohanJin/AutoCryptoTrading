@@ -946,15 +946,16 @@ class WebSocket(_FutureWebSocket):
             param=param
         )
         return
-
     """
-    # Private Endpoint
-        # Order
-        # Asset
-        # Position
-        # Risk Limitation
-        # Adl automatic reduction of position level
-        # Position Mode
+    #########################################################################################################################################################
+    ## Private Endpoint
+    #    # Order
+    #    # Asset
+    #    # Position
+    #    # Risk Limitation
+    #    # Adl automatic reduction of position level
+    #    # Position Mode
+    #########################################################################################################################################################
     """
     def order(
         self,

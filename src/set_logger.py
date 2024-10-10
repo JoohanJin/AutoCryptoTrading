@@ -18,7 +18,8 @@ def log_decorator(func):
         logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
         try:
             result = func(*args, **kwargs)
-            logger.info(f"{func.__name__} returned {result}")
+            if (result):
+                logger.info(f"{func.__name__} returned {result}")
             return result
         except Exception as e:
             logger.error(f"Error in {func.__name__}: {e}")

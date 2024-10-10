@@ -1,7 +1,7 @@
 # Standard Module
 import time
 import asyncio
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, Tuple
 import pandas as pd 
 import numpy as np
 import threading
@@ -18,14 +18,17 @@ class strategyManager:
         ws_name: Optional[str] = "strategyManager", # no need to authenticate1
         # provide the list of strategy as variable
         # so that it can subscribe different values at the initiation.
-        ma_period: Optional[int] = 1, # in minute
     ) -> None:
+        """
+        :Function Name: __init__() for StrategyManager
+        """
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
         # no need to login, no need to provide api_key and secret_key
         self.ws = future.WebSocket()
-        self.ma_period: int = ma_period # set the period of moving average, in minute
+        self.ma_period: int = 10 # set the period of moving average, in minute
 
+        # wait till WebSocket set up is done
         time.sleep(1)
 
         # multi-thrading based queue
@@ -55,21 +58,22 @@ class strategyManager:
         threading.Thread(target=self.calculate_sma_thread, daemon=True).start()
         return
     
-    def put_data_buffer(
+    def _put_data_buffer(
         self,
-        msg,
+        msg: dict,
     ) -> None:
         """
         Put price data of the crypto into the buffer.
 
-        :param
+        :param:
+            :msg: response from the websockt client, put it into the buffer.
 
         :returns: None in python, it put the value into the buffer and return nothing.
         """
         self.q.put(msg.get('data'), block=False, timeout=None)
         return
     
-    def get_data_buffer(self) -> dict:
+    def _get_data_buffer(self) -> dict:
         try:
             result = self.q.get(block = True)
             self.q.task_done()
@@ -79,13 +83,13 @@ class strategyManager:
             return None
 
     @log_decorator
-    def append_df(self) -> None:
+    def _append_df(self) -> None:
         '''
             Continuously fetches data from the queue, processes it and appends it to the DataFrame.
         '''
         # consider append each data into the list and convert it to df periodically.
-        buffer: list = list()
-        buffer_size: int = 3
+        # buffer: list = list()
+        # buffer_size: int = 3
         while True:
             try:
                 response: dict = self.get_data_buffer()
@@ -110,15 +114,15 @@ class strategyManager:
                 logger.info("self.df_lock has been released")
         return
     
-    def calculate_sma_thread(self):
+    def _calculate_sma_thread(self):
         while True:
-            sma = self.calculate_sma()
+            sma = self.__calculate_smas()
             if sma:
                 print(sma)
             time.sleep(1)
     
     @log_decorator
-    def calculate_sma(self) -> Optional[float]:
+    def __calculate_smas(self) -> Optional[Tuple[float]]:
         """
         Calculate the simple moving average (SMA) of the lastPrice
 
@@ -127,24 +131,24 @@ class strategyManager:
         self.df_lock.acquire()
 
         try:
-            if self.dataFrame.shape[0] < self.ma_period:
+            if (self.dataFrame.shape[0] < self.ma_period):
                 print("None")
                 return
             
-            sma = self.dataFrame['lastPrice'].tail(self.ma_period).astype(float).mean()
-            return sma
+            sma_5 = self.dataFrame['lastPrice'].tail(5).astype(float).mean()
+            sma_10 = self.dataFrame['lastPrice'].tail(10).astype(float).mean()
+            sma_15 = self.dataFrame['lastPrice'].tail(15).astype(float).mean()
+            sma_20 = self.dataFrame['lastPrice'].tail(20).astype(float).mean()
+
+            return sma_5, sma_10, sma_15, sma_20
         finally:
             self.df_lock.release()
             logger.info("self.df_lock has been released")
-
-
-        return
+            return
 
 
 if __name__ == "__main__":
     s: strategyManager = strategyManager()
-
-    # Keep the main thread alive
     try:
         while True:
             time.sleep(1)
