@@ -18,8 +18,6 @@ def ping_loop(
         ws.send(ping_payload)
 
 
-
-
 test_ws = websocket.WebSocket()
 
 test_ws.connect("wss://contract.mexc.com/edge")
@@ -63,14 +61,6 @@ async def print_df():
     await update_df
     print(df)
 
-
-# time.sleep(0.3)
-
-
-# test.kline(
-#     callback=print_msg,
-#     interval="Min1"
-# )
 
 if __name__ == "__main__":
     while True:

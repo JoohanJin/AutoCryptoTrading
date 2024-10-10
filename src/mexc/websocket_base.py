@@ -14,7 +14,7 @@ import websocket
 
 # get the Logger
 sys.path.append('..')
-from set_logger import logger
+from set_logger import logger, log_decorator
 
 
 class __BasicWebSocketManager:
@@ -93,6 +93,7 @@ class __BasicWebSocketManager:
         # enable logging -> TODO: Test
         # websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
 
+    @log_decorator
     def _connect(self, url):
         """
         # connect WebSocketApp to the API endpoint
@@ -143,12 +144,9 @@ class __BasicWebSocketManager:
         if (not self.conn_timeout):
             # connection timeout
             # retry connection is set to False
-            logger.info("connection timeout for the WebSocket")
             return
 
         # log the connection result
-        logger.info(f"WebSocket has been connected to {url}")
-
         # if api_key and secret_key are given, login to the WebSocketApi
         if self.api_key and self.secret_key:
             time.sleep(0.5)
@@ -156,6 +154,7 @@ class __BasicWebSocketManager:
 
         return
     
+    @log_decorator
     def _authenticate(self):
         """
         # method: _authenticate
@@ -186,7 +185,6 @@ class __BasicWebSocketManager:
             )
         )
         self.ws.send(header) # send the header to the endpoint
-        logger.info("login request has been sent!") # log the request
         return
 
     def _are_connections_connected(
@@ -338,6 +336,7 @@ class __BasicWebSocketManager:
     
 
 class _FutureWebSocketManager(__BasicWebSocketManager):
+    @log_decorator
     def __init__(
         self,
         ws_name = "FutureWebSocketV1",
@@ -353,6 +352,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         return
 
+    @log_decorator
     def subscribe(
         self, 
         method, 
@@ -368,8 +368,6 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         while (not self._is_connected() and not self.ws):
             time.sleep(0.1)
-
-        logger.info(f"subscription header for {method} has been sent!")
 
         header = json.dumps(query)
         self.ws.send(header)
@@ -443,6 +441,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             )
         return
 
+    @log_decorator
     def _deal_with_sub_msg(
         self,
         msg
