@@ -93,7 +93,6 @@ class __BasicWebSocketManager:
         # enable logging -> TODO: Test
         # websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
 
-    @log_decorator
     def _connect(self, url):
         """
         # connect WebSocketApp to the API endpoint
@@ -154,7 +153,6 @@ class __BasicWebSocketManager:
 
         return
     
-    @log_decorator
     def _authenticate(self):
         """
         # method: _authenticate
@@ -336,7 +334,6 @@ class __BasicWebSocketManager:
     
 
 class _FutureWebSocketManager(__BasicWebSocketManager):
-    @log_decorator
     def __init__(
         self,
         ws_name = "FutureWebSocketV1",
@@ -441,7 +438,6 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             )
         return
 
-    @log_decorator
     def _deal_with_sub_msg(
         self,
         msg

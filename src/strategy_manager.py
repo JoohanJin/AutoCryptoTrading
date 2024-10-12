@@ -47,14 +47,15 @@ class strategyManager:
 
         # default dataframe with the given columns
         self.dataFrame = pd.DataFrame(
+            data = [],
             columns = [
                 "timestamp",'symbol', 'lastPrice', 'riseFallRate', 'fairPrice', 'indexPrice',
                 'volume24', 'amount24', 'maxBidPrice', 'minAskPrice', 'lower24Price', 
                 'high24Price', 'bid1', 'ask1', 'holdVol', 'riseFallValue',
                 'fundingRate', 'zone', 'riseFallRates', 'riseFallRatesOfTimezone'
             ],
-            index = pd.Index([], name = "timeStamp")
         )
+        self.dataFrame.index.name = "timestamp"
 
         # start the thread for the data fetch from the API
         threading.Thread(target=self._price_data_fetch, daemon=True).start()
@@ -174,7 +175,6 @@ class strategyManager:
             self.df_lock.release()
         return
     
-    @log_decorator
     def _resize_df(self) -> None:
         """
         :func: __save_data()
