@@ -30,3 +30,4 @@ src/mexc/__pycache__
 src/binance/__pycache__
 src/binance/__pycache__
 src/*log
+src/telegram/__pycache__
