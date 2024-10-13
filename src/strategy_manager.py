@@ -12,6 +12,7 @@ import sys
 from mexc import future
 from set_logger import logger, log_decorator
 from data_saver import DataSaver
+from custom_telegram.telegram_bot_class import CustomTelegramBot
 
 class strategyManager:
     def __init__(
@@ -29,6 +30,10 @@ class strategyManager:
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver = DataSaver()
         self._df_size_limit = 100
+
+        self.__telegram_bot = CustomTelegramBot()
+
+        self.loop = asyncio.get_event_loop()
 
         # wait till WebSocket set up is done
         time.sleep(1)
@@ -49,12 +54,14 @@ class strategyManager:
         self.dataFrame = pd.DataFrame(
             data = [],
             columns = [
-                "timestamp",'symbol', 'lastPrice', 'riseFallRate', 'fairPrice', 'indexPrice',
+                'symbol', 'lastPrice', 'riseFallRate', 'fairPrice', 'indexPrice',
                 'volume24', 'amount24', 'maxBidPrice', 'minAskPrice', 'lower24Price', 
                 'high24Price', 'bid1', 'ask1', 'holdVol', 'riseFallValue',
                 'fundingRate', 'zone', 'riseFallRates', 'riseFallRatesOfTimezone'
             ],
+            index = [int(time.time() * 1000)]
         )
+        # self.dataFrame.set_index("timestamp")
         self.dataFrame.index.name = "timestamp"
 
         # start the thread for the data fetch from the API
@@ -95,23 +102,34 @@ class strategyManager:
             Continuously fetches data from the queue, processes it and appends it to the DataFrame.
         '''
         # consider append each data into the list and convert it to df periodically.
-        data_buffer: list = list()
-        timestamp_buffer: list = list()
-        buffer_size: int = 3
+        # data_buffer: list = list()
+        # timestamp_buffer: list = list()
+        # buffer_size: int = 3
         while True:
             try:
                 response: dict = self._get_data_buffer()
                 if response:
                     # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
                     timestamp = response['timestamp']
-                    timestamp_buffer.append(timestamp)
-                    data_buffer.append(response)
+                    # timestamp_buffer.append(timestamp)
+                    # data_buffer.append(response)
 
-                    if (len(data_buffer) >= buffer_size):
-                        self.__append_df(
-                            data_buffer=data_buffer,
-                            timestamp_buffer=timestamp_buffer,
-                        )
+                    tmp = pd.DataFrame(
+                        data = [response],
+                    )
+
+                    tmp.set_index("timestamp", inplace = True)
+                    # tmp.index.name = "timestamp"
+
+
+                    with self.df_lock:
+                        self.dataFrame=pd.concat([self.dataFrame, tmp], axis=0)
+
+                    # if (len(data_buffer) >= buffer_size):
+                    #     self.__append_df(
+                    #         data_buffer=data_buffer,
+                    #         timestamp_buffer=timestamp_buffer,
+                    #     )
             except Exception as e:
                 print(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
@@ -126,10 +144,6 @@ class strategyManager:
                 data_buffer,
                 index = [timestamp_buffer],
             )
-
-            # print(tmp)
-
-            # edit self.dataFrame: i.e. concat
             with self.df_lock:
                 self.dataFrame=pd.concat([self.dataFrame, tmp], axis=0)
             return True
@@ -142,10 +156,13 @@ class strategyManager:
     
     def _calculate_sma_thread(self) -> None:
         while True:
-            sma = self.__calculate_smas()
-            # if sma:
-                # print(sma)
-            time.sleep(3)
+            sma_values = self.__calculate_smas()
+            if sma_values:
+                sma_5, sma_10, sma_15, sma_20 = sma_values
+                message: str = f"SMA Update:\nSMA5: {sma_5:.2f}\nSMA10: {sma_10:.2f}\nSMA15: {sma_15:.2f}\nSMA20: {sma_20:.2f}"
+                asyncio.run(self.send_telegram_message(message))
+            time.sleep(2)
+            # now do something with sma
         return
     
     def __calculate_smas(self) -> Optional[Tuple[float]]:
@@ -183,20 +200,28 @@ class strategyManager:
         :make a use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
-            time.sleep(120)
-            if self.dataFrame.shape[0] > 100:
+            time.sleep(40)
+            if self.dataFrame.shape[0] > 20:
                 with self.df_lock:
-                    data = self.dataFrame.iloc[:-100]
-                    self.dataFrame = self.dataFrame.iloc[-100:]
+                    data = self.dataFrame.iloc[:-20]
+                    self.dataFrame = self.dataFrame.iloc[-20:]
                 self._memory_saver.write(data)
         return
+    
+    async def send_telegram_message(self, message: str)-> None:
+        try:
+            await self.__telegram_bot.send_text(message)
+        except Exception as e:
+            logger.debug(f"Error sending Telegram message: {e}")
 
 
 if __name__ == "__main__":
     s: strategyManager = strategyManager()
     try:
-        while True:
-            time.sleep(1)
+        s.loop.run_forever()
     except KeyboardInterrupt:
         logger.info("Program interrupted by user. Exiting...")
+        sys.exit(0)
+    except Exception as e:
+        logger.debug(f"Program encounters critical errors.{e}\n Exiting...")
         sys.exit(0)

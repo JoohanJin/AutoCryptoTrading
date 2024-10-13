@@ -10,14 +10,22 @@ class DataSaver:
         self,
         data: pd.DataFrame,
     ):
-        data.to_csv(
-            self._output_path,
-            index = False,
-            header = not (os.path.isfile(self._output_path)),
-            # columns = False,
-            mode = "a",
-            encoding = "utf-8",
-        )
+        data.dropna(inplace=True)
+        if os.path.isfile(self._output_path):
+            data.to_csv(
+                self._output_path,
+                index = True,
+                header = False,
+                index_label = "timestamp",
+                mode = "a",
+                encoding = "utf-8",
+            )
+        else: # no output file
+            data.to_csv(
+                self._output_path,
+                index = True,
+                encoding = "utf-8",
+            )
         return
     
 
