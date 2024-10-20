@@ -44,7 +44,6 @@ class strategyManager:
         self.price_q = Queue()
 
         self.ws.ticker(
-            # callback = print, # for debugging purpose
             callback=self._put_data_buffer
         )
 
@@ -65,10 +64,8 @@ class strategyManager:
         # self.dataFrame.set_index("timestamp")
         self.dataFrame.index.name = "timestamp"
 
-
         self._init_threads()
         self._start_threads()
-        
         return
     
     def _init_threads(self):
@@ -132,7 +129,7 @@ class strategyManager:
             self.price_q.task_done()
             return result
         except Exception as e:
-            print(f"Error retreving data from queue: {e}")
+            logger.critical(f"Error retreving data from queue: {e}")
             return None
 
     def _price_data_fetch(self) -> None:
@@ -168,7 +165,7 @@ class strategyManager:
                     #         timestamp_buffer=timestamp_buffer,
                     #     )
             except Exception as e:
-                print(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
+                logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
 
     def __append_df(
@@ -219,18 +216,17 @@ class strategyManager:
 
         try:
             if (self.dataFrame.shape[0] < periods[-1]):
-                logger.warning(f"MA period ({self._ma_period}) is less than maximum SMA period ({periods[-1]})")
+                logger.warning(f"MA period ({self.dataFrame.shape[0]}) is less than maximum SMA period ({periods[-1]})")
                 return
 
-            tmp = self.dataFrame[: - periods[-1]].copy()
+            tmp = self.dataFrame[-periods[-1]:]["lastPrice"].copy()
         except Exception as e:
             logger.warnning(f"from {__name__}, function: {self}.__calculate_smas has has raised the Exception")
             return
         finally:
             self.df_lock.release()
-            
+        
         smas = tuple(np.mean(tmp[-period:]) for period in periods)
-
         return smas
     
     def _resize_df(self) -> None:
@@ -241,12 +237,14 @@ class strategyManager:
         :make a use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
-            time.sleep(40)
-            if self.dataFrame.shape[0] > 20:
+            time.sleep(15 * 60)
+            if (self.dataFrame) and (self.dataFrame.shape[0] > 4_000_000):
                 with self.df_lock:
-                    data = self.dataFrame.iloc[:-20]
-                    self.dataFrame = self.dataFrame.iloc[-20:]
+                    data = self.dataFrame.iloc[:-4_000_000]
+                    self.dataFrame = self.dataFrame.iloc[-4_000_000:]
                 self._memory_saver.write(data)
+                logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                del data
         return
     
     async def send_telegram_message(self, message: str)-> None:
@@ -265,5 +263,5 @@ if __name__ == "__main__":
         logger.info("Program interrupted by user. Exiting...")
         sys.exit(0)
     except Exception as e:
-        logger.debug(f"Program encounters critical errors.{e}\n Exiting...")
+        logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
         sys.exit(0)
