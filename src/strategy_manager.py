@@ -30,6 +30,7 @@ class strategyManager:
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver = DataSaver()
         self._df_size_limit = 100
+        self.threads: list[threading.Threading] = list()
 
         self.__telegram_bot = CustomTelegramBot()
 
@@ -43,7 +44,6 @@ class strategyManager:
         self.price_q = Queue()
 
         self.ws.ticker(
-            # callback = print, # for debugging purpose
             callback=self._put_data_buffer
         )
 
@@ -64,14 +64,49 @@ class strategyManager:
         # self.dataFrame.set_index("timestamp")
         self.dataFrame.index.name = "timestamp"
 
-        # start the thread for the data fetch from the API
-        threading.Thread(target=self._price_data_fetch, daemon=True).start()
-        logger.info("Thread for price fetch has been started")
-        threading.Thread(target=self._calculate_sma_thread, daemon=True).start()
-        logger.info("Thread for calculating sma has been started")
-        threading.Thread(target=self._resize_df, daemon=True).start()
-        logger.info("Thread for DataFrame size limit has been started")
+        self._init_threads()
+        self._start_threads()
         return
+    
+    def _init_threads(self):
+        # start the thread for the data fetch from the API
+        thread_price_fetch: threading.Thread = threading.Thread(
+            name = "price_data_fetch",
+            target = self._price_data_fetch,
+            daemon = True
+        )
+        logger.info("Thread for price fetch has been started")
+
+        thread_calculate_sma: threading.Thread = threading.Thread(
+            name = "calculate_sma_thread",
+            target = self._calculate_sma_thread,
+            daemon = True
+        )
+        logger.info("Thread for calculating sma has been started")
+
+        thread_memory_save: threading.Thread = threading.Thread(
+            name= "resize_df",
+            target=self._resize_df,
+            daemon=True
+        )
+        logger.info("Thread for DataFrame size limit has been started")
+
+        self.threads.extend([thread_price_fetch, thread_calculate_sma, thread_memory_save])
+        return
+
+    def _start_threads(self):
+        for thread in self.threads:
+            try:
+                thread.start()
+                logger.info(f"Thread '{thread.name}' (ID: {thread.ident}) has started")
+            except RuntimeError as e:
+                logger.critical(f"Failed to start thread '{thread.name}': {str(e)}")
+                raise
+            except Exception as e:
+                logger.critical(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
+                raise
+        return
+
     
     def _put_data_buffer(
         self,
@@ -94,7 +129,7 @@ class strategyManager:
             self.price_q.task_done()
             return result
         except Exception as e:
-            print(f"Error retreving data from queue: {e}")
+            logger.critical(f"Error retreving data from queue: {e}")
             return None
 
     def _price_data_fetch(self) -> None:
@@ -119,19 +154,18 @@ class strategyManager:
                     )
 
                     tmp.set_index("timestamp", inplace = True)
-                    # tmp.index.name = "timestamp"
-
 
                     with self.df_lock:
                         self.dataFrame=pd.concat([self.dataFrame, tmp], axis=0)
 
+                    # Batch processing implementation
                     # if (len(data_buffer) >= buffer_size):
                     #     self.__append_df(
                     #         data_buffer=data_buffer,
                     #         timestamp_buffer=timestamp_buffer,
                     #     )
             except Exception as e:
-                print(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
+                logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
 
     def __append_df(
@@ -165,32 +199,35 @@ class strategyManager:
             # now do something with sma
         return
     
-    def __calculate_smas(self) -> Optional[Tuple[float]]:
+    def __calculate_smas(
+        self,
+        periods: Tuple[int] = (5, 10, 15, 20),
+    ) -> Optional[Tuple[float]]:
         """
         Calculate the simple moving average (SMA) of the lastPrice
 
+        :params periods
         :returns: The calculated SMA or None if there is not enough data
+        # TODO: May be able to add context manager in python
+            # For safer lock handling for a timeout.
+            # Makes SMA periods configurable.
         """
         self.df_lock.acquire()
 
         try:
-            if (self.dataFrame.shape[0] < self._ma_period):
-                # print("None")
+            if (self.dataFrame.shape[0] < periods[-1]):
+                logger.warning(f"MA period ({self.dataFrame.shape[0]}) is less than maximum SMA period ({periods[-1]})")
                 return
-            
-            sma_5 = self.dataFrame['lastPrice'].tail(5).astype(float).mean()
-            sma_10 = self.dataFrame['lastPrice'].tail(10).astype(float).mean()
-            sma_15 = self.dataFrame['lastPrice'].tail(15).astype(float).mean()
-            sma_20 = self.dataFrame['lastPrice'].tail(20).astype(float).mean()
 
-
-            return sma_5, sma_10, sma_15, sma_20
+            tmp = self.dataFrame[-periods[-1]:]["lastPrice"].copy()
         except Exception as e:
             logger.warnning(f"from {__name__}, function: {self}.__calculate_smas has has raised the Exception")
-            return False
+            return
         finally:
             self.df_lock.release()
-        return
+        
+        smas = tuple(np.mean(tmp[-period:]) for period in periods)
+        return smas
     
     def _resize_df(self) -> None:
         """
@@ -200,12 +237,14 @@ class strategyManager:
         :make a use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
-            time.sleep(40)
-            if self.dataFrame.shape[0] > 20:
+            time.sleep(15 * 60)
+            if (self.dataFrame) and (self.dataFrame.shape[0] > 4_000_000):
                 with self.df_lock:
-                    data = self.dataFrame.iloc[:-20]
-                    self.dataFrame = self.dataFrame.iloc[-20:]
+                    data = self.dataFrame.iloc[:-4_000_000]
+                    self.dataFrame = self.dataFrame.iloc[-4_000_000:]
                 self._memory_saver.write(data)
+                logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                del data
         return
     
     async def send_telegram_message(self, message: str)-> None:
@@ -218,10 +257,11 @@ class strategyManager:
 if __name__ == "__main__":
     s: strategyManager = strategyManager()
     try:
-        s.loop.run_forever()
+        while True:
+            time.sleep(1) # Sleep to reduce the cpu usage.
     except KeyboardInterrupt:
         logger.info("Program interrupted by user. Exiting...")
         sys.exit(0)
     except Exception as e:
-        logger.debug(f"Program encounters critical errors.{e}\n Exiting...")
+        logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
         sys.exit(0)
