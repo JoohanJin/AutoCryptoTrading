@@ -31,7 +31,6 @@ class CustomTelegramBot:
         data = json.load(f)
         return data['api_key'], data['channel_id']
 
-    @log_decorator
     async def send_text(self, message: str) -> None:
         await self._bot.send_message(
             chat_id = self.__channel_id,
