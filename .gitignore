@@ -31,3 +31,4 @@ src/binance/__pycache__
 src/binance/__pycache__
 src/*log
 src/telegram/__pycache__
+src/*test*
