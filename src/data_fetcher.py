@@ -9,14 +9,16 @@ from queue import Queue
 import sys
 
 # Custom Module
-from mexc import future
+from mexc.future import WebSocket
 from set_logger import logger, log_decorator
 from data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
+from data_pipeline import DataPipeline
 
-class strategyManager:
+class DataFetcher:
     def __init__(
         self,
+        pipeline: DataPipeline
         # provide the list of strategy as variable
         # so that it can subscribe different values at the initiation.
     ) -> None:
@@ -26,11 +28,12 @@ class strategyManager:
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
         # no need to provide api_key and secret_key, i.e., no authentication on API side
-        self.ws = future.WebSocket()
+        self.ws: WebSocket = WebSocket()
         self._ma_period: int = 20 # set the period of moving average
-        self._memory_saver = DataSaver()
-        self._df_size_limit = 100
+        self._memory_saver: DataSaver = DataSaver()
+        self._df_size_limit: int = 100
         self.threads: list[threading.Threading] = list()
+        self.pipeline: DataPipeline = pipeline
 
         self.__telegram_bot = CustomTelegramBot()
 
@@ -255,7 +258,7 @@ class strategyManager:
 
 
 if __name__ == "__main__":
-    s: strategyManager = strategyManager()
+    s: DataFetcher = DataFetcher()
     try:
         while True:
             time.sleep(1) # Sleep to reduce the cpu usage.
