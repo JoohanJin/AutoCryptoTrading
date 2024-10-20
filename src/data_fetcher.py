@@ -9,11 +9,11 @@ from queue import Queue
 import sys
 
 # Custom Module
-from mexc.future import WebSocket
-from set_logger import logger, log_decorator
-from data_saver import DataSaver
-from custom_telegram.telegram_bot_class import CustomTelegramBot
-from data_pipeline import DataPipeline
+from src.mexc.future import WebSocket
+from src.set_logger import logger, log_decorator
+from src.data_saver import DataSaver
+from src.custom_telegram.telegram_bot_class import CustomTelegramBot
+from src.pipeline.data_pipeline import DataPipeline
 
 class DataFetcher:
     def __init__(
@@ -33,6 +33,8 @@ class DataFetcher:
             :set the Price Data Table
 
         :params self:
+        :params pipeline:
+            :pipeline to transmit the data to the data processor.
 
         :return None:        
         """
@@ -45,8 +47,6 @@ class DataFetcher:
         self._df_size_limit: int = 100
         self.threads: list[threading.Threading] = list()
         self.pipeline: DataPipeline = pipeline
-
-        self.__telegram_bot = CustomTelegramBot()
 
         # wait till WebSocket set up is done
         time.sleep(1)
@@ -297,29 +297,5 @@ class DataFetcher:
                 logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
                 del data
         return
-    
-    """
-    ######################################################################################################################
-    #                               Send the important message to the Telegram Chat Room                                 #
-    ######################################################################################################################
-    """
-    async def send_telegram_message(self, message: str)-> None:
-        # how to use this from the other functions?
-        # asyncio.run(self.send_telegram_message(message))
-        try:
-            await self.__telegram_bot.send_text(message)
-        except Exception as e:
-            logger.debug(f"Error sending Telegram message: {e}")
 
-
-if __name__ == "__main__":
-    s: DataFetcher = DataFetcher()
-    try:
-        while True:
-            time.sleep(1) # Sleep to reduce the cpu usage.
-    except KeyboardInterrupt:
-        logger.info("Program interrupted by user. Exiting...")
-        sys.exit(0)
-    except Exception as e:
-        logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
-        sys.exit(0)
+        
