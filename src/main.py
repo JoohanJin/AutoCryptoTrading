@@ -3,8 +3,8 @@ import time
 import sys
 
 # CUSTOM LIBRARY
-from src.data_fetcher import DataFetcher
-from src.data_processor import StrategyHandler
+from src.data_fetcher import DataCollectorAndProcessor
+from src.strategy_manager import StrategyHandler
 from src.pipeline.data_pipeline import DataPipeline
 from src.set_logger import logger
 
@@ -12,7 +12,7 @@ from src.set_logger import logger
 if __name__ == "__main__":
     pipeline: DataPipeline = DataPipeline()
 
-    d: DataFetcher = DataFetcher(
+    d: DataCollectorAndProcessor = DataCollectorAndProcessor(
         pipeline = pipeline
     )
     s: StrategyHandler = StrategyHandler(

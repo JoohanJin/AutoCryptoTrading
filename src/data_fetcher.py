@@ -15,7 +15,7 @@ from src.data_saver import DataSaver
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from src.pipeline.data_pipeline import DataPipeline
 
-class DataFetcher:
+class DataCollectorAndProcessor:
     def __init__(
         self,
         pipeline: DataPipeline
@@ -44,8 +44,8 @@ class DataFetcher:
         self.ws: WebSocket = WebSocket()
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver: DataSaver = DataSaver()
-        self._df_size_limit: int = 100
-        self.threads: list[threading.Threading] = list()
+        self._df_size_limit: int = 4_000_000
+        self.threads: list[threading.Thread] = list()
         self.pipeline: DataPipeline = pipeline
 
         # wait till WebSocket set up is done
@@ -83,7 +83,7 @@ class DataFetcher:
     #                                        Threading Management Functions                                              #
     ######################################################################################################################
     """
-    def _init_threads(self):
+    def _init_threads(self) -> None:
         """
         :function name: _init_threads():
             :set the threads for the necessary operations and append them into the list of thread pool
@@ -289,13 +289,11 @@ class DataFetcher:
         """
         while True:
             time.sleep(15 * 60)
-            if (self.priceData) and (self.priceData.shape[0] > 4_000_000):
+            if (self.priceData) and (self.priceData.shape[0] > self._df_size_limit):
                 with self.df_lock:
-                    data = self.priceData.iloc[:-4_000_000]
-                    self.priceData = self.priceData.iloc[-4_000_000:]
+                    data = self.priceData.iloc[:-self._df_size_limit]
+                    self.priceData = self.priceData.iloc[-self._df_size_limit:]
                 self._memory_saver.write(data)
                 logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
                 del data
         return
-
-        

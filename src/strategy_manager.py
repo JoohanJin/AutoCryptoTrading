@@ -27,3 +27,6 @@ class StrategyHandler:
             await self.__telegram_bot.send_text(message)
         except Exception as e:
             logger.debug(f"Error sending Telegram message: {e}")
+
+    def generate_telegram_msg(self, data) -> str:
+        return ""
