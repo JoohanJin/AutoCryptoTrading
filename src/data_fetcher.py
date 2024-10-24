@@ -80,7 +80,7 @@ class DataCollectorAndProcessor:
     
     """
     ######################################################################################################################
-    #                                        Threading Management Functions                                              #
+    #                                               Threading Management                                                 #
     ######################################################################################################################
     """
     def _init_threads(self) -> None:
@@ -88,12 +88,17 @@ class DataCollectorAndProcessor:
         :function name: _init_threads():
             :set the threads for the necessary operations and append them into the list of thread pool
 
+        :params self:
+
         :The list of threads are as follows:
             :price fetching
                 :get the price from the broker
             :calculate the simple moving average
                 :calculate the simple moving average based on the 
             :memory saver 
+                :used to control the size of the Price DataFrame.
+
+        :return None:
         """
         # start the thread for the data fetch from the API
         thread_price_fetch: threading.Thread = threading.Thread(
@@ -122,7 +127,13 @@ class DataCollectorAndProcessor:
 
     def _start_threads(self):
         """
+        :function name: _start_threads()
+            :start the threads in the thread pool of the class.
+            :Will raise issues if there is a problem with the triggering of the thread.
+        
+        :param self:
 
+        :
         """
         for thread in self.threads:
             try:
@@ -208,6 +219,7 @@ class DataCollectorAndProcessor:
             logger.critical(f"Error retreving data from queue: {e}")
             return None
 
+    # for batch processing of the data.
     def __append_df(
         self, 
         data_buffer: list,
@@ -229,7 +241,7 @@ class DataCollectorAndProcessor:
 
     """
     ######################################################################################################################
-    #                                  Calculate the SMAs Using Data From the BUffer                                     #
+    #                                  Calculate the SMAs Using Data From the Buffer                                     #
     ######################################################################################################################
     """
     def _calculate_moving_averages(self) -> None:
@@ -296,4 +308,12 @@ class DataCollectorAndProcessor:
                 self._memory_saver.write(data)
                 logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
                 del data
+        return
+    
+    """
+    ######################################################################################################################
+    #                                        Push Data to the Data Pipeline                                              #
+    ######################################################################################################################
+    """
+    def push_data():
         return

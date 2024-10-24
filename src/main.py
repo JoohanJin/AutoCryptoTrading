@@ -9,7 +9,7 @@ from src.pipeline.data_pipeline import DataPipeline
 from src.set_logger import logger
 
 
-if __name__ == "__main__":
+def main():
     pipeline: DataPipeline = DataPipeline()
 
     d: DataCollectorAndProcessor = DataCollectorAndProcessor(
@@ -28,3 +28,12 @@ if __name__ == "__main__":
     except Exception as e:
         logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
         sys.exit(0)
+
+
+"""
+######################################################################################################################
+#                                                     Code Run                                                       #
+######################################################################################################################
+"""
+if __name__ == "__main__":
+    main()

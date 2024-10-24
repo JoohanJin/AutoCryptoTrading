@@ -1,5 +1,7 @@
+# STANDARD LIBRARY
 import threading
 import pandas
+from typing import Optional, Tuple, Literal, Union
 
 # CUSTOM LIBRARY
 from src.pipeline.data_pipeline import DataPipeline
@@ -14,14 +16,28 @@ class StrategyHandler:
         self.pipeline: DataPipeline = pipeline
         self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
         return
-    
+
+    """
+    ######################################################################################################################
+    #                                      Read Data from the Data Pipeline                                              #
+    ######################################################################################################################
+    """
+    def get_data(
+        self,
+        type: Union[Literal["test"]],
+    ) -> Optional[Tuple[float]]:
+        data: Tuple[float] | None = self.pipeline.pop_data(
+            type = type, 
+            block = True,
+        )
+        return data
+
     """
     ######################################################################################################################
     #                               Send the important message to the Telegram Chat Room                                 #
     ######################################################################################################################
     """
     async def send_telegram_message(self, message: str)-> None:
-        # how to use this from the other functions?
         # asyncio.run(self.send_telegram_message(message))
         try:
             await self.__telegram_bot.send_text(message)
