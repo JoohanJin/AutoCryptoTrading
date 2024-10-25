@@ -246,14 +246,14 @@ class DataCollectorAndProcessor:
     """
     def _calculate_moving_averages(self) -> None:
         while True:
-            sma_values, ema_values = self.__calculate_mas()
+            sma_values, ema_values = self.__calculate_ema_sma()
             if (sma_values and ema_values):
                 sma_5, sma_10, sma_15, sma_20 = sma_values
                 ema_5, ema_10, ema_15, ema_20 = ema_values
             time.sleep(2)
         return
     
-    def __calculate_mas(
+    def __calculate_ema_sma(
         self,
         periods: Tuple[int] = (5, 10, 15, 20),
     ) -> Optional[Tuple[Tuple[float], Tuple[float]]]:
@@ -275,7 +275,7 @@ class DataCollectorAndProcessor:
 
             tmp = self.priceData[-periods[-1]:]["lastPrice"].copy()
         except Exception as e:
-            logger.warnning(f"from {__name__}, function: {self}.__calculate_mas has has raised the Exception")
+            logger.warnning(f"from {__name__}, function: {self}.__calculate_ema_sma has has raised the Exception")
             return
         finally:
             self.df_lock.release()
@@ -315,5 +315,20 @@ class DataCollectorAndProcessor:
     #                                        Push Data to the Data Pipeline                                              #
     ######################################################################################################################
     """
-    def push_data():
-        return
+    def push_ema_data(
+        self,
+        data: Tuple[float],
+    ) -> bool:
+        return self.pipeline.push_data(
+            type = 'ema',
+            data = data
+        )
+    
+    def push_sma_data(
+        self,
+        data: Tuple[float],
+    ) -> bool:
+        return self.pipeline.push_data(
+            type = 'sma',
+            data = data
+        )

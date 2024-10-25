@@ -12,7 +12,7 @@ class StrategyHandler:
     def __init__(
             self,
             pipeline: DataPipeline,
-        ):
+        ) -> None:
         self.pipeline: DataPipeline = pipeline
         self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
         return
@@ -22,17 +22,25 @@ class StrategyHandler:
     #                                      Read Data from the Data Pipeline                                              #
     ######################################################################################################################
     """
-    def get_data(
-        self,
-        type: Union[Literal["test"]],
-    ) -> Optional[Tuple[float]]:
-        data: Tuple[float] | None = self.pipeline.pop_data(
-            type = type, 
+    def get_test_data(self) -> Optional[Tuple[float]]:
+        return self.pipeline.pop_data(
+            type = "test",
             block = True,
         )
-        return data
 
+    def get_smas(self) -> Optional[Tuple[float]]:
+        return self.pipeline.pop_data(
+            type = "sma",
+            block = True,
+        )
+    
+    def get_emas(self) -> Optional[Tuple[float]]:
+        return self.pipeline.pop_data(
+            type = "ema",
+            block = True,
+        )
     """
+
     ######################################################################################################################
     #                               Send the important message to the Telegram Chat Room                                 #
     ######################################################################################################################

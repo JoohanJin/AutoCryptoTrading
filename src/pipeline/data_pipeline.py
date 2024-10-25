@@ -11,8 +11,23 @@ class DataPipeline:
     def __init__(
         self,
     ) -> None:
+        """
+        # func __init__:
+            # Creates a dictionary of Queue objects to store different technical indicators data.
+            # Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
+        
+        # queues:
+            # test: general testing data.
+            # sma: Simple Moving Average Values.
+            # ema: Exponential Moving Average Values.
+            # "?" : Purpose to be defined.
+        
+        # param self
+
+        # return None
+        """
         # data buffer
-        self.queues = {
+        self.queues: Queue[Tuple[float]] = {
             "test": Queue(
                 maxsize=100,
             ),
@@ -39,11 +54,32 @@ class DataPipeline:
         ],
         data: Tuple[float],
     ) -> bool:
+        """
+        # func push_data:
+            # pushes the data to the corresponding queue based on the type.
+            # will be used by data fetcher.
+        
+        # param self
+        # param type
+            # will get the key value for self.queues to seletively push the data into the respective queue.
+            # Enum:
+                # "test"
+                # "sma"
+                # "ema"
+                # "?"
+
+        # param data
+            # Tuple[float]
+
+        # return bool
+            # return True if the operation is successful.
+            # return False if the operation is not successful.
+        """
         try:
             self.queues[type].put(
                 data,
                 block = True,
-                timeout = 1
+                timeout = 1,
             )
             return True
         except Full:
@@ -66,6 +102,26 @@ class DataPipeline:
         ],
         block: bool = False,
     ) -> Optional[Tuple[float]]:
+        """
+        # func pop_data
+            # get the data from the 
+        
+        # param self
+        # param type
+            # will get the key value for self.queues to seletively push the data into the respective queue.
+            # Enum:
+                # "test"
+                # "sma"
+                # "ema"
+                # "?"
+
+        # param data
+            # Tuple[float]
+
+        # return bool
+            # return True if the operation is successful.
+            # return False if the operation is not successful.
+        """
         try:
             data: Tuple[float] = self.queues[type].get(block = block)
             return data
