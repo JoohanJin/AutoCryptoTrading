@@ -101,6 +101,7 @@ class DataPipeline:
             Literal["?"],
         ],
         block: bool = False,
+        timeout: int | None = None
     ) -> Optional[Tuple[float]]:
         """
         # func pop_data
@@ -123,7 +124,7 @@ class DataPipeline:
             # return False if the operation is not successful.
         """
         try:
-            data: Tuple[float] = self.queues[type].get(block = block)
+            data: Tuple[float] = self.queues[type].get(block = block, timeout = timeout)
             return data
         except Empty:
             logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")

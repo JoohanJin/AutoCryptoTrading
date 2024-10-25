@@ -2,11 +2,12 @@
 import threading
 import pandas
 from typing import Optional, Tuple, Literal, Union
+import asyncio
 
 # CUSTOM LIBRARY
-from src.pipeline.data_pipeline import DataPipeline
-from src.custom_telegram import CustomTelegramBot
-from src.set_logger import logger
+from pipeline.data_pipeline import DataPipeline
+from custom_telegram.telegram_bot_class import CustomTelegramBot
+from set_logger import logger
 
 class StrategyHandler:
     def __init__(
@@ -14,7 +15,19 @@ class StrategyHandler:
             pipeline: DataPipeline,
         ) -> None:
         self.pipeline: DataPipeline = pipeline
+        self.threads = []
         self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
+
+        self._init_threads()
+        self._start_threads()
+
+        # Test
+        while True:
+            sma_values = self.get_smas()
+            if (sma_values):
+                asyncio.run(self.send_telegram_message(
+                    f"SMAs:\nsma_5: {sma_values[0]}\nsma_10: {sma_values[1]}\nsma_15: {sma_values[2]}\nsma_20: {sma_values[3]}"
+                ))
         return
 
     """
@@ -54,3 +67,34 @@ class StrategyHandler:
 
     def generate_telegram_msg(self, data) -> str:
         return ""
+    
+    """
+    ######################################################################################################################
+    #                                               Threading Management                                                 #
+    ######################################################################################################################
+    """
+    def _init_threads(self):
+        
+
+        self.threads.extend([])
+        return
+    
+    def _start_threads(self):
+        """
+        # function name: _start_threads()
+            # start the threads in the thread pool of the class.
+            # will raise issues if there is  problem with the triggering of the thread.
+        
+        # param self
+        """
+        for thread in self.threads:
+            try:
+                thread.start()
+                logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
+            except RuntimeError as e:
+                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                raise
+            except Exception as e:
+                logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
+                raise
+        return

@@ -3,10 +3,10 @@ import time
 import sys
 
 # CUSTOM LIBRARY
-from src.data_fetcher import DataCollectorAndProcessor
-from src.strategy_manager import StrategyHandler
-from src.pipeline.data_pipeline import DataPipeline
-from src.set_logger import logger
+from data_fetcher import DataCollectorAndProcessor
+from strategy_manager import StrategyHandler
+from pipeline.data_pipeline import DataPipeline
+from set_logger import logger
 
 
 def main():

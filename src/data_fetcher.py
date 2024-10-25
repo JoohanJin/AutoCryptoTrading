@@ -9,11 +9,11 @@ from queue import Queue
 import sys
 
 # Custom Module
-from src.mexc.future import WebSocket
-from src.set_logger import logger, log_decorator
-from src.data_saver import DataSaver
-from src.custom_telegram.telegram_bot_class import CustomTelegramBot
-from src.pipeline.data_pipeline import DataPipeline
+from mexc.future import WebSocket
+from set_logger import logger, log_decorator
+from data_saver import DataSaver
+from custom_telegram.telegram_bot_class import CustomTelegramBot
+from pipeline.data_pipeline import DataPipeline
 
 class DataCollectorAndProcessor:
     def __init__(
@@ -51,7 +51,7 @@ class DataCollectorAndProcessor:
         # wait till WebSocket set up is done
         time.sleep(1)
 
-        # used as a buffer for data fetching from the MEXC Endpoint
+        # used as  buffer for data fetching from the MEXC Endpoint
         self.price_fetch_buffer = Queue()
 
         self.ws.ticker(
@@ -111,7 +111,7 @@ class DataCollectorAndProcessor:
         thread_calculate_sma: threading.Thread = threading.Thread(
             name = "calculate_sma_thread",
             target = self._calculate_moving_averages,
-            daemon = True
+            daemon = True,
         )
         logger.info("Thread for calculating sma has been started")
 
@@ -127,23 +127,21 @@ class DataCollectorAndProcessor:
 
     def _start_threads(self):
         """
-        :function name: _start_threads()
-            :start the threads in the thread pool of the class.
-            :Will raise issues if there is a problem with the triggering of the thread.
+        # function name: _start_threads()
+            # start the threads in the thread pool of the class.
+            # Will raise issues if there is  problem with the triggering of the thread.
         
-        :param self:
-
-        :
+        # param self:
         """
         for thread in self.threads:
             try:
                 thread.start()
-                logger.info(f"Thread '{thread.name}' (ID: {thread.ident}) has started")
+                logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"Failed to start thread '{thread.name}': {str(e)}")
-                raise
+                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                raise RuntimeError
             except Exception as e:
-                logger.critical(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
+                logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise
         return
 
@@ -246,10 +244,19 @@ class DataCollectorAndProcessor:
     """
     def _calculate_moving_averages(self) -> None:
         while True:
-            sma_values, ema_values = self.__calculate_ema_sma()
-            if (sma_values and ema_values):
-                sma_5, sma_10, sma_15, sma_20 = sma_values
-                ema_5, ema_10, ema_15, ema_20 = ema_values
+            data: Tuple[Tuple[float]] | None = self.__calculate_ema_sma()
+
+            if data:
+                sma_values = data[0]
+                ema_values = data[0]
+
+            # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
+                if (sma_values): self.__push_sma_data(sma_values)
+                if (ema_values): self.__push_ema_data(ema_values)
+
+            # if (sma_values and ema_values):
+            #     sma_5, sma_10, sma_15, sma_20 = sma_values
+            #     ema_5, ema_10, ema_15, ema_20 = ema_values
             time.sleep(2)
         return
     
@@ -263,7 +270,7 @@ class DataCollectorAndProcessor:
         :params periods
         :returns: The calculated SMA or None if there is not enough data
         # TODO: May be able to add context manager in python
-            # For safer lock handling for a timeout.
+            # For safer lock handling for  timeout.
             # Makes SMA periods configurable.
         """
         self.df_lock.acquire()
@@ -297,7 +304,7 @@ class DataCollectorAndProcessor:
         :func: __save_data()
             : using _data_saver to move the dataframe stroing the price movement to the csv file in data
         
-        :make a use of data saver, i.e., custom class using the df.to_csv()
+        :make  use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
             time.sleep(15 * 60)
@@ -315,7 +322,7 @@ class DataCollectorAndProcessor:
     #                                        Push Data to the Data Pipeline                                              #
     ######################################################################################################################
     """
-    def push_ema_data(
+    def __push_ema_data(
         self,
         data: Tuple[float],
     ) -> bool:
@@ -324,7 +331,7 @@ class DataCollectorAndProcessor:
             data = data
         )
     
-    def push_sma_data(
+    def __push_sma_data(
         self,
         data: Tuple[float],
     ) -> bool:
