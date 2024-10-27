@@ -54,6 +54,7 @@ class DataCollectorAndProcessor:
         # used as  buffer for data fetching from the MEXC Endpoint
         self.price_fetch_buffer = Queue()
 
+        # subsribe to the ticker data from the MexC data
         self.ws.ticker(
             callback=self._put_ticker_data
         )
@@ -106,21 +107,21 @@ class DataCollectorAndProcessor:
             target = self._price_data_fetch,
             daemon = True
         )
-        logger.info("Thread for price fetch has been started")
+        logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
         thread_calculate_sma: threading.Thread = threading.Thread(
             name = "calculate_sma_thread",
             target = self._calculate_moving_averages,
             daemon = True,
         )
-        logger.info("Thread for calculating sma has been started")
+        logger.info(f"{__name__}: Thread for calculating sma has been set up!")
 
         thread_memory_save: threading.Thread = threading.Thread(
             name= "resize_df",
             target=self._resize_df,
             daemon=True
         )
-        logger.info("Thread for DataFrame size limit has been started")
+        logger.info(f"{__name__}: Thread for DataFrame size limit has been set up!")
 
         self.threads.extend([thread_price_fetch, thread_calculate_sma, thread_memory_save])
         return
@@ -248,7 +249,7 @@ class DataCollectorAndProcessor:
 
             if data:
                 sma_values = data[0]
-                ema_values = data[0]
+                ema_values = data[1]
 
             # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
                 if (sma_values): self.__push_sma_data(sma_values)
