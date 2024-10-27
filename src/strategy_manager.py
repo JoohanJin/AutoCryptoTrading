@@ -126,7 +126,7 @@ class StrategyHandler:
             if (data):
                 pass
                 # do something with data
-            time.sleep(seconds = 1.5)
+            time.sleep(1.5)
         return
     
     def threads_ema(self) -> Tuple[float]:
@@ -135,7 +135,7 @@ class StrategyHandler:
             if (data):
                 pass
                 # do something with data
-            time.sleep(seconds = 1.5)
+            time.sleep(1.5)
         return
     
     def threads_test(self) -> Tuple[float]  :
@@ -144,5 +144,5 @@ class StrategyHandler:
             if (data):
                 pass
                 # do something with data
-            time.sleep(seconds = 1.5)
+            time.sleep(1.5)
         return

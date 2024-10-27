@@ -44,7 +44,7 @@ class DataCollectorAndProcessor:
         self.ws: WebSocket = WebSocket()
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver: DataSaver = DataSaver()
-        self._df_size_limit: int = 4_000_000
+        self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
         self.pipeline: DataPipeline = pipeline
 
@@ -263,7 +263,13 @@ class DataCollectorAndProcessor:
     
     def __calculate_ema_sma(
         self,
-        periods: Tuple[int] = (5, 10, 15, 20),
+        periods: Tuple[int] = (
+            5, # 10 sec
+            15, # 30 sec
+            30, # 1 min
+            150, # 5 min
+            300, # 10 min
+        ),
     ) -> Optional[Tuple[Tuple[float], Tuple[float]]]:
         """
         Calculate the simple moving average (SMA) of the lastPrice
@@ -278,7 +284,7 @@ class DataCollectorAndProcessor:
 
         try:
             if (self.priceData.shape[0] < periods[-1]):
-                logger.warning(f"MA period ({self.priceData.shape[0]}) is less than maximum SMA period ({periods[-1]})")
+                # logger.warning(f"MA period ({self.priceData.shape[0]}) is less than maximum SMA period ({periods[-1]})")
                 return
 
             tmp = self.priceData[-periods[-1]:]["lastPrice"].copy()
@@ -308,13 +314,21 @@ class DataCollectorAndProcessor:
         :make  use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
-            time.sleep(15 * 60)
-            if (self.priceData) and (self.priceData.shape[0] > self._df_size_limit):
+            data = None
+            try:
                 with self.df_lock:
-                    data = self.priceData.iloc[:-self._df_size_limit]
-                    self.priceData = self.priceData.iloc[-self._df_size_limit:]
+                    if (not self.priceData.empty()) and (self.priceData.shape[0] > self._df_size_limit):
+                        data = self.priceData.iloc[:-self._df_size_limit]
+                        self.priceData = self.priceData.iloc[-self._df_size_limit:]
+                    else:
+                        logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
+                time.sleep(150)
+            except Exception as e:
+                logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")
+
+            if data:
                 self._memory_saver.write(data)
-                logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
                 del data
         return
     
