@@ -311,25 +311,25 @@ class DataCollectorAndProcessor:
         :func: __save_data()
             : using _data_saver to move the dataframe stroing the price movement to the csv file in data
         
-        :make  use of data saver, i.e., custom class using the df.to_csv()
+        :make a use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
             data = None
             try:
                 with self.df_lock:
-                    if (not self.priceData.empty()) and (self.priceData.shape[0] > self._df_size_limit):
+                    if (self.priceData.shape[0] > self._df_size_limit):
                         data = self.priceData.iloc[:-self._df_size_limit]
                         self.priceData = self.priceData.iloc[-self._df_size_limit:]
                     else:
                         logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
-                time.sleep(150)
             except Exception as e:
                 logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")
 
-            if data:
+            if (data is not None):
                 self._memory_saver.write(data)
                 logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                del data
+            time.sleep(150)
+
         return
     
     """

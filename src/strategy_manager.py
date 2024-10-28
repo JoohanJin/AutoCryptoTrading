@@ -83,14 +83,14 @@ class StrategyHandler:
             target = self.threads_ema,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for sma data getter has been set up!")
+        logger.info(f"{__name__}: Thread for ema data getter has been set up!")
 
         thread3: threading.Thread = threading.Thread(
             name = "test data getter",
             target = self.threads_test,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for sma data getter has been set up!")
+        logger.info(f"{__name__}: Thread for test data getter has been set up!")
 
         self.threads.extend([thread1, thread2])
         return
