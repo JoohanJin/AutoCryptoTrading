@@ -791,8 +791,8 @@ class WebSocket(_FutureWebSocket):
         method = "sub.tickers"
         self._method_subscribe(
             method = method,
-            callback= callback,
-            param={}
+            callback = callback,
+            param = {}
         )
         return
     

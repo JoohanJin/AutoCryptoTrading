@@ -328,7 +328,7 @@ class DataCollectorAndProcessor:
             if (data is not None):
                 self._memory_saver.write(data)
                 logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-            time.sleep(150)
+            time.sleep(149.9) # make an adjustment.
 
         return
     

@@ -101,23 +101,23 @@ class __BasicWebSocketManager:
             # WebSocket tries to connect to the Endpoint, with the given endpoint
         """
         # if there is no retries attribute set to True, then no need to try, but we will anyway
-        infinite_reconnect: bool = False
+        infinite_reconnect: bool = True
         if self.retries:
             infinite_reconnect = True
 
         # will make the WebSocketApp and will try to connect to the host
         self.ws = websocket.WebSocketApp(
             url= url,
-            on_message=self.__on_message,
-            on_open=self.__on_open,
-            on_close=self.__on_close,
-            on_error=self.__on_error
+            on_message = self.__on_message,
+            on_open = self.__on_open,
+            on_close = self.__on_close,
+            on_error = self.__on_error
         )
         
         # thread for connection
         self.wst = threading.Thread(
             target = lambda: self.ws.run_forever(
-                ping_interval = 30,
+                ping_interval = 10,
             )
         )
         self.wst.daemon = True # set this as the background program where it tries to connect
@@ -294,7 +294,7 @@ class __BasicWebSocketManager:
         # websocket close
         # logging the status code and the msg into the logger
         """
-        logger.info(f"logger has been closed: status code - {status_code}, close message = {close_msg}")
+        logger.error(f"logger has been closed: status code - {status_code}, close message = {close_msg}")
         return
 
     def _ping_loop(
@@ -525,7 +525,9 @@ class _FutureWebSocket(_FutureWebSocketManager):
                 secret_key = self.secret_key
             )
 
-            self.ws._connect(url=self.endpoint)
+            self.ws._connect(
+                url = self.endpoint,
+            )
 
-        self.ws.subscribe(method=method, callback_function= callback, param=param)
+        self.ws.subscribe(method = method, callback_function = callback, param = param)
         return
