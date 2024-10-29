@@ -111,25 +111,25 @@ class __BasicWebSocketManager:
             on_message = self.__on_message,
             on_open = self.__on_open,
             on_close = self.__on_close,
-            on_error = self.__on_error
+            on_error = self.__on_error,
         )
         
         # thread for connection
         self.wst = threading.Thread(
             target = lambda: self.ws.run_forever(
                 ping_interval = 10,
-            )
+            ),
+            daemon = True, # set this as the background program where it tries to connect
         )
-        self.wst.daemon = True # set this as the background program where it tries to connect
         self.wst.start() # start the thread for making a connection
 
         # thread for ping
         self.wsp = threading.Thread(
             target = lambda: self._ping_loop(
-                ping_interval=20,
-            )
+                ping_interval=10,
+            ),
+            daemon = True, # set this as the background program where it sends the ping to the host every 10 sec.
         )
-        self.wsp.daemon = True # set as the background thread
         self.wsp.start() # start the thread for ping
 
         # wait until the websocket is connected to the endpoint
@@ -294,7 +294,7 @@ class __BasicWebSocketManager:
         # websocket close
         # logging the status code and the msg into the logger
         """
-        logger.error(f"logger has been closed: status code - {status_code}, close message = {close_msg}")
+        logger.error(f"Websocket {__name__} has been closed: status code - {status_code}, close message = {close_msg}")
         return
 
     def _ping_loop(
@@ -327,7 +327,7 @@ class __BasicWebSocketManager:
         """
         self.ws.close()
 
-        logger.info("The WebSocket Manager has been terminated - might need to restart the entire program")
+        logger.warning("The WebSocket Manager has been terminated - might need to restart the entire program")
 
         while self.ws.sock:
             continue
