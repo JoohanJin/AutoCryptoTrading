@@ -327,7 +327,7 @@ class __BasicWebSocketManager:
         """
         self.ws.close()
 
-        logger.warning("The WebSocket Manager has been terminated - might need to restart the entire program")
+        logger.warning("The WebSocket Manager has been terminated - You might need to restart the entire program")
 
         while self.ws.sock:
             continue
@@ -339,7 +339,6 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         ws_name = "FutureWebSocketV1",
         **kwargs
     ):
-        logger.debug(f"{kwargs}")
         # self.callback_function = kwargs.pop("callback_function") if kwargs.get("callback_function") else self._default_callback
 
         super().__init__(ws_name=ws_name, **kwargs)
@@ -401,7 +400,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             if msg.get("channel", "") == "pong":
                 return True
             return False
-        
+
         def is_error_msg():
             if msg.get("channel", "") == "rs.error":
                 return True

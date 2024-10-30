@@ -961,7 +961,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
         '''
             # place an order on the MexC broker
             # currently on the maintanence
