@@ -3,7 +3,7 @@ from queue import Full, Queue, Empty
 from typing import Union, Optional, Literal, Tuple
 
 # CUSTOM LIBRARY
-from set_logger import logger
+from logger.set_logger import logger
 
 
 

@@ -10,7 +10,7 @@ import sys
 
 # Custom Module
 from mexc.future import FutureWebSocket
-from set_logger import logger, log_decorator
+from logger.set_logger import logger, log_decorator
 from data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from pipeline.data_pipeline import DataPipeline

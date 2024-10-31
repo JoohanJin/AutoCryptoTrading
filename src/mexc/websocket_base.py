@@ -14,8 +14,7 @@ import websocket
 
 # get the Logger
 sys.path.append('..')
-from set_logger import logger, log_decorator
-
+from logger.set_logger import logger, log_decorator
 
 class __BasicWebSocketManager:
     def __init__(

@@ -6,7 +6,7 @@ import sys
 from data_fetcher import DataCollectorAndProcessor
 from strategy_manager import StrategyHandler
 from pipeline.data_pipeline import DataPipeline
-from set_logger import logger
+from logger.set_logger import logger
 
 class SystemManager:
     def __init__(

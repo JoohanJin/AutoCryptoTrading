@@ -8,7 +8,7 @@ import time
 # CUSTOM LIBRARY
 from pipeline.data_pipeline import DataPipeline
 from custom_telegram.telegram_bot_class import CustomTelegramBot
-from set_logger import logger
+from logger.set_logger import logger
 
 class StrategyHandler:
     def __init__(

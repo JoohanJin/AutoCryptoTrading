@@ -1,7 +1,7 @@
 from telegram import Bot
 import json
 import asyncio
-from set_logger import log_decorator
+from logger.set_logger import log_decorator
 
 class Test:
     def __init__(self) -> None:
