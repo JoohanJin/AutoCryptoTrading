@@ -4,7 +4,7 @@ import sys
 from .base_sdk import *
 
 import threading
-from typing import Literal, Union, Optional
+from typing import Literal, Union, Optional, Callable
 import time
 import hashlib
 import threading
@@ -20,17 +20,14 @@ from set_logger import logger, log_decorator
 class __BasicWebSocketManager:
     def __init__(
         self,
-        # callback_function = None,
-        # endpoint: Optional[str] = "wss://contract.mexc.com/edge",
-        ws_name: Optional[str] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
-        ping_interval: Optional[int] = 20,
+        ws_name: Optional[str] = "BaseWebSocketManager",
+        ping_interval: Optional[int] = 10,
+        connection_interval: Optional[int] = 10,
         ping_timeout: Optional[int] = 10,
-        retries: Optional[bool] = True,
-        restart_on_error: Optional[bool] = True,
-        log_or_not: Optional[bool] = True,
         conn_timeout: Optional[int] = 30,
+        default_callback: Optional[Callable] = None,
     ):
         """
         # method: __init__()
@@ -45,68 +42,62 @@ class __BasicWebSocketManager:
                 # retries: retries for WebSocket Connection for error
                     # TODO: error handling not yet implemented
                 # restart_on_error: retries on error
-                # log_or_not: if the WebSocket behavior will be logged or not
                 # conn_timeout: WebSocket will try to connect to the endpoint for the timeout interval
                 # login_required: if the websocket needs to authenticate to the system or not
         """
-        # Set API key
-        self.api_key = api_key
-        self.secret_key = secret_key
-
-        # do we need to login for this WebSocketManager?
-
-        # get the callback function
-        # self.callback = callback_function
-
         # get the websocket name
         self.ws_name = ws_name
 
+        # Set API key
+        # do we need to login for this WebSocketManager?
+        self.api_key = api_key
+        self.secret_key = secret_key
+        
         # ping settings
         self.ping_interval = ping_interval
         self.ping_timeout = ping_timeout
-        self.retry_count = retries
 
-        # callback function setting
-        # self.callback_function = callback_function
+        # default callback
+        self.callback_function = default_callback
+
+        # Connection interval
+        self.conn_interval = connection_interval
 
         # connection timeout interval
         self.conn_timeout = conn_timeout
 
         # to save the list of subcriptions and the function for each subcription
+        self.callback_dictionary = {}
+
         # setup the directory as follow:
         """
         {
             <subscription-type>: <callback-function>
         }
         """
-        self.callback_dictionary = {}
 
         # record the subscription made
         self.subscriptions = []
 
-        self.retries = True
-        self.restart_on_error = restart_on_error
-
         # has the Websocket been authroized by the API? -> false initially
-        self.auth = False
-
-        # enable logging -> TODO: Test
-        # websocket_base.enableTrace(traceable=log_or_not, handler=logger, level='INFO')
+        self.auth = False if (self.api_key is None or self.secret_key is None) else True
 
     def _connect(self, url):
         """
         # connect WebSocketApp to the API endpoint
 
         # method: _connect()
-            # WebSocket tries to connect to the Endpoint, with the given endpoint
+            # WebSocket tries to connect to the given Endpoint.
+
+        # param: url
+            # shiould be the endpoint url to establish the connection.
+
         """
         # if there is no retries attribute set to True, then no need to try, but we will anyway
         infinite_reconnect: bool = True
-        if self.retries:
-            infinite_reconnect = True
 
         # will make the WebSocketApp and will try to connect to the host
-        self.ws = websocket.WebSocketApp(
+        self.ws: websocket.WebSocketApp = websocket.WebSocketApp(
             url= url,
             on_message = self.__on_message,
             on_open = self.__on_open,
@@ -115,40 +106,44 @@ class __BasicWebSocketManager:
         )
         
         # thread for connection
-        self.wst = threading.Thread(
+        self.wst: threading.Thread = threading.Thread(
+            name = "Connection thread",
             target = lambda: self.ws.run_forever(
-                ping_interval = 10,
+                ping_interval = self.conn_interval, # default 10 sec
             ),
             daemon = True, # set this as the background program where it tries to connect
         )
         self.wst.start() # start the thread for making a connection
 
         # thread for ping
-        self.wsp = threading.Thread(
+        self.wsp: threading.Thread = threading.Thread(
+            name = "Ping thread",
             target = lambda: self._ping_loop(
-                ping_interval=10,
+                ping_interval=self.ping_interval, # default 10 sec
             ),
             daemon = True, # set this as the background program where it sends the ping to the host every 10 sec.
         )
         self.wsp.start() # start the thread for ping
 
-        # wait until the websocket is connected to the endpoint
+        # wait until the websocket is connected to the host.
         while (infinite_reconnect or self.conn_timeout) and not self._is_connected():
             if not infinite_reconnect:
                 self.conn_timeout -= 1
             
             time.sleep(1)
 
-        # if timeout occurred
-        if (not self.conn_timeout):
-            # connection timeout
-            # retry connection is set to False
-            return
+            # if timeout occurred
+            if (not self.conn_timeout):
+                logger.warning(f"{__name__}: connection to the host time out. You may restart the entire program.")
+                # connection timeout
+                # retry connection is set to False
+                return
 
-        # log the connection result
+
+        logger.info(f"{__name__}: Websocket Connection to the host has been established.")
         # if api_key and secret_key are given, login to the WebSocketApi
-        if self.api_key and self.secret_key:
-            time.sleep(0.5)
+        if self.auth:
+            time.sleep(1)
             self._authenticate()
 
         return
@@ -164,11 +159,7 @@ class __BasicWebSocketManager:
         _signature: str = self.api_key + timestamp
 
         # hmac using sha256
-        signature = hmac.new(
-            self.secret_key.encode("utf-8"), # encoded secret key
-            _signature.encode("utf-8"), # encoded _signature
-            hashlib.sha256
-        ).hexdigest()
+        signature = self._generate_signature()
 
         # make the parameter dictionary into json string
         header = json.dumps(
@@ -184,6 +175,21 @@ class __BasicWebSocketManager:
         )
         self.ws.send(header) # send the header to the endpoint
         return
+    
+    def _generate_signature(self):
+        """
+        # make a signature for future private websocket API
+        # Do we need this?
+        """
+        timestamp = str(int(time.time() * 1000))
+        _query_str = self.api_key + timestamp
+        signature = hmac.new(
+            self.secret_key.encode("utf-8"),
+            _query_str.encode("utf-8"),
+            hashlib.sha256
+            ).hexdigest()
+    
+        return signature
 
     def _are_connections_connected(
         self,
@@ -191,15 +197,14 @@ class __BasicWebSocketManager:
     ):
         # if there is connection which is not active, return False
         for connection in connections:
-            if not connection.is_connected():
+            if (not connection.is_connected()):
                 return False
-        
         return True
 
     def _set_callback(
             self,
             topic: str,
-            callback_function
+            callback_function,
     ):
         """
         # method: _set_callback
@@ -232,22 +237,12 @@ class __BasicWebSocketManager:
                 return False
         except AttributeError: # exception handling, if there is any error occurred just return False
             return False
-
-    # def _generate_signature(self):
-    #     """
-    #     # make a signature for future private websocket API
-    #     # Do we need this?
-    #     """
-    #     timestamp = str(int(time.time() * 1000))
-    #     _query_str = self.api_key + timestamp
-    #     signature = hmac.new(
-    #         self.secret_key.encode("utf-8"),
-    #         _query_str.encode("utf-8"),
-    #         hashlib.sha256
-    #         ).hexdigest()
-    
-    #     return signature
-    
+        
+    """
+    ######################################################################################################################
+    #                                Websocket Message Handling Function                                                 #
+    ######################################################################################################################
+    """
     def __on_message(
         self,
         wsa,
@@ -339,20 +334,17 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         ws_name = "FutureWebSocketV1",
         **kwargs
     ):
-        # self.callback_function = kwargs.pop("callback_function") if kwargs.get("callback_function") else self._default_callback
+        super().__init__(ws_name = ws_name, **kwargs)
 
-        super().__init__(ws_name=ws_name, **kwargs)
-
-        # if not callback_fuction:
+        # if there is no default function.
         self.callback_function = self._deal_with_response
 
         return
 
-    @log_decorator
     def subscribe(
         self, 
-        method, 
-        callback_function, 
+        method: Optional[str] = "sub.ticker", 
+        callback_function = None, 
         param: dict = {}
     ):
         query = dict(
@@ -365,6 +357,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         while (not self._is_connected() and not self.ws):
             time.sleep(0.1)
 
+        # make dict into json, so that it can be on the header of the HTTP Socket.
         header = json.dumps(query)
         self.ws.send(header)
         self.subscriptions.append(query)

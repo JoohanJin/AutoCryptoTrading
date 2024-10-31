@@ -9,7 +9,7 @@ from queue import Queue
 import sys
 
 # Custom Module
-from mexc.future import WebSocket
+from mexc.future import FutureWebSocket
 from set_logger import logger, log_decorator
 from data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
@@ -41,7 +41,7 @@ class DataCollectorAndProcessor:
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
         # no need to provide api_key and secret_key, i.e., no authentication on API side
-        self.ws: WebSocket = WebSocket()
+        self.ws: FutureWebSocket = FutureWebSocket()
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver: DataSaver = DataSaver()
         self._df_size_limit: int = 1_000
@@ -59,7 +59,7 @@ class DataCollectorAndProcessor:
             callback=self._put_ticker_data
         )
 
-        # mutex lock
+        # lock for accessing Price DataFrame.
         self.df_lock = threading.Lock()
 
         # default dataframe with the given columns

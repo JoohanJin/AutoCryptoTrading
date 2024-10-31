@@ -740,16 +740,13 @@ class FutureMarket(FutureBase):
         )
     
 
-class WebSocket(_FutureWebSocket):
+class FutureWebSocket(_FutureWebSocket):
     def __init__(
         ws_name: Optional[str] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 20, # as it is recommended
         ping_timeout: Optional[int] = 10,
-        retries: Optional[bool] = True,
-        restart_on_error: Optional[bool] = True,
-        log_or_not: Optional[bool] = True,
         conn_timeout: Optional[int] = 30,
     ) -> None:
         
@@ -759,9 +756,6 @@ class WebSocket(_FutureWebSocket):
             secret_key = secret_key,
             ping_interval = ping_interval,
             ping_timeout = ping_timeout,
-            retries = retries,
-            restart_on_error= restart_on_error,
-            log_or_not = log_or_not,
             conn_timeout = conn_timeout,
         )
 
@@ -800,7 +794,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict(
-            symbol="BTC_USDT"
+            symbol = "BTC_USDT"
         )
     ):
         """
@@ -820,7 +814,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict(
-            symbol="BTC_USDT"
+            symbol = "BTC_USDT"
         )
     ):
         """
