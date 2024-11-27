@@ -4,22 +4,42 @@ import pandas
 from typing import Optional, Tuple, Literal, Union, List
 import asyncio
 import time
+from enum import IntFlag
 
 # CUSTOM LIBRARY
 from pipeline.data_pipeline import DataPipeline
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
 
+# BUY
+# SELL
+# HOLD
+
+class TradeSignal(IntFlag):
+    BUY = 1 # 001
+    SELL = 2 # 010
+    HOLD = 4 # 100
+
+
 class StrategyHandler:
     def __init__(
             self,
             pipeline: DataPipeline,
         ) -> None:
+        # data pipeline to get the ema, sma data, for now.
         self.pipeline: DataPipeline = pipeline
+        
+        # threads pool
         self.threads: List[threading.Thead] = []
+        
+        # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
 
+        # Data buffer for each data.
+
+        # initialize the threads
         self._init_threads()
+        # start each thread, which is in the threads pool.
         self._start_threads()
 
         return
@@ -92,7 +112,13 @@ class StrategyHandler:
         )
         logger.info(f"{__name__}: Thread for test data getter has been set up!")
 
-        self.threads.extend([thread1, thread2])
+        self.threads.extend(
+            [
+                thread1, 
+                thread2,
+                # thread3,
+            ]
+        )
         return
     
     def _start_threads(self):
@@ -117,32 +143,32 @@ class StrategyHandler:
     
     """
     ######################################################################################################################
-    #                                                   Functionality                                                    #
+    #                                                      Threads                                                       #
     ######################################################################################################################
     """
     def threads_sma(self) -> Tuple[float]:
         while True:
             data = self.get_smas()
             if (data):
-                pass
+                sma = data
                 # do something with data
-            time.sleep(1.5)
+            time.sleep(1)
         return
     
     def threads_ema(self) -> Tuple[float]:
         while True:
             data = self.get_emas()
             if (data):
-                pass
+                ema = data
                 # do something with data
-            time.sleep(1.5)
+            time.sleep(1)
         return
     
     def threads_test(self) -> Tuple[float]  :
         while True:
             data = self.get_test_data()
             if (data):
-                pass
+                test_data = data
                 # do something with data
-            time.sleep(1.5)
+            time.sleep(1)
         return

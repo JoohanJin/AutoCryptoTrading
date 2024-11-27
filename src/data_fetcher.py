@@ -269,6 +269,8 @@ class DataCollectorAndProcessor:
             30, # 1 min
             150, # 5 min
             300, # 10 min
+            # 600, # 20 min
+            # 900, # 30 min
         ),
     ) -> Optional[Tuple[Tuple[float], Tuple[float]]]:
         """
