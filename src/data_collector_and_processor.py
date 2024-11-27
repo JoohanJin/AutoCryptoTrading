@@ -356,3 +356,11 @@ class DataCollectorAndProcessor:
             type = 'sma',
             data = data
         )
+    
+
+    """
+    Possible Strategy:
+    - Bullish/Bearish Cross of EMAs and SMAs
+        - 
+    
+    """
