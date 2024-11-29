@@ -3,7 +3,7 @@ import time
 import sys
 
 # CUSTOM LIBRARY
-from data_fetcher import DataCollectorAndProcessor
+from src.data_collector_and_processor import DataCollectorAndProcessor
 from strategy_manager import StrategyHandler
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
@@ -32,7 +32,7 @@ class SystemManager:
             return
 
 def main():
-    main: SystemManager = SystemManager()
+    main_system_manager: SystemManager = SystemManager()
 
 """
 ######################################################################################################################
