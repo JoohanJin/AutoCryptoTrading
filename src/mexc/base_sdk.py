@@ -9,7 +9,7 @@ from typing import Union, Literal
 '''
 Class for Base SDK for MEXC APIs including SpotV3, Spot V2, Futures V1 and so on
 '''
-class _MexCBase():
+class _MexCBase:
     '''
     Function Name: __init__
 
@@ -71,12 +71,8 @@ class FutureBase(_MexCBase):
             # proxies=proxies,
         )
 
-        self.session.headers.update(
-            {
-            "Content-Type": "application/json",
-            "ApiKey": self.api_key
-            }
-        )
+        self.session.headers['ApiKey'] = self.api_key
+        return
     
 
     def generate_signature_get_del(self, timestamp: str, **kwargs) -> str:

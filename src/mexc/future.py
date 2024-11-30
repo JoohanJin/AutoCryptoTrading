@@ -7,7 +7,7 @@ from typing import Optional, Literal, Union, Callable
 try:
     from mexc.base_sdk import FutureBase
     from mexc.websocket_base import _FutureWebSocket
-    from set_logger import logger, log_decorator
+    from logger.set_logger import logger, log_decorator
 except Exception as e:
     print(f"Error occured: {e}")
     from .base_sdk import FutureBase
@@ -740,16 +740,13 @@ class FutureMarket(FutureBase):
         )
     
 
-class WebSocket(_FutureWebSocket):
+class FutureWebSocket(_FutureWebSocket):
     def __init__(
         ws_name: Optional[str] = None,
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ping_interval: Optional[int] = 20, # as it is recommended
         ping_timeout: Optional[int] = 10,
-        retries: Optional[bool] = True,
-        restart_on_error: Optional[bool] = True,
-        log_or_not: Optional[bool] = True,
         conn_timeout: Optional[int] = 30,
     ) -> None:
         
@@ -759,9 +756,6 @@ class WebSocket(_FutureWebSocket):
             secret_key = secret_key,
             ping_interval = ping_interval,
             ping_timeout = ping_timeout,
-            retries = retries,
-            restart_on_error= restart_on_error,
-            log_or_not = log_or_not,
             conn_timeout = conn_timeout,
         )
 
@@ -791,8 +785,8 @@ class WebSocket(_FutureWebSocket):
         method = "sub.tickers"
         self._method_subscribe(
             method = method,
-            callback= callback,
-            param={}
+            callback = callback,
+            param = {}
         )
         return
     
@@ -800,7 +794,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict(
-            symbol="BTC_USDT"
+            symbol = "BTC_USDT"
         )
     ):
         """
@@ -820,7 +814,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict(
-            symbol="BTC_USDT"
+            symbol = "BTC_USDT"
         )
     ):
         """
@@ -961,7 +955,7 @@ class WebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
         '''
             # place an order on the MexC broker
             # currently on the maintanence

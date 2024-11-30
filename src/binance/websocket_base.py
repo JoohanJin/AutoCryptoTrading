@@ -10,7 +10,7 @@ import hashlib
 import threading
 
 # Customized Library
-from set_logger import logger
+from logger.set_logger import logger
 
 
 class __BasicWebSocketManager:

@@ -3,7 +3,7 @@ from queue import Full, Queue, Empty
 from typing import Union, Optional, Literal, Tuple
 
 # CUSTOM LIBRARY
-from src.set_logger import logger
+from logger.set_logger import logger
 
 
 
@@ -26,7 +26,7 @@ class DataPipeline:
 
         # return None
         """
-        # data buffer
+        # data buffer, can be added in the future.
         self.queues: Queue[Tuple[float]] = {
             "test": Queue(
                 maxsize=100,

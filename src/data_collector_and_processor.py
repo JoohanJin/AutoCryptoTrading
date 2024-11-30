@@ -9,8 +9,8 @@ from queue import Queue
 import sys
 
 # Custom Module
-from mexc.future import WebSocket
-from set_logger import logger, log_decorator
+from mexc.future import FutureWebSocket
+from logger.set_logger import logger, log_decorator
 from data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from pipeline.data_pipeline import DataPipeline
@@ -41,10 +41,10 @@ class DataCollectorAndProcessor:
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
         # no need to provide api_key and secret_key, i.e., no authentication on API side
-        self.ws: WebSocket = WebSocket()
+        self.ws: FutureWebSocket = FutureWebSocket()
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver: DataSaver = DataSaver()
-        self._df_size_limit: int = 4_000_000
+        self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
         self.pipeline: DataPipeline = pipeline
 
@@ -54,11 +54,12 @@ class DataCollectorAndProcessor:
         # used as  buffer for data fetching from the MEXC Endpoint
         self.price_fetch_buffer = Queue()
 
+        # subsribe to the ticker data from the MexC data
         self.ws.ticker(
             callback=self._put_ticker_data
         )
 
-        # mutex lock
+        # lock for accessing Price DataFrame.
         self.df_lock = threading.Lock()
 
         # default dataframe with the given columns
@@ -106,21 +107,21 @@ class DataCollectorAndProcessor:
             target = self._price_data_fetch,
             daemon = True
         )
-        logger.info("Thread for price fetch has been started")
+        logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
         thread_calculate_sma: threading.Thread = threading.Thread(
             name = "calculate_sma_thread",
             target = self._calculate_moving_averages,
             daemon = True,
         )
-        logger.info("Thread for calculating sma has been started")
+        logger.info(f"{__name__}: Thread for calculating sma has been set up!")
 
         thread_memory_save: threading.Thread = threading.Thread(
             name= "resize_df",
             target=self._resize_df,
             daemon=True
         )
-        logger.info("Thread for DataFrame size limit has been started")
+        logger.info(f"{__name__}: Thread for DataFrame size limit has been set up!")
 
         self.threads.extend([thread_price_fetch, thread_calculate_sma, thread_memory_save])
         return
@@ -248,7 +249,7 @@ class DataCollectorAndProcessor:
 
             if data:
                 sma_values = data[0]
-                ema_values = data[0]
+                ema_values = data[1]
 
             # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
                 if (sma_values): self.__push_sma_data(sma_values)
@@ -262,7 +263,15 @@ class DataCollectorAndProcessor:
     
     def __calculate_ema_sma(
         self,
-        periods: Tuple[int] = (5, 10, 15, 20),
+        periods: Tuple[int] = (
+            5, # 10 sec
+            15, # 30 sec
+            30, # 1 min
+            150, # 5 min
+            300, # 10 min
+            # 600, # 20 min
+            # 900, # 30 min
+        ),
     ) -> Optional[Tuple[Tuple[float], Tuple[float]]]:
         """
         Calculate the simple moving average (SMA) of the lastPrice
@@ -277,7 +286,7 @@ class DataCollectorAndProcessor:
 
         try:
             if (self.priceData.shape[0] < periods[-1]):
-                logger.warning(f"MA period ({self.priceData.shape[0]}) is less than maximum SMA period ({periods[-1]})")
+                # logger.warning(f"MA period ({self.priceData.shape[0]}) is less than maximum SMA period ({periods[-1]})")
                 return
 
             tmp = self.priceData[-periods[-1]:]["lastPrice"].copy()
@@ -304,17 +313,25 @@ class DataCollectorAndProcessor:
         :func: __save_data()
             : using _data_saver to move the dataframe stroing the price movement to the csv file in data
         
-        :make  use of data saver, i.e., custom class using the df.to_csv()
+        :make a use of data saver, i.e., custom class using the df.to_csv()
         """
         while True:
-            time.sleep(15 * 60)
-            if (self.priceData) and (self.priceData.shape[0] > self._df_size_limit):
+            data = None
+            try:
                 with self.df_lock:
-                    data = self.priceData.iloc[:-self._df_size_limit]
-                    self.priceData = self.priceData.iloc[-self._df_size_limit:]
+                    if (self.priceData.shape[0] > self._df_size_limit):
+                        data = self.priceData.iloc[:-self._df_size_limit]
+                        self.priceData = self.priceData.iloc[-self._df_size_limit:]
+                    else:
+                        logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
+            except Exception as e:
+                logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")
+
+            if (data is not None):
                 self._memory_saver.write(data)
-                logger.info(f"Data Saver has store the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                del data
+                logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+            time.sleep(149.9) # make an adjustment.
+
         return
     
     """
@@ -339,3 +356,11 @@ class DataCollectorAndProcessor:
             type = 'sma',
             data = data
         )
+    
+
+    """
+    Possible Strategy:
+    - Bullish/Bearish Cross of EMAs and SMAs
+        - 
+    
+    """
