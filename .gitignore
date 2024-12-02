@@ -23,6 +23,7 @@ market_data/
 src/__pycache__/
 src/.ipynb_checkpoints/
 .ipynb_checkpoints
+src/pipeline/__pycache__/
 
 # logging
 src/mexc/*.log*

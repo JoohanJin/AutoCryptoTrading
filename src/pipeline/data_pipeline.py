@@ -6,7 +6,6 @@ from typing import Union, Optional, Literal, Tuple
 from logger.set_logger import logger
 
 
-
 class DataPipeline:
     def __init__(
         self,
@@ -115,6 +114,7 @@ class DataPipeline:
                 # "sma"
                 # "ema"
                 # "?"
+                # More queue with keywords will be added.
 
         # param data
             # Tuple[float]
