@@ -126,13 +126,16 @@ class DataCollectorAndProcessor:
         self.threads.extend([thread_price_fetch, thread_calculate_sma, thread_memory_save])
         return
 
-    def _start_threads(self):
+    def _start_threads(self) -> None:
         """
-        # function name: _start_threads()
+        # func _start_threads():
             # start the threads in the thread pool of the class.
             # Will raise issues if there is  problem with the triggering of the thread.
         
-        # param self:
+        # param self: dataCollectorAndProcessor
+            # class object
+
+        # return None
         """
         for thread in self.threads:
             try:
@@ -156,14 +159,26 @@ class DataCollectorAndProcessor:
         msg: dict,
     ) -> None:
         """
-        Put price data of the crypto into the buffer.
+        # func _put_ticker_data():
+            # Put price data of the crypto into the buffer.
 
-        :param:
-            :msg: response from the websockt client, put it into the buffer.
+        # param self: DataCollectorAndProcessor
+            # class object
+        # param msg: dict
+            # message from the MexC API, json format, but parsed as python dict.
 
-        :returns: None in python, it put the value into the buffer and return nothing.
+        # return None
         """
-        self.price_fetch_buffer.put(msg.get('data'), block=False, timeout=None)
+        try:
+            self.price_fetch_buffer.put(
+                msg.get('data'),
+                block = False,
+                timeout = None,
+            )
+        except Exception as e:
+            logger.critical(
+                f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}"
+            )
         return
     
     """
@@ -197,12 +212,6 @@ class DataCollectorAndProcessor:
                     with self.df_lock:
                         self.priceData=pd.concat([self.priceData, tmp], axis=0)
 
-                    # Batch processing implementation
-                    # if (len(data_buffer) >= buffer_size):
-                    #     self.__append_df(
-                    #         data_buffer=data_buffer,
-                    #         timestamp_buffer=timestamp_buffer,
-                    #     )
             except Exception as e:
                 logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
@@ -356,11 +365,3 @@ class DataCollectorAndProcessor:
             type = 'sma',
             data = data
         )
-    
-
-    """
-    Possible Strategy:
-    - Bullish/Bearish Cross of EMAs and SMAs
-        - 
-    
-    """
