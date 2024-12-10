@@ -7,8 +7,8 @@ from queue import Queue
 
 # CUSTOM LIBRARY
 from pipeline.data_pipeline import DataPipeline
-from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
+from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 
 
 class TradeSignal(IntFlag):
@@ -21,16 +21,19 @@ class StrategyHandler:
     def __init__(
             self,
             pipeline: DataPipeline,
+            custom_telegram_bot: CustomTelegramBot,
         ) -> None:
         """
-        # func __init__:
+        # func __init__():
             # Initialize the Strategy Handler.
             # It gets the pipeline as a parameter for the indicator fetching.
             # It initializes the telegram bot for the notification.
             # It initializes the threads for the indicator fetching.
 
         # param self: StrategyHandler
+            # class object
         # param pipeline: DataPipeline
+            # Data pipeline for the indicator fetching.
         
         # return None
         """
@@ -38,16 +41,18 @@ class StrategyHandler:
         self.pipeline: DataPipeline = pipeline
         
         # threads pool
-        self.threads: List[threading.Thead] = []
+        self.threads: List[threading.Thead] = list()
         
         # telegram bot manager to send the notification.
-        self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
+        self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
 
-        # Data buffer for all of the data.
+        # Initialize data-buffer for all of the data.
+        # TODO: Need to figure out how to make a signal.
         self.__data_buffer: Queue = Queue(maxsize=100)
 
         # initialize the threads
         self._init_threads()
+
         # start each thread, which is in the threads pool.
         self._start_threads()
 
