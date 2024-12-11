@@ -3,6 +3,7 @@ import time
 import sys
 
 # CUSTOM LIBRARY
+from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from src.data_collector_and_processor import DataCollectorAndProcessor
 from strategy_manager import StrategyHandler
 from pipeline.data_pipeline import DataPipeline
@@ -12,13 +13,28 @@ class SystemManager:
     def __init__(
             self,
         ):
+        """
+        # func __init__():
+            # Initialize the System Manager.
+
+        # param self: SystemManager
+            # class object
+
+        # return None
+        """
         pipeline: DataPipeline = DataPipeline()
-        d: DataCollectorAndProcessor = DataCollectorAndProcessor(
+
+        telegram_bot: CustomTelegramBot = CustomTelegramBot()
+
+        data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
             pipeline = pipeline
         )
-        s: StrategyHandler = StrategyHandler(
-            pipeline = pipeline
+
+        strategy_handler: StrategyHandler = StrategyHandler(
+            pipeline = pipeline,
+            custom_telegram_bot = telegram_bot,
         )
+        
 
         try:
             while True:

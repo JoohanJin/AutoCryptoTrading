@@ -7,11 +7,12 @@ from queue import Queue
 
 # CUSTOM LIBRARY
 from pipeline.data_pipeline import DataPipeline
-from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
+from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 
 
 class TradeSignal(IntFlag):
+    # state management using the bit manipulation.
     BUY = 1 # 001
     SELL = 2 # 010
     HOLD = 4 # 100
@@ -21,16 +22,19 @@ class StrategyHandler:
     def __init__(
             self,
             pipeline: DataPipeline,
+            custom_telegram_bot: CustomTelegramBot,
         ) -> None:
         """
-        # func __init__:
+        # func __init__():
             # Initialize the Strategy Handler.
             # It gets the pipeline as a parameter for the indicator fetching.
             # It initializes the telegram bot for the notification.
             # It initializes the threads for the indicator fetching.
 
         # param self: StrategyHandler
+            # class object
         # param pipeline: DataPipeline
+            # Data pipeline for the indicator fetching.
         
         # return None
         """
@@ -38,20 +42,48 @@ class StrategyHandler:
         self.pipeline: DataPipeline = pipeline
         
         # threads pool
-        self.threads: List[threading.Thead] = []
+        self.threads: List[threading.Thead] = list()
         
         # telegram bot manager to send the notification.
-        self.__telegram_bot: CustomTelegramBot = CustomTelegramBot()
+        self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
 
-        # Data buffer for all of the data.
-        self.__data_buffer: Queue = Queue(maxsize=100)
+        # Initialize data-buffer for all of the data.
+        # Mutex Lock
+        self.indicators_lock: threading.Lock = threading.Lock()
+
+        # Shared memory
+        self.indicators: dict = {
+            "sma": None, # Latest SMA data
+            "ema": None, # latest EMA data
+        }
+
+        # TODO: Need to figure out how to make a signal.
 
         # initialize the threads
         self._init_threads()
+
         # start each thread, which is in the threads pool.
         self._start_threads()
 
         return
+
+    """
+    ######################################################################################################################
+    #                                      Read Data from the Data Pipeline                                              #
+    ######################################################################################################################
+    """
+    @staticmethod
+    def generate_timestamp() -> int:
+        """
+        # func generate_timestamp(): static method
+            # Generate the timestamp using the current time, in the form of epoch in ms.
+
+        # param None
+
+        # return int
+            # the timestam in the form of epoch in ms.
+        """
+        return int(time.time() * 1000)
 
     """
     ######################################################################################################################
@@ -145,7 +177,7 @@ class StrategyHandler:
     
     """
     ######################################################################################################################
-    #                                               Threading Management                                                 #
+    #                                                 Threads Management                                                 #
     ######################################################################################################################
     """
     def _init_threads(self):
@@ -180,6 +212,7 @@ class StrategyHandler:
         )
         logger.info(f"{__name__}: Thread for test_data_getter has been set up!")
 
+        # add threads into the Threads pool.
         self.threads.extend(
             [
                 thread1, 
@@ -202,6 +235,7 @@ class StrategyHandler:
         """
         for thread in self.threads:
             try:
+                # start the thread.
                 thread.start()
                 logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
@@ -214,7 +248,7 @@ class StrategyHandler:
     
     """
     ######################################################################################################################
-    #                                                      Threads                                                       #
+    #                                            Functions for Threads                                                   #
     ######################################################################################################################
     """
     def threads_sma(self) -> bool:
@@ -232,9 +266,9 @@ class StrategyHandler:
         while True:
             data = self.get_smas()
             if (data):
-                sma = data
-                # do something with data
-            time.sleep(1)
+                # update to the shared structure to use them for analysis.
+                with self.indicators_lock:
+                    self.indicators["sma"] = data
         return
     
     def threads_ema(self) -> bool:
@@ -252,9 +286,9 @@ class StrategyHandler:
         while True:
             data = self.get_emas()
             if (data):
-                ema = data
-                # do something with data
-            time.sleep(1)
+                # update to the shared structure to use them for analysis.
+                with self.indicators_lock:
+                    self.indicators["ema"] = data
         return
     
     def threads_test(self) -> bool:
@@ -264,13 +298,12 @@ class StrategyHandler:
         # param self: StrategyHandler
             # class object
 
-        # return True if the update is successful.
-        # return False if the update is unsuccessful.
+        # return True if the update is successful. - TODO
+        # return False if the update is unsuccessful. - TODO
         """
         while True:
             data = self.get_test_data()
             if (data):
                 test_data = data
-                # do something with data
-            time.sleep(1)
+                # update this to the common memory.
         return
