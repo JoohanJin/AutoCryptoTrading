@@ -359,7 +359,7 @@ class DataCollectorAndProcessor:
     """
     def _resize_df(self) -> None:
         """
-        # func: __resize_df()
+        # func __resize_df():
             # using _data_saver to move the dataframe storing the price movement to the csv file in data
         
         # make a use of data saver, i.e., custom class using the df.to_csv()
