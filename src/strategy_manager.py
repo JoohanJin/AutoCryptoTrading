@@ -12,6 +12,7 @@ from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 
 
 class TradeSignal(IntFlag):
+    # state management using the bit manipulation.
     BUY = 1 # 001
     SELL = 2 # 010
     HOLD = 4 # 100
@@ -297,8 +298,8 @@ class StrategyHandler:
         # param self: StrategyHandler
             # class object
 
-        # return True if the update is successful. (TODO)
-        # return False if the update is unsuccessful. (TODO)
+        # return True if the update is successful. - TODO
+        # return False if the update is unsuccessful. - TODO
         """
         while True:
             data = self.get_test_data()
