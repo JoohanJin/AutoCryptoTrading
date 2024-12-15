@@ -190,34 +190,25 @@ class StrategyHandler:
 
         # return None
         """
-        thread1: threading.Thread = threading.Thread(
+        sma_thread: threading.Thread = threading.Thread(
             name = "sma_data_getter",
             target = self.threads_sma,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
 
-        thread2: threading.Thread = threading.Thread(
+        ema_thread: threading.Thread = threading.Thread(
             name = "ema_data_getter",
             target = self.threads_ema,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
 
-        # but no need touse it right now.
-        thread3: threading.Thread = threading.Thread(
-            name = "test_data_getter",
-            target = self.threads_test,
-            daemon = True,
-        )
-        logger.info(f"{__name__}: Thread for test_data_getter has been set up!")
-
         # add threads into the Threads pool.
         self.threads.extend(
             [
-                thread1, 
-                thread2,
-                # thread3,
+                sma_thread, 
+                ema_thread,
             ]
         )
         return
@@ -289,21 +280,4 @@ class StrategyHandler:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
                     self.indicators["ema"] = data
-        return
-    
-    def threads_test(self) -> bool:
-        """
-        # func threads_test():
-
-        # param self: StrategyHandler
-            # class object
-
-        # return True if the update is successful. - TODO
-        # return False if the update is unsuccessful. - TODO
-        """
-        while True:
-            data = self.get_test_data()
-            if (data):
-                test_data = data
-                # update this to the common memory.
         return
