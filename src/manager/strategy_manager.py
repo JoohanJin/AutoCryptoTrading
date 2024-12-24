@@ -7,8 +7,8 @@ from queue import Queue
 
 # CUSTOM LIBRARY
 from pipeline.data_pipeline import DataPipeline
-from logger.set_logger import logger
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
+from logger.set_logger import logger
 
 
 class TradeSignal(IntFlag):

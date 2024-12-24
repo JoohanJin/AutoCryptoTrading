@@ -4,8 +4,8 @@ import sys
 
 # CUSTOM LIBRARY
 from custom_telegram.telegram_bot_class import CustomTelegramBot
-from data_collector_and_processor import DataCollectorAndProcessor
-from strategy_manager import StrategyHandler
+from manager.data_collector_and_processor import DataCollectorAndProcessor
+from manager.strategy_manager import StrategyHandler
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
 
@@ -47,8 +47,9 @@ class SystemManager:
             sys.exit(0)
             return
 
-def main():
+def main(): # to test run the system manager.
     main_system_manager: SystemManager = SystemManager()
+
 
 """
 ######################################################################################################################
