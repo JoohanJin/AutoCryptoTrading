@@ -1,6 +1,6 @@
 # STANDARD LIBRARY
 import threading
-from typing import Optional, Tuple, Literal, Union, List
+from typing import Dict, Optional, Tuple, Literal, Union, List
 import time
 from enum import IntFlag
 from queue import Queue
@@ -90,7 +90,7 @@ class StrategyHandler:
     #                                      Read Data from the Data Pipeline                                              #
     ######################################################################################################################
     """
-    def get_test_data(self) -> Optional[Tuple[float]]:
+    def get_test_data(self) -> Optional[Dict[int, float]]:
         """
         # func get_test_data:
             # Get the test data from the data pipeline.
@@ -107,7 +107,7 @@ class StrategyHandler:
             timeout = None,
         )
 
-    def get_smas(self) -> Optional[Tuple[float]]:
+    def get_smas(self) -> Optional[Dict[int, float]]:
         """
         # func get_smas:
             # Get the sma data from the data pipeline.
@@ -123,7 +123,7 @@ class StrategyHandler:
             timeout = None,
         )
     
-    def get_emas(self) -> Optional[Tuple[float]]:
+    def get_emas(self) -> Optional[Dict[int, float]]:
         """
         # func get_emas:
             # Get the ema data from the data pipeline.

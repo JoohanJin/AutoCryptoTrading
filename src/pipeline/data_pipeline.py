@@ -1,6 +1,6 @@
 # Standard Library
 from queue import Full, Queue, Empty
-from typing import Union, Optional, Literal, Tuple
+from typing import Dict, Union, Optional, Literal, Tuple
 
 # CUSTOM LIBRARY
 from logger.set_logger import logger
@@ -26,7 +26,7 @@ class DataPipeline:
         # return None
         """
         # data buffer, can be added in the future.
-        self.queues: Queue[Tuple[float]] = {
+        self.queues: Queue[Tuple[Dict[int, float]]] = {
             "test": Queue(
                 maxsize=100,
             ),
@@ -51,7 +51,7 @@ class DataPipeline:
             Literal["ema"],
             Literal["?"],
         ],
-        data: Tuple[float],
+        data: Tuple[Dict[int, float]],
     ) -> bool:
         """
         # func push_data:
@@ -101,7 +101,7 @@ class DataPipeline:
         ],
         block: bool = False,
         timeout: int | None = None
-    ) -> Optional[Tuple[float]]:
+    ) -> Optional[Dict[int, float]]:
         """
         # func pop_data
             # get the data from the 
