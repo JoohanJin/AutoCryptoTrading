@@ -1,16 +1,14 @@
 # Standard Module
 import time
-import asyncio
-from typing import Literal, Optional, Union, Tuple
+from typing import Dict, Optional, Tuple
 import pandas as pd 
 import numpy as np
 import threading
 from queue import Queue
-import sys
 
 # Custom Module
 from mexc.future import FutureWebSocket
-from logger.set_logger import logger, log_decorator # type: ignore
+from logger.set_logger import logger
 from manager.data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from pipeline.data_pipeline import DataPipeline
@@ -65,7 +63,6 @@ class DataCollectorAndProcessor:
 
         # default dataframe with the given columns
         self.priceData: pd.DataFrmae = pd.DataFrame(
-            data = [],
             columns = [
                 'symbol', 'lastPrice', 'riseFallRate', 'fairPrice', 'indexPrice',
                 'volume24', 'amount24', 'maxBidPrice', 'minAskPrice', 'lower24Price', 
@@ -286,7 +283,7 @@ class DataCollectorAndProcessor:
             # when the data is available, push the data to the data pipeline.
         """
         while True:
-            data: Tuple[Tuple[float]] | None = self.__calculate_ema_sma()
+            data: Tuple[Dict[int, float], Dict[int, float]] | None = self.__calculate_ema_sma()
 
             if data:
                 sma_values = data[0]
@@ -307,10 +304,10 @@ class DataCollectorAndProcessor:
             30, # 1 min
             150, # 5 min
             300, # 10 min
-            # 600, # 20 min
-            # 900, # 30 min
+            600, # 20 min
+            900, # 30 min
         ),
-    ) -> Optional[Tuple[Tuple[float], Tuple[float]]]:
+    ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
         """
         # func __calculate_ema_sma():
             # It calculate the simple moving average (SMA) of the lastPrice
@@ -326,13 +323,20 @@ class DataCollectorAndProcessor:
 
         try:
             with self.df_lock:
-                if (self.priceData.shape[0] < periods[-1]):
+                if (self.priceData.shape[0] == 0):
                     return None
 
                 tmpDataframe = self.priceData[-periods[-1]:]["lastPrice"].copy()
 
-            smas = tuple(np.mean(tmpDataframe[-period:]) for period in periods)
-            emas = tuple(pd.Series(tmpDataframe).ewm(span=period, adjust = False).mean().iloc[-1] for period in periods)
+            smas: Dict[int, float] = dict()
+            emas: Dict[int, float] = dict()
+
+            for period in periods:
+                if tmpDataframe.shape[0] >= period:
+                    smas[period * 2] = np.mean(tmpDataframe[-period:])
+                    emas[period * 2] = pd.Series(tmpDataframe).ewm(span=period, adjust = False).mean().iloc[-1]
+                else:
+                    break
         
             return smas, emas
 
@@ -398,7 +402,7 @@ class DataCollectorAndProcessor:
     """
     def __push_ema_data(
         self,
-        data: Tuple[float],
+        data: Dict[int, float],
     ) -> bool:
         return self.pipeline.push_data(
             type = 'ema',
@@ -407,7 +411,7 @@ class DataCollectorAndProcessor:
     
     def __push_sma_data(
         self,
-        data: Tuple[float],
+        data: Tuple[Dict[int, float]],
     ) -> bool:
         return self.pipeline.push_data(
             type = 'sma',
