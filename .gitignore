@@ -1,7 +1,10 @@
+# ignore auto-generated files
+.vscode/
+
 # ignore json
 src/mexc/*.json
 src/binance/*.json
-
+*.json
 
 # virtual environment directory
 gazua/
@@ -16,8 +19,7 @@ market_data/
 # ignore archieve data
 *archieve*
 
-# ignore mexc test files
-
+*__pycache__*
 
 # auto-generated directories
 src/__pycache__/
@@ -33,3 +35,4 @@ src/binance/__pycache__
 src/*log
 src/telegram/__pycache__
 src/*test*
+src/sdk/__pycache__/
