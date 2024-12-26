@@ -111,8 +111,8 @@ class DataCollectorAndProcessor:
         logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
         thread_calculate_sma: threading.Thread = threading.Thread(
-            name = "calculate_sma_thread",
-            target = self._calculate_moving_averages,
+            name = "provide_moving_average_thread",
+            target = self._push_moving_averages,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for calculating sma has been set up!")
@@ -273,30 +273,32 @@ class DataCollectorAndProcessor:
     #                                  Calculate the SMAs Using Data From the Buffer                                     #
     ######################################################################################################################
     """
-    def _calculate_moving_averages(self) -> None:
+    def _push_moving_averages(self) -> None:
         """
-        # func _calculate_moving_averages():
-            # call the function __calculate_ema_sma() to calculate the EMA and SMA
+        # func _push_moving_averages():
+            # call the function __calculate_ema_sma_price() to calculate the EMA and SMA
             # get tuple of data where:
                 # data[0] = SMA values
                 # data[1] = EMA values
             # when the data is available, push the data to the data pipeline.
         """
         while True:
-            data: Tuple[Dict[int, float], Dict[int, float]] | None = self.__calculate_ema_sma()
+            data: Tuple[Dict[int, float], Dict[int, float]] | None = self.__calculate_ema_sma_price()
 
             if data:
-                sma_values = data[0]
-                ema_values = data[1]
+                sma_values: Dict[int, float] = data[0]
+                ema_values: Dict[int, float] = data[1]
+                price: Dict[str, float] = data[2]
 
             # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
                 if (sma_values): self.__push_sma_data(sma_values)
                 if (ema_values): self.__push_ema_data(ema_values)
+                if (price): self.__push_price_data(price)
 
             time.sleep(2)
         return
     
-    def __calculate_ema_sma(
+    def __calculate_ema_sma_price(
         self,
         periods: Tuple[int] = (
             5, # 10 sec
@@ -309,7 +311,7 @@ class DataCollectorAndProcessor:
         ),
     ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
         """
-        # func __calculate_ema_sma():
+        # func __calculate_ema_sma_price():
             # It calculate the simple moving average (SMA) of the lastPrice
 
         # params self: DataCollectorAndProcessor
@@ -330,6 +332,7 @@ class DataCollectorAndProcessor:
 
             smas: Dict[int, float] = dict()
             emas: Dict[int, float] = dict()
+            prices: Dict[str, float] =  dict()
 
             # TODO: this should be fast enough, but can be optimized further.
             for period in periods:
@@ -338,21 +341,25 @@ class DataCollectorAndProcessor:
                     emas[period * 2] = pd.Series(tmpDataframe).ewm(span=period, adjust = False).mean().iloc[-1]
                 else:
                     break
-        
-            return smas, emas
+            
+            price: float = tmpDataframe.iloc[-1]
+            prices["price"] = price
+
+
+            return smas, emas, price
 
         except KeyError as e:
             # Specific error handling for KeyError, i.e., missing collumn
-            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma has raised the KeyError: {e}")
+            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the KeyError: {e}")
             return None
         
         except IndexError as e:
             # Specific error handling for IndexError, i.e., out of range and slicing of the DataFrame.
-            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma has raised the IndexError: {e}")
+            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the IndexError: {e}")
             return None
 
         except Exception as e:
-            logger.warning(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma has has raised the Unknown Exception.")
+            logger.warning(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception.")
             return None
         
 
@@ -416,5 +423,14 @@ class DataCollectorAndProcessor:
     ) -> bool:
         return self.pipeline.push_data(
             type = 'sma',
+            data = data
+        )
+    
+    def __push_price_data(
+        self,
+        data: Dict[str, float],
+    ):
+        return self.pipeline.push_data(
+            type = 'price',
             data = data
         )

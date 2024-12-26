@@ -139,6 +139,23 @@ class StrategyHandler:
             timeout = None,
         )
 
+    def get_price_data(self) -> Optional[Dict[int, float]]:
+        """
+        # func get_price_data:
+            # Get the test data from the data pipeline.
+            # It will be used for the testing phase.
+            # It will be used by the threads to get the data from the pipeline.
+
+        # param self: StrategyHandler
+        
+        # return None
+        """
+        return self.pipeline.pop_data(
+            type = "price",
+            block = True, # if there is no data, then stop the process until the data is available.
+            timeout = None,
+        )
+
     """
     ######################################################################################################################
     #                               Send the important message to the Telegram Chat Room                                 #
@@ -162,6 +179,7 @@ class StrategyHandler:
         except Exception as e:
             logger.error(f"Error sending Telegram message: {e}")
 
+    # this is not used currently
     def generate_telegram_msg(self, data) -> str:
         """
         # func generate_telegram_msg:
@@ -192,23 +210,31 @@ class StrategyHandler:
         """
         sma_thread: threading.Thread = threading.Thread(
             name = "sma_data_getter",
-            target = self.threads_sma,
+            target = self.get_sma,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
 
         ema_thread: threading.Thread = threading.Thread(
             name = "ema_data_getter",
-            target = self.threads_ema,
+            target = self.get_ema,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
+
+        price_thread: threading.Thread = threading.Thread(
+            name = "price_data_getter",
+            target = self.get_price,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
 
         # add threads into the Threads pool.
         self.threads.extend(
             [
                 sma_thread, 
                 ema_thread,
+                price_thread,
             ]
         )
         return
@@ -242,9 +268,9 @@ class StrategyHandler:
     #                                            Functions for Threads                                                   #
     ######################################################################################################################
     """
-    def threads_sma(self) -> bool:
+    def get_sma(self) -> bool:
         """
-        # func threads_sma():
+        # func get_sma():
             # get the sma data from the pipeline.
             # target function of the thread.
         
@@ -262,9 +288,9 @@ class StrategyHandler:
                     self.indicators["sma"] = data
         return
     
-    def threads_ema(self) -> bool:
+    def get_ema(self) -> bool:
         """
-        # func threads_ema():
+        # func get_ema():
             # get the ema data from the pipeline.
             # target function of the thread.
         
@@ -280,4 +306,25 @@ class StrategyHandler:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
                     self.indicators["ema"] = data
+        return
+    
+    def get_price(self) -> bool:
+        """
+        # func get_price():
+            # get the price data from the pipeline.
+            # target function of the thread.
+        
+        # param self: StrategyHandler
+            # class object
+        
+        # return True if the update is successful.
+        # return False if the update is not successful.
+        """
+        while True:
+            data = self.get_price_data()
+            if (data):
+                # update to the shared structure to use them for analysis.
+                with self.indicators_lock:
+                    self.indicators["price"] = data
+                    print(self.indicators)
         return

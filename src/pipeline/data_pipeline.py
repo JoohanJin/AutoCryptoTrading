@@ -27,7 +27,7 @@ class DataPipeline:
         """
         # data buffer, can be added in the future.
         self.queues: Queue[Tuple[Dict[int, float]]] = {
-            "test": Queue(
+            "price": Queue(
                 maxsize=100,
             ),
             "sma": Queue(
@@ -97,7 +97,7 @@ class DataPipeline:
             Literal["test"],
             Literal["sma"],
             Literal["ema"],
-            Literal["?"],
+            Literal["price"],
         ],
         block: bool = False,
         timeout: int | None = None
