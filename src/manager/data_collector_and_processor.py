@@ -331,6 +331,7 @@ class DataCollectorAndProcessor:
             smas: Dict[int, float] = dict()
             emas: Dict[int, float] = dict()
 
+            # TODO: this should be fast enough, but can be optimized further.
             for period in periods:
                 if tmpDataframe.shape[0] >= period:
                     smas[period * 2] = np.mean(tmpDataframe[-period:])
