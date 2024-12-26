@@ -22,7 +22,7 @@ class __BasicWebSocketManager:
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ws_name: Optional[str] = "BaseWebSocketManager",
-        ping_interval: Optional[int] = 10,
+        ping_interval: Optional[int] = 5,
         connection_interval: Optional[int] = 10,
         ping_timeout: Optional[int] = 10,
         conn_timeout: Optional[int] = 30,

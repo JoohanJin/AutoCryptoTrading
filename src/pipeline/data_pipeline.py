@@ -130,7 +130,7 @@ class DataPipeline:
             logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")
             return None
         except KeyError:
-            logger.warning(f"{__name__} - pop_data(): Invalid Queue Type.")
+            logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}")
             return None
         except Exception as e:
             logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}.")

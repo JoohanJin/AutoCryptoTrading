@@ -388,15 +388,17 @@ class DataCollectorAndProcessor:
                     if (self.priceData.shape[0] > self._df_size_limit):
                         data = self.priceData.iloc[:-self._df_size_limit]
                         self.priceData = self.priceData.iloc[-self._df_size_limit:]
+                    # if (self.priceData.shape[0] > 10):
+                    #     data = self.priceData.iloc[:-10]
+                    #     self.priceData = self.priceData.iloc[-10:]
                     else:
                         logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 
                 if (data is not None):
                     self._memory_saver.write(data)
                     logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                time.sleep(149.9) # make an adjustment.
+                time.sleep(150) # make an adjustment.
 
-                return None
             
             except Exception as e:
                 logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")

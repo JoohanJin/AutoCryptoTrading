@@ -69,13 +69,13 @@ class StrategyHandler:
 
     """
     ######################################################################################################################
-    #                                      Read Data from the Data Pipeline                                              #
+    #                                               Static Method                                                        #
     ######################################################################################################################
     """
     @staticmethod
     def generate_timestamp() -> int:
         """
-        # func generate_timestamp(): static method
+        # static func generate_timestamp():
             # Generate the timestamp using the current time, in the form of epoch in ms.
 
         # param None
@@ -158,7 +158,7 @@ class StrategyHandler:
 
     """
     ######################################################################################################################
-    #                               Send the important message to the Telegram Chat Room                                 #
+    #                         Send the important message to the Telegram Chat Room as a Logging                          #
     ######################################################################################################################
     """
     async def send_telegram_message(self, message: str)-> None:
@@ -271,7 +271,7 @@ class StrategyHandler:
     def get_sma(self) -> bool:
         """
         # func get_sma():
-            # get the sma data from the pipeline.
+            # get the sma data from the pipeline and put it into the shared structured.
             # target function of the thread.
         
         # param self: StrategyHandler
@@ -291,7 +291,7 @@ class StrategyHandler:
     def get_ema(self) -> bool:
         """
         # func get_ema():
-            # get the ema data from the pipeline.
+            # get the ema data from the pipeline and put it into the shared structured.
             # target function of the thread.
         
         # param self: StrategyHandler
@@ -311,7 +311,7 @@ class StrategyHandler:
     def get_price(self) -> bool:
         """
         # func get_price():
-            # get the price data from the pipeline.
+            # get the price data from the pipeline and put it into the shared structured.
             # target function of the thread.
         
         # param self: StrategyHandler
@@ -326,5 +326,4 @@ class StrategyHandler:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
                     self.indicators["price"] = data
-                    print(self.indicators)
         return
