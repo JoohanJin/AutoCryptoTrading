@@ -18,14 +18,14 @@ class CustomTelegramBot:
     def __init__(self) -> None:
         # Get the credential from the json
         # will be considered as private attributes.
-        self.__api_key, self.__channel_id = self.get_credential()
+        self.__api_key, self.__channel_id = self.__get_credential()
 
         # make the bot instance
         self._bot = Bot(self.__api_key)
 
         return
 
-    def get_credential(self) -> str:
+    def __get_credential(self) -> str:
         # funcion called when TelegramBot is initialized.
         f = open('./custom_telegram/key.json')
         data = json.load(f)
@@ -38,10 +38,11 @@ class CustomTelegramBot:
         )
         return
 
-
+"""
 ############################################################################################
 #                                     Running Code Zone                                    #
 ############################################################################################
+"""
 
 async def main():
     test = Test()
