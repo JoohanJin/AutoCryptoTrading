@@ -2,29 +2,22 @@
 import threading
 from typing import Dict, Optional, Tuple, Literal, Union, List
 import time
-from enum import IntFlag
 from queue import Queue
 
 # CUSTOM LIBRARY
 from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
+from pipeline.indicator_pipeline import IndicatorPipeline
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
-
-
-class TradeSignal(IntFlag):
-    # state management using the bit manipulation.
-    BUY = 1 # 001
-    SELL = 2 # 010
-    HOLD = 4 # 100 # Do nothing
 
 
 class StrategyHandler:
     def __init__(
             self,
-            pipeline: DataPipeline,
+            data_pipeline: DataPipeline,
+            indicator_pipeline: IndicatorPipeline,
             custom_telegram_bot: CustomTelegramBot,
-            future_market: FutureMarket, # this is for REST API, making orders and so on.
         ) -> None:
         """
         # func __init__():
@@ -41,7 +34,8 @@ class StrategyHandler:
         # return None
         """
         # data pipeline to get the indicators
-        self.pipeline: DataPipeline = pipeline
+        self.data_pipeline: DataPipeline = data_pipeline
+        self.indicator_pipeline: IndicatorPipeline = indicator_pipeline
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
@@ -100,7 +94,7 @@ class StrategyHandler:
         
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "test",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -116,7 +110,7 @@ class StrategyHandler:
 
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "sma",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -132,7 +126,7 @@ class StrategyHandler:
 
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "ema",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -149,7 +143,7 @@ class StrategyHandler:
         
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "price",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -343,3 +337,10 @@ class StrategyHandler:
     # signal reader
         # windows value, default 3000 ms (3 sec)
         # if the signal was made more than 3 seconds, then just ignore.
+
+
+    """
+    # declare a signal buffer -> thread safe one
+    # order decider will pop the data
+    # one more class just making trading decision bsed on the indicators?
+    """
