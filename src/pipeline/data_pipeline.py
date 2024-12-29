@@ -12,7 +12,7 @@ class DataPipeline:
     ) -> None:
         """
         # func __init__:
-            # Creates a dictionary of Queue objects to store different technical indicators data.
+            # Creates a Queue object of Dict to store different technical indicators data.
             # Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
         
         # queues:
@@ -27,7 +27,7 @@ class DataPipeline:
         """
         # data buffer, can be added in the future.
         self.queues: Queue[Tuple[Dict[int, float]]] = {
-            "test": Queue(
+            "price": Queue(
                 maxsize=100,
             ),
             "sma": Queue(
@@ -77,7 +77,7 @@ class DataPipeline:
         try:
             self.queues[type].put(
                 data,
-                block = True,
+                block = False,
                 timeout = 1,
             )
             return True
@@ -97,16 +97,17 @@ class DataPipeline:
             Literal["test"],
             Literal["sma"],
             Literal["ema"],
-            Literal["?"],
+            Literal["price"],
         ],
-        block: bool = False,
+        block: bool = True,
         timeout: int | None = None
     ) -> Optional[Dict[int, float]]:
         """
-        # func pop_data
-            # get the data from the 
+        # func pop_data():
+            # get the data from the queue with the given type.
         
         # param self
+            # class object
         # param type
             # will get the key value for self.queues to seletively push the data into the respective queue.
             # Enum:
@@ -120,8 +121,7 @@ class DataPipeline:
             # Tuple[float]
 
         # return bool
-            # return True if the operation is successful.
-            # return False if the operation is not successful.
+            # return data if there is a valid data.
         """
         try:
             data: Tuple[float] = self.queues[type].get(block = block, timeout = timeout)
@@ -130,7 +130,7 @@ class DataPipeline:
             logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")
             return None
         except KeyError:
-            logger.warning(f"{__name__} - pop_data(): Invalid Queue Type.")
+            logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}")
             return None
         except Exception as e:
             logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}.")

@@ -36,3 +36,4 @@ src/*log
 src/telegram/__pycache__
 src/*test*
 src/sdk/__pycache__/
+src/credentials/

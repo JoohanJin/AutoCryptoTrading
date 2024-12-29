@@ -22,14 +22,14 @@ class __BasicWebSocketManager:
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         ws_name: Optional[str] = "BaseWebSocketManager",
-        ping_interval: Optional[int] = 10,
+        ping_interval: Optional[int] = 5,
         connection_interval: Optional[int] = 10,
         ping_timeout: Optional[int] = 10,
         conn_timeout: Optional[int] = 30,
         default_callback: Optional[Callable] = None,
     ):
         """
-        # method: __init__()
+        # func __init__()
             # params:
                 # callback_function: function, general callback_function for entire response from the endpoint
                 # endpoint: MexC Websocket API endpoint
@@ -39,6 +39,7 @@ class __BasicWebSocketManager:
                 # ping_interval: WebSocketConnection ping interval, default 20 seconds
                 # ping_timeout: if there is no response for ping resposne for 10 seconds, close the websocket with the endpoint
                 # retries: retries for WebSocket Connection for error
+                    # TODO: need to implement the automatic reconnect and restart (by default)
                     # TODO: error handling not yet implemented
                 # restart_on_error: retries on error
                 # conn_timeout: WebSocket will try to connect to the endpoint for the timeout interval
@@ -79,7 +80,10 @@ class __BasicWebSocketManager:
         self.subscriptions = []
 
         # has the Websocket been authroized by the API? -> false initially
+        # if api_key and secret_key are given, then it should be authentication needed.
         self.auth = False if (self.api_key is None or self.secret_key is None) else True
+
+        return
 
     def _connect(self, url):
         """
@@ -100,8 +104,8 @@ class __BasicWebSocketManager:
             url= url,
             on_message = self.__on_message,
             on_open = self.__on_open,
-            on_close = self.__on_close,
-            on_error = self.__on_error,
+            on_close = self.__on_close, # TODO:
+            on_error = self.__on_error, # TODO: 
         )
         
         # thread for connection
@@ -263,9 +267,10 @@ class __BasicWebSocketManager:
     ):
         """
         # when there is an error
-        # Exit and raise errors or attempt to reconnect
+            # Exit and raise errors OR
+            # attempt to reconnect
         """
-        logger.error(f"Unknown Error Occurred: {exception}")
+        logger.error(f"{__name__} - WebSocket API: Unknown Error Occurred: {exception}")
         return
 
     def __on_open(
@@ -275,7 +280,7 @@ class __BasicWebSocketManager:
         """
         # when the websocket is open
         """
-        logger.info("ws has been opened")
+        logger.info(f"{__name__} - WebSocket has been opened")
         return
 
     def __on_close(
@@ -288,7 +293,9 @@ class __BasicWebSocketManager:
         # websocket close
         # logging the status code and the msg into the logger
         """
-        logger.error(f"Websocket {__name__} has been closed: status code - {status_code}, close message = {close_msg}")
+        logger.warning(f"{__name__} - the websocket has been closed. Need to reconnect")
+        # TODO: need to implement the function for reconnect.
+        exit()
         return
 
     def _ping_loop(
@@ -312,7 +319,7 @@ class __BasicWebSocketManager:
         """
         self.subscriptions.clear()
         self.callback_dictionary.clear()
-        logger.info(f"WebSocketApp, {self.ws_name} has been reset.")
+        logger.info(f"{__name__} - WebSocket {self.ws_name} has been reset.")
         return
 
     def exit(self):
@@ -327,6 +334,7 @@ class __BasicWebSocketManager:
             continue
     
 
+# MexC Future Websocket Manager
 class _FutureWebSocketManager(__BasicWebSocketManager):
     def __init__(
         self,

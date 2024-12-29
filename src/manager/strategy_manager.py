@@ -2,27 +2,22 @@
 import threading
 from typing import Dict, Optional, Tuple, Literal, Union, List
 import time
-from enum import IntFlag
 from queue import Queue
 
 # CUSTOM LIBRARY
+from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
+from pipeline.indicator_pipeline import IndicatorPipeline
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
-
-
-class TradeSignal(IntFlag):
-    # state management using the bit manipulation.
-    BUY = 1 # 001
-    SELL = 2 # 010
-    HOLD = 4 # 100
 
 
 class StrategyHandler:
     def __init__(
             self,
-            pipeline: DataPipeline,
+            data_pipeline: DataPipeline,
             custom_telegram_bot: CustomTelegramBot,
+            # indicator_pipeline: IndicatorPipeline,
         ) -> None:
         """
         # func __init__():
@@ -38,30 +33,28 @@ class StrategyHandler:
         
         # return None
         """
-        # data pipeline to get the ema, sma data, for now.
-        self.pipeline: DataPipeline = pipeline
-        
-        # threads pool
-        self.threads: List[threading.Thead] = list()
+        # data pipeline to get the indicators
+        self.data_pipeline: DataPipeline = data_pipeline
+        # self.indicator_pipeline: IndicatorPipeline = indicator_pipeline
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
 
-        # Initialize data-buffer for all of the data.
+        # Shared memory
         # Mutex Lock
         self.indicators_lock: threading.Lock = threading.Lock()
-
-        # Shared memory
         self.indicators: dict = {
             "sma": None, # Latest SMA data
             "ema": None, # latest EMA data
+            "price": None, # latest Price data
         }
 
-        # TODO: Need to figure out how to make a signal.
+        # threads pool
+        self.threads: List[threading.Thead] = list()
 
+        # TODO: separate this part as strat()
         # initialize the threads
         self._init_threads()
-
         # start each thread, which is in the threads pool.
         self._start_threads()
 
@@ -69,13 +62,13 @@ class StrategyHandler:
 
     """
     ######################################################################################################################
-    #                                      Read Data from the Data Pipeline                                              #
+    #                                               Static Method                                                        #
     ######################################################################################################################
     """
     @staticmethod
     def generate_timestamp() -> int:
         """
-        # func generate_timestamp(): static method
+        # static func generate_timestamp():
             # Generate the timestamp using the current time, in the form of epoch in ms.
 
         # param None
@@ -101,7 +94,7 @@ class StrategyHandler:
         
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "test",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -117,7 +110,7 @@ class StrategyHandler:
 
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "sma",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
@@ -133,15 +126,32 @@ class StrategyHandler:
 
         # return None
         """
-        return self.pipeline.pop_data(
+        return self.data_pipeline.pop_data(
             type = "ema",
+            block = True, # if there is no data, then stop the process until the data is available.
+            timeout = None,
+        )
+
+    def get_price_data(self) -> Optional[Dict[int, float]]:
+        """
+        # func get_price_data:
+            # Get the test data from the data pipeline.
+            # It will be used for the testing phase.
+            # It will be used by the threads to get the data from the pipeline.
+
+        # param self: StrategyHandler
+        
+        # return None
+        """
+        return self.data_pipeline.pop_data(
+            type = "price",
             block = True, # if there is no data, then stop the process until the data is available.
             timeout = None,
         )
 
     """
     ######################################################################################################################
-    #                               Send the important message to the Telegram Chat Room                                 #
+    #                         Send the important message to the Telegram Chat Room as a Logging                          #
     ######################################################################################################################
     """
     async def send_telegram_message(self, message: str)-> None:
@@ -162,6 +172,7 @@ class StrategyHandler:
         except Exception as e:
             logger.error(f"Error sending Telegram message: {e}")
 
+    # this is not used currently
     def generate_telegram_msg(self, data) -> str:
         """
         # func generate_telegram_msg:
@@ -192,23 +203,31 @@ class StrategyHandler:
         """
         sma_thread: threading.Thread = threading.Thread(
             name = "sma_data_getter",
-            target = self.threads_sma,
+            target = self.get_sma,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
 
         ema_thread: threading.Thread = threading.Thread(
             name = "ema_data_getter",
-            target = self.threads_ema,
+            target = self.get_ema,
             daemon = True,
         )
         logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
+
+        price_thread: threading.Thread = threading.Thread(
+            name = "price_data_getter",
+            target = self.get_price,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
 
         # add threads into the Threads pool.
         self.threads.extend(
             [
                 sma_thread, 
                 ema_thread,
+                price_thread,
             ]
         )
         return
@@ -228,12 +247,12 @@ class StrategyHandler:
             try:
                 # start the thread.
                 thread.start()
-                logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
+                logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
                 raise
             except Exception as e:
-                logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
+                logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise
         return
     
@@ -242,10 +261,10 @@ class StrategyHandler:
     #                                            Functions for Threads                                                   #
     ######################################################################################################################
     """
-    def threads_sma(self) -> bool:
+    def get_sma(self) -> bool:
         """
-        # func threads_sma():
-            # get the sma data from the pipeline.
+        # func get_sma():
+            # get the sma data from the pipeline and put it into the shared structured.
             # target function of the thread.
         
         # param self: StrategyHandler
@@ -262,10 +281,10 @@ class StrategyHandler:
                     self.indicators["sma"] = data
         return
     
-    def threads_ema(self) -> bool:
+    def get_ema(self) -> bool:
         """
-        # func threads_ema():
-            # get the ema data from the pipeline.
+        # func get_ema():
+            # get the ema data from the pipeline and put it into the shared structured.
             # target function of the thread.
         
         # param self: StrategyHandler
@@ -281,3 +300,47 @@ class StrategyHandler:
                 with self.indicators_lock:
                     self.indicators["ema"] = data
         return
+    
+    def get_price(self) -> bool:
+        """
+        # func get_price():
+            # get the price data from the pipeline and put it into the shared structured.
+            # target function of the thread.
+        
+        # param self: StrategyHandler
+            # class object
+        
+        # return True if the update is successful.
+        # return False if the update is not successful.
+        """
+        while True:
+            data = self.get_price_data()
+            if (data):
+                # update to the shared structure to use them for analysis.
+                with self.indicators_lock:
+                    self.indicators["price"] = data
+        return
+    
+    """
+    ######################################################################################################################
+    #                                                 Signal Generator                                                   #
+    ######################################################################################################################
+    """
+    # TODO: Need to figure out how to make a signal.
+
+    # buffer -> queue
+        # queue[Dict[float, TradeSignal]]
+        # dict will be
+        # {timestamp in ms: TradeSignal}
+        # timestamp is to indicate when the signal has been generated.
+
+    # signal reader
+        # windows value, default 3000 ms (3 sec)
+        # if the signal was made more than 3 seconds, then just ignore.
+
+
+    """
+    # declare a signal buffer -> thread safe one
+    # order decider will pop the data
+    # one more class just making trading decision bsed on the indicators?
+    """
