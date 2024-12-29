@@ -47,7 +47,7 @@ class SystemManager:
         )
 
         strategy_handler: StrategyHandler = StrategyHandler(
-            pipeline = pipeline,
+            data_pipeline = pipeline,
             custom_telegram_bot = telegram_bot,
         )
 

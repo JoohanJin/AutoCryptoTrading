@@ -16,8 +16,8 @@ class StrategyHandler:
     def __init__(
             self,
             data_pipeline: DataPipeline,
-            indicator_pipeline: IndicatorPipeline,
             custom_telegram_bot: CustomTelegramBot,
+            # indicator_pipeline: IndicatorPipeline,
         ) -> None:
         """
         # func __init__():
@@ -35,7 +35,7 @@ class StrategyHandler:
         """
         # data pipeline to get the indicators
         self.data_pipeline: DataPipeline = data_pipeline
-        self.indicator_pipeline: IndicatorPipeline = indicator_pipeline
+        # self.indicator_pipeline: IndicatorPipeline = indicator_pipeline
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
