@@ -16,7 +16,8 @@ from pipeline.data_pipeline import DataPipeline
 class DataCollectorAndProcessor:
     def __init__(
         self,
-        pipeline: DataPipeline
+        pipeline: DataPipeline,
+        websocket: FutureWebSocket,
         # provide the list of strategy as variable
         # so that it can subscribe different values at the initiation.
     ) -> None:
@@ -40,9 +41,9 @@ class DataCollectorAndProcessor:
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
         # no need to provide api_key and secret_key, i.e., no authentication on API side
-        self.ws: FutureWebSocket = FutureWebSocket()
+        self.ws: FutureWebSocket = websocket
         self._ma_period: int = 20 # set the period of moving average
-        self._memory_saver: DataSaver = DataSaver()
+        self._memory_saver: DataSaver = DataSaver() # can be here.
         self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
         self.pipeline: DataPipeline = pipeline

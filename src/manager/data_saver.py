@@ -22,10 +22,10 @@ class DataSaver:
 
             # Validate the input data
             if data is None or not isinstance(data, pd.DataFrame):
-                logger.error("Error in DataSaver.write: Provided data is not a Pandas DataFrame.")
+                logger.error(f"{__name__} - TypeError - DataSaver.write: Provided data is not a Pandas DataFrame.")
                 return
             if data.empty:
-                logger.error("Error in DataSaver.write: Provided data is empty after dropna.")
+                logger.error(f"{__name__} - No Data in DataSaver.write: Provided data is empty after dropna.")
                 return
 
             # Drop NaN values
@@ -51,17 +51,18 @@ class DataSaver:
                 )
 
         except FileNotFoundError as e:
-            logger.error(f"FileNotFoundError in DataSaver.write: {str(e)}")
+            logger.error(f"{__name__} - FileNotFoundError in DataSaver.write: {str(e)}")
         except PermissionError as e:
-            logger.error(f"PermissionError in DataSaver.write: {str(e)}")
+            logger.error(f"{__name__} - PermissionError in DataSaver.write: {str(e)}")
         except AttributeError as e:
-            logger.error(f"AttributeError in DataSaver.write: {str(e)}")
+            logger.error(f"{__name__} - AttributeError in DataSaver.write: {str(e)}")
         except OSError as e:
-            logger.error(f"OSError in DataSaver.write: {str(e)}")
+            logger.error(f"{__name__} - OSError in DataSaver.write: {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error in DataSaver.write: {str(e)}")
+            logger.error(f"{__name__} - Unexpected error in DataSaver.write: {str(e)}")
 
 
+# Test Code Run Zone
 if __name__ == "__main__":
     # Test the DataSaver class
     __test_drive = DataSaver()

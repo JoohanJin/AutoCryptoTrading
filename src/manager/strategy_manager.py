@@ -59,9 +59,10 @@ class StrategyHandler:
 
         # TODO: Need to figure out how to make a signal.
 
+
+        # TODO: separate this part as strat()
         # initialize the threads
         self._init_threads()
-
         # start each thread, which is in the threads pool.
         self._start_threads()
 

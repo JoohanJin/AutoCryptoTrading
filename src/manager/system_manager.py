@@ -5,7 +5,9 @@ import sys
 # CUSTOM LIBRARY
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor
+from manager.data_saver import DataSaver
 from manager.strategy_manager import StrategyHandler
+from mexc.future import FutureWebSocket
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
 
@@ -22,19 +24,27 @@ class SystemManager:
 
         # return None
         """
+
+        # TODO: getting credentials put it here for authentication of
+            # TelegramBot
+            # WebSocket API
+            # REST API SDK
+
+        ws: FutureWebSocket = FutureWebSocket()
         pipeline: DataPipeline = DataPipeline()
 
+        # TODO: authentication can be done here.
         telegram_bot: CustomTelegramBot = CustomTelegramBot()
 
         data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
-            pipeline = pipeline
+            pipeline = pipeline,
+            websocket = ws,
         )
 
         strategy_handler: StrategyHandler = StrategyHandler(
             pipeline = pipeline,
             custom_telegram_bot = telegram_bot,
         )
-        
 
         try:
             while True:
