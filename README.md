@@ -82,7 +82,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+<!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
 This is a small project of mine, focused on automating the trading flow. As a personal trader and a Computer Engineering student who is not doing very well XD, it is challenging to balance both trading and studying simultaneously. Therefore, I decided to develop a program that can automate my trading activities.
 
