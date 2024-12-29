@@ -6,6 +6,7 @@ from enum import IntFlag
 from queue import Queue
 
 # CUSTOM LIBRARY
+from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
@@ -15,7 +16,7 @@ class TradeSignal(IntFlag):
     # state management using the bit manipulation.
     BUY = 1 # 001
     SELL = 2 # 010
-    HOLD = 4 # 100
+    HOLD = 4 # 100 # Do nothing
 
 
 class StrategyHandler:
@@ -23,6 +24,7 @@ class StrategyHandler:
             self,
             pipeline: DataPipeline,
             custom_telegram_bot: CustomTelegramBot,
+            future_market: FutureMarket, # this is for REST API, making orders and so on.
         ) -> None:
         """
         # func __init__():
@@ -38,27 +40,23 @@ class StrategyHandler:
         
         # return None
         """
-        # data pipeline to get the ema, sma data, for now.
+        # data pipeline to get the indicators
         self.pipeline: DataPipeline = pipeline
-        
-        # threads pool
-        self.threads: List[threading.Thead] = list()
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
 
-        # Initialize data-buffer for all of the data.
+        # Shared memory
         # Mutex Lock
         self.indicators_lock: threading.Lock = threading.Lock()
-
-        # Shared memory
         self.indicators: dict = {
             "sma": None, # Latest SMA data
             "ema": None, # latest EMA data
+            "price": None, # latest Price data
         }
 
-        # TODO: Need to figure out how to make a signal.
-
+        # threads pool
+        self.threads: List[threading.Thead] = list()
 
         # TODO: separate this part as strat()
         # initialize the threads
@@ -255,12 +253,12 @@ class StrategyHandler:
             try:
                 # start the thread.
                 thread.start()
-                logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
+                logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
                 raise
             except Exception as e:
-                logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
+                logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise
         return
     
@@ -328,3 +326,20 @@ class StrategyHandler:
                 with self.indicators_lock:
                     self.indicators["price"] = data
         return
+    
+    """
+    ######################################################################################################################
+    #                                                 Signal Generator                                                   #
+    ######################################################################################################################
+    """
+    # TODO: Need to figure out how to make a signal.
+
+    # buffer -> queue
+        # queue[Dict[float, TradeSignal]]
+        # dict will be
+        # {timestamp in ms: TradeSignal}
+        # timestamp is to indicate when the signal has been generated.
+
+    # signal reader
+        # windows value, default 3000 ms (3 sec)
+        # if the signal was made more than 3 seconds, then just ignore.
