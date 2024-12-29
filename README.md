@@ -92,6 +92,12 @@ Implemented Features So Far
 - MexC Broker connection
   - Currently, the order placement functionality is not working but will be tested in the near future
 - Data Fetching using Websocket
+  - Resizing the pandas dataframe for memory management and save them in the csv file.
+- Calculate the indicators based on the price data
+  - EMA
+  - SMA
+- Data buffer to pass the indicators to strategy manager.
+- Signal buffer to pass the signal to the Order Maker.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

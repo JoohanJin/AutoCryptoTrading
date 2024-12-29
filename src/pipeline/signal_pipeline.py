@@ -6,7 +6,7 @@ from typing import Literal, Optional, Dict, Any
 from logger.set_logger import logger
 from object.signal_int import TradeSignal # TODO: Need to define this class in another class
 
-class IndicatorPipeline:
+class SignalPipeline:
     def __init__(self):
         """
         # func __init__:

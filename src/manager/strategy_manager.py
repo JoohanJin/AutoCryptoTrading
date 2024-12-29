@@ -7,7 +7,7 @@ from queue import Queue
 # CUSTOM LIBRARY
 from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
-from pipeline.indicator_pipeline import IndicatorPipeline
+from pipeline.signal_pipeline import SignalPipeline
 from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
 
@@ -17,7 +17,7 @@ class StrategyHandler:
             self,
             data_pipeline: DataPipeline,
             custom_telegram_bot: CustomTelegramBot,
-            # indicator_pipeline: IndicatorPipeline,
+            # signal_pipeline: SignalPipeline,
         ) -> None:
         """
         # func __init__():
