@@ -393,7 +393,7 @@ class DataCollectorAndProcessor:
                     #     data = self.priceData.iloc[:-10]
                     #     self.priceData = self.priceData.iloc[-10:]
                     else:
-                        logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
+                        logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 
                 if (data is not None):
                     self._memory_saver.write(data)

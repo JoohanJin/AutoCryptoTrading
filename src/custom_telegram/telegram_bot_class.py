@@ -1,11 +1,9 @@
 from telegram import Bot
-import json
 import asyncio
 
 class Test:
     def __init__(self) -> None:
         self._telegram_bot = CustomTelegramBot()
-
         # print(CustomTelegramBot.__api_key)
 
     async def testing_message(self) -> str:
@@ -30,8 +28,6 @@ class CustomTelegramBot:
         self._bot = Bot(self.__api_key)
 
         return
-
-
 
     async def send_text(self, message: str) -> None:
         await self._bot.send_message(

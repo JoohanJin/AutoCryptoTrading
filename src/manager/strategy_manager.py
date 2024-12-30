@@ -5,10 +5,10 @@ import time
 from queue import Queue
 
 # CUSTOM LIBRARY
+from custom_telegram.telegram_bot_class import CustomTelegramBot
 from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
-from src.custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
 
 
@@ -17,7 +17,7 @@ class StrategyHandler:
             self,
             data_pipeline: DataPipeline,
             custom_telegram_bot: CustomTelegramBot,
-            # signal_pipeline: SignalPipeline,
+            # signal_pipeline: SignalPipeline, # TODO: Need to uncomment this and implement the logic to "generate a signal" and "send the signal" based on SMAs and EMAs
         ) -> None:
         """
         # func __init__():
@@ -35,7 +35,7 @@ class StrategyHandler:
         """
         # data pipeline to get the indicators
         self.data_pipeline: DataPipeline = data_pipeline
-        # self.indicator_pipeline: IndicatorPipeline = indicator_pipeline
+        # self.indicator_pipeline: IndicatorPipeline = indicator_pipeline # TODO: need to uncomment this for initialization.
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
