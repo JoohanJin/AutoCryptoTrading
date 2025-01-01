@@ -2,6 +2,7 @@ import logging
 import time
 from functools import wraps
 
+#TODO: Need to implement the dynamic logging file generator.
 # config the basic log format
 logging.basicConfig(
     filename=f"log/{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.log",

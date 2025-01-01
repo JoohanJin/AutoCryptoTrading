@@ -397,12 +397,12 @@ class DataCollectorAndProcessor:
 
                 if (data is not None):
                     self._memory_saver.write(data)
-                    logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                time.sleep(150) # make an adjustment.
+                    logger.info(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                time.sleep(300)
 
             
             except Exception as e:
-                logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")
+                logger.warning(f"{__name__} - func _resize_df(): Exception caused: {e}")
 
         return None
     
