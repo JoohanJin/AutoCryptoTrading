@@ -6,7 +6,7 @@ import sys
 # CUSTOM LIBRARY
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor
-from manager.strategy_manager import StrategyHandler
+from manager.signal_generator import SignalGenerator
 from mexc.future import FutureWebSocket
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
@@ -46,7 +46,7 @@ class SystemManager:
             websocket = ws,
         )
 
-        strategy_handler: StrategyHandler = StrategyHandler(
+        signal_generator: SignalGenerator = SignalGenerator(
             data_pipeline = pipeline,
             custom_telegram_bot = telegram_bot,
         )

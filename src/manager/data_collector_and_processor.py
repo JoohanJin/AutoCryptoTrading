@@ -11,6 +11,7 @@ from mexc.future import FutureWebSocket
 from logger.set_logger import logger
 from manager.data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
+from object.constants import MA_WRITE_PERIODS
 from pipeline.data_pipeline import DataPipeline
 
 class DataCollectorAndProcessor:
@@ -301,15 +302,7 @@ class DataCollectorAndProcessor:
     
     def __calculate_ema_sma_price(
         self,
-        periods: Tuple[int] = (
-            5, # 10 sec
-            15, # 30 sec
-            30, # 1 min
-            150, # 5 min
-            300, # 10 min
-            600, # 20 min
-            900, # 30 min
-        ),
+        periods: Tuple[int] = MA_WRITE_PERIODS,
     ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
         """
         # func __calculate_ema_sma_price():
