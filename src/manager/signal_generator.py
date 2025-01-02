@@ -10,9 +10,10 @@ from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
 from logger.set_logger import logger
+from object.signal_int import TradeSignal
 
 
-class StrategyHandler:
+class SignalGenerator:
     def __init__(
             self,
             data_pipeline: DataPipeline,
@@ -323,15 +324,35 @@ class StrategyHandler:
     
     """
     ######################################################################################################################
-    #                                                 Signal Generator                                                   #
+    #                                                Generating Signal                                                   #
     ######################################################################################################################
     """
+    def generate_golden_cross_signal(self) -> None:
+        return
+    
+    def generate_price_moving_average_signal(self) -> None:
+        return
+    
+    def generate_ema_sma_divergence_signal(self) -> None:
+        return
+    
+    def generate_price_reversal_signal(self) -> None:
+        return
+
     # TODO: Need to figure out how to make a signal.
 
     # buffer -> queue
         # queue[Dict[float, TradeSignal]]
         # dict will be
-        # {timestamp in ms: TradeSignal}
+    """
+    {
+        "signal": 
+            {
+                "timestamp": int,
+                "signal": TradeSignal,
+            }
+    }
+    """
         # timestamp is to indicate when the signal has been generated.
 
     # signal reader
@@ -340,7 +361,7 @@ class StrategyHandler:
 
 
     """
-    # declare a signal buffer -> thread safe one
+    # declare a signal buffer, i.e., signal pipeline
     # order decider will pop the data
     # one more class just making trading decision bsed on the indicators?
     """
