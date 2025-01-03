@@ -4,41 +4,54 @@ import time
 from functools import wraps
 import os
 
-#TODO: Need to implement the dynamic logging file generator.
-# config the basic log format
-# logging.basicConfig(
-#     filename=f"log/{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.log",
-#     encoding='utf-8',
-#     format="%(asctime)s - %(levelname)s - %(message)s",
-#     level=logging.INFO
-# )
-log_dir: str = "log"
-if (not os.path.exists(log_dir)):
-    os.makedirs(log_dir)
+import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
+from datetime import datetime
+import time
 
+# Log directory
+log_dir = "log"
+os.makedirs(log_dir, exist_ok=True)
+
+# Base log file name (not directly used for rotation but required by the handler)
 log_filename: str = os.path.join(log_dir, f"{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.log")
 
-# create a TimedRotatingFileHandler object based on the current date, which rotates logs at midnight
-handler = TimedRotatingFileHandler(
-    log_filename,
-    when="midnight",
-    interval=1,
+
+# Custom TimedRotatingFileHandler to use timestamps as file names
+class TimestampedRotatingFileHandler(TimedRotatingFileHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def rotation_filename(self, default_name):
+        """
+        Override the default rotation filename logic to use a timestamp.
+        """
+        # Generate a timestamped file name in the format YYYY-MM-DD_HH-MM-SS.log
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        return os.path.join(os.path.dirname(self.baseFilename), f"{timestamp}.log")
+
+
+# Create a custom handler
+handler = TimestampedRotatingFileHandler(
+    filename=log_filename,  # Base file name (required by the handler)
+    when="s",               # Rotate every second
+    interval=1,             # Interval of 1 second
+    backupCount=5,          # Keep the last 5 rotated logs
     encoding='utf-8'
 )
-handler.suffix = "%Y-%m-%d"
 
-# define the log format
+# Define log format
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 
-# create a logger
-logger = logging.getLogger("TradingBot Logger")
+# Create logger
+logger = logging.getLogger("Timestamped Logger")
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
-# Prevent duplicate handlers if the logger is imported multiple times.
+# Prevent propagation
 logger.propagate = False
-
 
 # define log_decorator for the function, future usage consideration
 def log_decorator(func):
