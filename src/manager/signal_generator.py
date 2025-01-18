@@ -363,5 +363,5 @@ class SignalGenerator:
     """
     # declare a signal buffer, i.e., signal pipeline
     # order decider will pop the data
-    # one more class just making trading decision bsed on the indicators?
+    # one more class just making trading decision based on the indicators?
     """

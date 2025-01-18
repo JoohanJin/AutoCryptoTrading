@@ -270,6 +270,7 @@ class __BasicWebSocketManager:
             # attempt to reconnect
         """
         logger.error(f"{__name__} - WebSocket API: Unknown Error Occurred: {exception}")
+        sys.exit()
         return
 
     def __on_open(
@@ -294,7 +295,7 @@ class __BasicWebSocketManager:
         """
         logger.warning(f"{__name__} - the websocket has been closed. Need to reconnect")
         # TODO: need to implement the function for reconnect.
-        exit()
+        sys.exit()
         return
 
     def _ping_loop(
