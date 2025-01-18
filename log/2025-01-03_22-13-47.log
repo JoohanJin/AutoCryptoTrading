@@ -1,0 +1,1 @@
+2025-01-03 22:13:47,066 - CRITICAL - __main__: function main() has raised an Unexpected error starting the system: [Errno 2] No such file or directory: './credentials/telegram_key.json'
