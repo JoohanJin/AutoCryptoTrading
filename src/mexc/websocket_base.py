@@ -13,7 +13,6 @@ import json
 import websocket
 
 # get the Logger
-sys.path.append('..')
 from logger.set_logger import logger, log_decorator
 
 class __BasicWebSocketManager:
@@ -143,7 +142,7 @@ class __BasicWebSocketManager:
                 return
 
 
-        logger.info(f"{__name__}: Websocket Connection to the host has been established.")
+        logger.info(f"{__name__} - func _connect: Websocket Connection to the host has been established.")
         # if api_key and secret_key are given, login to the WebSocketApi
         if self.auth:
             time.sleep(1)
@@ -271,6 +270,7 @@ class __BasicWebSocketManager:
             # attempt to reconnect
         """
         logger.error(f"{__name__} - WebSocket API: Unknown Error Occurred: {exception}")
+        sys.exit()
         return
 
     def __on_open(
@@ -295,7 +295,7 @@ class __BasicWebSocketManager:
         """
         logger.warning(f"{__name__} - the websocket has been closed. Need to reconnect")
         # TODO: need to implement the function for reconnect.
-        exit()
+        sys.exit()
         return
 
     def _ping_loop(
@@ -411,7 +411,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         elif is_sub_response():
             self._deal_with_sub_msg(msg=msg)
         elif is_error_msg():
-            logger.info(f"The error has been received from the host: {msg}")
+            logger.info(f"{__name__} - func _deal_with_response(): The error has been received from the host: {msg}")
         elif is_pong_msg():
             pass
         else:
@@ -441,21 +441,20 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         self,
         msg
     ):
+        # TODO: refactor websocket base class with try-catch block for better error handling.
         topic = msg.get("channel")
 
-        if ((msg.get("channel", "").startswith("rs.") or
-            msg.get("channel", "").startswith("push.")) 
-            and msg.get("channel", "") != "rs.error"):
-            logger.info(f"Subcription to {topic} has been establisehd")
-
+        if (
+            (
+                msg.get("channel", "").startswith("rs.") or
+                msg.get("channel", "").startswith("push.")
+            ) and
+                msg.get("channel", "") != "rs.error"
+            ):
+            logger.info(f"{__name__} - func _dealwith_sub_msg(): Subcription to {topic} has been establisehd")
         else:
-            logger.info(f"")
+            logger.info(f"{__name__} - func _dealwith_sub_msg(): Subscription to {topic} has failed to establish.")
 
-
-        if msg.get("channel", "") != "rs.error":
-            logger.info(f"Subscription to {topic} has been established")
-        elif msg.get("channel", "") == "rs.error":
-            logger.debug(f"Subscription to {topic} has failed to establish")
         return
 
     def _deal_with_normal_msg(
@@ -476,7 +475,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
     ):
         for topic in topics:
             if topic in self.callback_dictionary:
-                logger.info(f"{topic} is already subscribed")
+                logger.info(f"{__name__} - func _deal_with_normal_msg(): {topic} is already subscribed")
                 raise Exception
             
 

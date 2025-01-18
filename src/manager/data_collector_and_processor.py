@@ -11,6 +11,7 @@ from mexc.future import FutureWebSocket
 from logger.set_logger import logger
 from manager.data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
+from object.constants import MA_WRITE_PERIODS
 from pipeline.data_pipeline import DataPipeline
 
 class DataCollectorAndProcessor:
@@ -301,15 +302,7 @@ class DataCollectorAndProcessor:
     
     def __calculate_ema_sma_price(
         self,
-        periods: Tuple[int] = (
-            5, # 10 sec
-            15, # 30 sec
-            30, # 1 min
-            150, # 5 min
-            300, # 10 min
-            600, # 20 min
-            900, # 30 min
-        ),
+        periods: Tuple[int] = MA_WRITE_PERIODS,
     ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
         """
         # func __calculate_ema_sma_price():
@@ -393,16 +386,17 @@ class DataCollectorAndProcessor:
                     #     data = self.priceData.iloc[:-10]
                     #     self.priceData = self.priceData.iloc[-10:]
                     else:
-                        logger.warning(f"Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
+                        logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 
                 if (data is not None):
                     self._memory_saver.write(data)
-                    logger.info(f"Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                time.sleep(150) # make an adjustment.
+                    logger.info(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                    print(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                time.sleep(300) # let the cpu to sleep for 5 minutes
 
             
             except Exception as e:
-                logger.warning(f"{__name__}: _resize_df - Exception caused: {e}")
+                logger.warning(f"{__name__} - func _resize_df(): Exception caused: {e}")
 
         return None
     
