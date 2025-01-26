@@ -412,6 +412,18 @@ class SignalGenerator:
         return None
     
     def generate_price_moving_average_signal(self) -> None:
+        """
+        # func generate_price_moving_average_signal():
+            # function to generate the price moving average signal generator.
+        
+        # Moving Average:
+            # when the current price crosses above or below a specified MA.
+            # This signal can indicate potential buy or sell opportunities based on the direction of the price movement relative to the moving average.
+
+        # Compare the current price with the moving average.
+            # If the current price crosses above the moving average, generate a "Price Above MA" signal.
+            # If the current price crosses below the movign average, generate a "Price Below MA" signal.
+        """
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
@@ -469,7 +481,7 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
-            time.sleep(1)         
+            time.sleep(1)
         return None
     
     def generate_price_reversal_signal(self) -> None:
