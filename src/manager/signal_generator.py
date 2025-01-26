@@ -41,7 +41,7 @@ class SignalGenerator:
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
 
-        # Shared memory
+        # Shared Structure
         # Mutex Lock
         self.indicators_lock: threading.Lock = threading.Lock()
         self.indicators: dict = {
@@ -328,7 +328,16 @@ class SignalGenerator:
     ######################################################################################################################
     """
     def generate_golden_cross_signal(self) -> None:
-        return
+        while True:
+            with self.indicators_lock:
+                sma_data = self.indicators["sma"]
+                ema_data = self.indicators["ema"]
+                price_data = self.indicators["price"]
+            
+            if (sma_data and ema_data and price_data):
+                # generate the signal based on the data and passit to the signal pipeline.
+                return None
+        return None
     
     def generate_price_moving_average_signal(self) -> None:
         return

@@ -66,10 +66,25 @@ class DataCollectorAndProcessor:
         # default dataframe with the given columns
         self.priceData: pd.DataFrmae = pd.DataFrame(
             columns = [
-                'symbol', 'lastPrice', 'riseFallRate', 'fairPrice', 'indexPrice',
-                'volume24', 'amount24', 'maxBidPrice', 'minAskPrice', 'lower24Price', 
-                'high24Price', 'bid1', 'ask1', 'holdVol', 'riseFallValue',
-                'fundingRate', 'zone', 'riseFallRates', 'riseFallRatesOfTimezone'
+                'symbol',
+                'lastPrice',
+                'riseFallRate',
+                'fairPrice',
+                'indexPrice',
+                'volume24',
+                'amount24',
+                'maxBidPrice',
+                'minAskPrice',
+                'lower24Price', 
+                'high24Price',
+                'bid1',
+                'ask1',
+                'holdVol',
+                'riseFallValue',
+                'fundingRate',
+                'zone',
+                'riseFallRates',
+                'riseFallRatesOfTimezone'
             ],
             index = [int(time.time() * 1000)]
         )
@@ -382,9 +397,6 @@ class DataCollectorAndProcessor:
                     if (self.priceData.shape[0] > self._df_size_limit):
                         data = self.priceData.iloc[:-self._df_size_limit]
                         self.priceData = self.priceData.iloc[-self._df_size_limit:]
-                    # if (self.priceData.shape[0] > 10):
-                    #     data = self.priceData.iloc[:-10]
-                    #     self.priceData = self.priceData.iloc[-10:]
                     else:
                         logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 

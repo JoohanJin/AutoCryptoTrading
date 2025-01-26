@@ -5,6 +5,7 @@ import time
 from logger.set_logger import logger
 
 class TradeManager:
+    # need to have the REST API caller for the FutureMarket
     def __init__(
         self,
         # indicator_pipeline
