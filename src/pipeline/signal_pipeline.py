@@ -33,11 +33,32 @@ class SignalPipeline:
         self,
         indicator: Dict[str, Dict[str, Any]],
     ) -> bool:
+        """
+        # func push_indicator():
+            # push the indicator to the buffer.
+
+        # param self
+            # class object
+        # param indicator
+            # indicator got as a parameter to push to the buffer.
+            # Dict[str, Dict[str, Any]]
+        """
+        try:
+            self.queue.put(
+                indicator,
+                block = False,
+                timeout = 1,
+            )
+        except Full:
+            logger.warning(f"{__name__} - Indicator Queue is full. Data cannot be added.")
+            return False
+        except Exception as e:
+            logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            return False
         return
     
     def pop_indicator(
         self,
-        indicator: Dict[str, Dict[str, Any]],
         timeout: int | None = None,
         block: bool = True,
     ) -> Dict[str, Dict[str, Any]] | None:
