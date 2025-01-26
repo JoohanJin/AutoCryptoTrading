@@ -11,6 +11,7 @@ from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
 from logger.set_logger import logger
 from object.signal_int import TradeSignal
+from object.trade_signal import Signal
 
 
 class SignalGenerator:
@@ -44,7 +45,7 @@ class SignalGenerator:
         # Shared Structure
         # Mutex Lock
         self.indicators_lock: threading.Lock = threading.Lock()
-        self.indicators: dict = {
+        self.indicators: dict[str, dict[int, float]] = {
             "sma": None, # Latest SMA data
             "ema": None, # latest EMA data
             "price": None, # latest Price data
@@ -327,26 +328,158 @@ class SignalGenerator:
     #                                                Generating Signal                                                   #
     ######################################################################################################################
     """
+    def __generate_signal(
+        self,
+        signal: object.TradeSignal,
+        timestamp: int = None,
+    ) -> Signal:
+        """
+        # func __generate_signal():
+            # Generate the signal based on the data.
+            # It will be used to generate the signal based on the data.
+        
+        # param self: StrategyHandler
+            # class object
+        # param signal: object.TradeSignal
+            # the signal object to be generated.
+
+        # return indicator
+        """
+        return Signal(
+            signal = signal,
+            timestamp = timestamp if (timestamp) else SignalGenerator.generate_timestamp(),
+        )
+
     def generate_golden_cross_signal(self) -> None:
+        """
+        # func generate_golden_cross_signal():
+            # function to generate the golden cross signal generator.
+        
+        # A golden cross occurs when:
+            # a short-term moving average (SMA) crosses above
+            # a long-term moving average, indicating a potential bullish trend.
+        """
         while True:
             with self.indicators_lock:
-                sma_data = self.indicators["sma"]
-                ema_data = self.indicators["ema"]
-                price_data = self.indicators["price"]
+                sma_data: dict = self.indicators.get("sma")
+                ema_data: dict = self.indicators.get("ema")
             
-            if (sma_data and ema_data and price_data):
+            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
-                return None
+                ten_sec_sma: float | None = sma_data.get(10)
+                five_min_ema: float | None = ema_data.get(300)
+
+                if (ten_sec_sma and five_min_ema):
+                    if (ten_sec_sma > five_min_ema):
+                        # generate the signal
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.LONG_TERM_BUY
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
+            time.sleep(1)
+        return None
+    
+    def generate_death_cross_signal(self) -> None:
+        """
+        # func generate_death_cross_signal():
+            # function to generate the death cross signal generator.
+        
+        # A death cross occurs when:
+            # a short-term moving average crosses below 
+            # a long-term moving average,
+            # indicating a potential bearish trend.
+        """
+        while True:
+            with self.indicators_lock:
+                sma_data: dict = self.indicators.get("sma")
+                ema_data: dict = self.indicators.get("ema")
+
+            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
+                # generate the signal based on the data and passit to the signal pipeline.
+                ten_sec_sma: float | None = sma_data.get(10)
+                five_min_ema: float | None = ema_data.get(300)
+
+                if (ten_sec_sma and five_min_ema):
+                    if (ten_sec_sma < five_min_ema):
+                        # generate the signal
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.LONG_TERM_SELL
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
+            time.sleep(1)
         return None
     
     def generate_price_moving_average_signal(self) -> None:
-        return
+        while True:
+            with self.indicators_lock:
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                current_price: float = self.indicators.get("price")
+            
+            if (sma_data and current_price):
+                sma_60 = sma_data.get(60) # Example for 1 min SMA
+                
+                if sma_60:
+                    if current_price > sma_60:
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.SHORT_TERM_BUY,
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
+                    
+                    elif current_price < sma_60:
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.SHORT_TERM_SELL,
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
+            time.sleep(1)
+        return None
     
-    def generate_ema_sma_divergence_signal(self) -> None:
-        return
+    def generate_ema_sma_divergence_signal(
+        self,
+        threshold: float = 0.05, # default threshold value
+    ) -> None:
+        """
+        # func generate_ema_sma_divergence_signal():
+            # function to generate the EMA and SMA divergence signal generator.
+
+        # param threshold: float
+            # the threshold value to determine the divergence between EMA and SMA
+
+        # Divergence:
+            # There is a significant difference between the EMA and SMA.
+            # This divergence can indicate potential changes in makret trends or momentum.
+        """
+        while True:
+            with self.indicators_lock:
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                ema_data: Dict[int, float] = self.indicators.get("ema")
+
+            if (sma_data and ema_data):
+                sma_60 = sma_data.get(60) # data for 1 min SMA
+                ema_60 = ema_data.get(60) # data for 1 min EMA
+
+                if (sma_60 and ema_60):
+                    divergence: float = abs(sma_60 - ema_60)
+                    if (divergence > threshold):
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.HOLD
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
+            time.sleep(1)         
+        return None
     
     def generate_price_reversal_signal(self) -> None:
-        return
+        """
+        # func generate_price_reversal_signal():
+            # function to generate the price reversal signal generator.
+        """
+        while True:
+            return None
+        return None
 
     # TODO: Need to figure out how to make a signal.
 
@@ -362,7 +495,7 @@ class SignalGenerator:
             }
     }
     """
-        # timestamp is to indicate when the signal has been generated.
+    # timestamp is to indicate when the signal has been generated. -> for the filtration.
 
     # signal reader
         # windows value, default 3000 ms (3 sec)

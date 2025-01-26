@@ -5,6 +5,7 @@ from typing import Literal, Optional, Dict, Any
 # Custom Library
 from logger.set_logger import logger
 from object.signal_int import TradeSignal # TODO: Need to define this class in another class
+from object.trade_signal import Signal
 
 class SignalPipeline:
     def __init__(self):
@@ -26,12 +27,12 @@ class SignalPipeline:
                 }
             }
         """
-        self.indicator_queue: Queue[Dict[str, Dict[str, Any]]] = Queue()
+        self.signal_queue: Queue[Signal] = Queue()
         return
     
     def push_indicator(
         self,
-        indicator: Dict[str, Dict[str, Any]],
+        signal: Signal,
     ) -> bool:
         """
         # func push_indicator():
@@ -44,8 +45,8 @@ class SignalPipeline:
             # Dict[str, Dict[str, Any]]
         """
         try:
-            self.queue.put(
-                indicator,
+            self.signal_queue.put(
+                signal,
                 block = False,
                 timeout = 1,
             )
@@ -61,7 +62,7 @@ class SignalPipeline:
         self,
         timeout: int | None = None,
         block: bool = True,
-    ) -> Dict[str, Dict[str, Any]] | None:
+    ) -> Signal | None:
         """
         # func pop_indicator():
             # get the indicator from the buffer.
@@ -80,7 +81,7 @@ class SignalPipeline:
             # return indicator if there is a valid indicator.
         """
         try:
-            return self.queue.get(
+            return self.signal_queue.get(
                 block = block,
                 timeout = timeout,    
             )
