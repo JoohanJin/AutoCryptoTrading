@@ -156,7 +156,10 @@ class SignalGenerator:
     #                         Send the important message to the Telegram Chat Room as a Logging                          #
     ######################################################################################################################
     """
-    async def send_telegram_message(self, message: str)-> None:
+    async def send_telegram_message(
+        self,
+        message: str = "",
+    )-> None:
         """
         # func send_telegram_message:
             # Send the message to the telegram chat room.
@@ -174,7 +177,7 @@ class SignalGenerator:
         except Exception as e:
             logger.error(f"Error sending Telegram message: {e}")
 
-    # this is not used currently
+    # TODO: This is not used currently.
     def generate_telegram_msg(self, data) -> str:
         """
         # func generate_telegram_msg:
@@ -198,11 +201,14 @@ class SignalGenerator:
         # func _init_threads:
             # Initialize the threads for the indicator fetching.
             # It will be used to initialize the threads for the indicator fetching.
+            # It will be used to consume the data and generate the signals based on the data and pass it to the signal pipeline.
         
         # param self: StrategyHandler
 
         # return None
         """
+
+        # Update the data
         sma_thread: threading.Thread = threading.Thread(
             name = "sma_data_getter",
             target = self.get_sma,
@@ -224,7 +230,7 @@ class SignalGenerator:
         )
         logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
 
-        # add threads into the Threads pool.
+        # add data-update threads into the Threads pool.
         self.threads.extend(
             [
                 sma_thread, 
@@ -232,6 +238,54 @@ class SignalGenerator:
                 price_thread,
             ]
         )
+
+        # Consume the data.
+        golden_cross_thread: threading.Thread = threading.Thread(
+            name = "golden_cross_signal_generator",
+            target = self.generate_golden_cross_signal,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for golden_cross_signal_generator has been set up!")
+
+        death_cross_thread: threading.Thread = threading.Thread(
+            name = "death_cross_signal_generator",
+            target = self.generate_death_cross_signal,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for death_cross_signal_generator has been set up!")
+
+        price_ma_thread: threading.Thread = threading.Thread(    
+            name = "price_ma_signal_generator",
+            target = self.generate_price_moving_average_signal,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for price_ma_signal_generator has been set up!")
+
+        ema_sma_divergence_thread: threading.Thread = threading.Thread(
+            name = "ema_sma_divergence_signal_generator",
+            target = self.generate_ema_sma_divergence_signal,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for ema_sma_divergence_signal_generator has been set up!")
+
+        price_reversal_thread: threading.Thread = threading.Thread(
+            name = "price_reversal_signal_generator",
+            target = self.generate_price_reversal_signal,
+            daemon = True,
+        )
+        logger.info(f"{__name__}: Thread for price_reversal_signal_generator has been set up!")
+
+        # add data consumptions threads into the Threads pool.
+        self.threads.extend(
+            [
+                golden_cross_thread,
+                death_cross_thread,
+                price_ma_thread,
+                ema_sma_divergence_thread,
+                price_reversal_thread,
+            ]
+        )
+
         return None
     
     def _start_threads(self) -> None:
