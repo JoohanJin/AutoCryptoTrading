@@ -15,12 +15,30 @@ from object.trade_signal import Signal
 
 
 class SignalGenerator:
+    """
+    ######################################################################################################################
+    #                                               Static Method                                                        #
+    ######################################################################################################################
+    """
+    @staticmethod
+    def generate_timestamp() -> int:
+        """
+        # static func generate_timestamp():
+            # Generate the timestamp using the current time, in the form of epoch in ms.
+
+        # param None
+
+        # return int
+            # the timestam in the form of epoch in ms.
+        """
+        return int(time.time() * 1000)
+
     def __init__(
-            self,
-            data_pipeline: DataPipeline,
-            custom_telegram_bot: CustomTelegramBot,
-            # signal_pipeline: SignalPipeline, # TODO: Need to uncomment this and implement the logic to "generate a signal" and "send the signal" based on SMAs and EMAs
-        ) -> None:
+        self,
+        data_pipeline: DataPipeline,
+        custom_telegram_bot: CustomTelegramBot,
+        signal_pipeline: SignalPipeline, # TODO: Need to uncomment this and implement the logic to "generate a signal" and "send the signal" based on SMAs and EMAs
+    ) -> None:
         """
         # func __init__():
             # Initialize the Strategy Handler.
@@ -37,7 +55,7 @@ class SignalGenerator:
         """
         # data pipeline to get the indicators
         self.data_pipeline: DataPipeline = data_pipeline
-        # self.indicator_pipeline: IndicatorPipeline = indicator_pipeline # TODO: need to uncomment this for initialization.
+        self.signal_pipeline: SignalPipeline = signal_pipeline # TODO: need to uncomment this for initialization.
         
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
@@ -60,25 +78,7 @@ class SignalGenerator:
         # start each thread, which is in the threads pool.
         self._start_threads()
 
-        return
-
-    """
-    ######################################################################################################################
-    #                                               Static Method                                                        #
-    ######################################################################################################################
-    """
-    @staticmethod
-    def generate_timestamp() -> int:
-        """
-        # static func generate_timestamp():
-            # Generate the timestamp using the current time, in the form of epoch in ms.
-
-        # param None
-
-        # return int
-            # the timestam in the form of epoch in ms.
-        """
-        return int(time.time() * 1000)
+        return None
 
     """
     ######################################################################################################################
@@ -431,7 +431,7 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
-            time.sleep(1)
+            time.sleep(1.5)
         return None
     
     def generate_death_cross_signal(self) -> None:
@@ -462,7 +462,7 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
-            time.sleep(1)
+            time.sleep(1.5)
         return None
     
     def generate_price_moving_average_signal(self) -> None:
@@ -500,12 +500,12 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
-            time.sleep(1)
+            time.sleep(1.5)
         return None
     
     def generate_ema_sma_divergence_signal(
         self,
-        threshold: float = 0.05, # default threshold value
+        threshold: float = 0.05, # TODO: need to define the threshold value.
     ) -> None:
         """
         # func generate_ema_sma_divergence_signal():
@@ -535,7 +535,7 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
-            time.sleep(1)
+            time.sleep(1.5)
         return None
     
     def generate_price_reversal_signal(self) -> None:
@@ -568,12 +568,5 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
-            time.sleep(1)
+            time.sleep(1.5)
         return None
-
-    """
-    # TODO: Need to figure out how to make a signal.
-    # declare a signal buffer, i.e., signal pipeline
-    # order decider will pop the data
-    # one more class just making trading decision based on the indicators?
-    """
