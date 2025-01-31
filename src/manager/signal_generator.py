@@ -232,7 +232,7 @@ class SignalGenerator:
                 price_thread,
             ]
         )
-        return
+        return None
     
     def _start_threads(self) -> None:
         """
@@ -477,7 +477,7 @@ class SignalGenerator:
                     divergence: float = abs(sma_60 - ema_60)
                     if (divergence > threshold):
                         signal: Signal = self.__generate_signal(
-                            signal = TradeSignal.HOLD
+                            signal = TradeSignal.HOLD,
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
@@ -488,33 +488,37 @@ class SignalGenerator:
         """
         # func generate_price_reversal_signal():
             # function to generate the price reversal signal generator.
+
+        # A price reversal signal occurs when:
+            # the price changes direction after a sustained trend.
+            # This cna indicate potential buy or sell opportunities based on this.
         """
         while True:
-            return None
+            with self.indicators_lock:
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                current_price: float = self.indicators.get("price")
+
+            if (sma_data and current_price):
+                sma_60: float = sma_data.get(60) # data for 1 min SMA
+
+                if (sma_60):
+                    if current_price > sma_60:
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.SHORT_TERM_BUY,
+                        )
+                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
+                        self.signal_pipeline.push_signal(signal)
+                    elif current_price < sma_60:
+                        signal: Signal = self.__generate_signal(
+                            signal = TradeSignal.SHORT_TERM_SELL,
+                        )
+                        self.signal_pipeline.push_signal(signal)
+                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
+            time.sleep(1)
         return None
 
+    """
     # TODO: Need to figure out how to make a signal.
-
-    # buffer -> queue
-        # queue[Dict[float, TradeSignal]]
-        # dict will be
-    """
-    {
-        "signal": 
-            {
-                "timestamp": int,
-                "signal": TradeSignal,
-            }
-    }
-    """
-    # timestamp is to indicate when the signal has been generated. -> for the filtration.
-
-    # signal reader
-        # windows value, default 3000 ms (3 sec)
-        # if the signal was made more than 3 seconds, then just ignore.
-
-
-    """
     # declare a signal buffer, i.e., signal pipeline
     # order decider will pop the data
     # one more class just making trading decision based on the indicators?
