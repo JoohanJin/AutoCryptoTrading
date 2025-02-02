@@ -37,7 +37,7 @@ class SignalGenerator:
         self,
         data_pipeline: DataPipeline,
         custom_telegram_bot: CustomTelegramBot,
-        signal_pipeline: SignalPipeline, # TODO: Need to uncomment this and implement the logic to "generate a signal" and "send the signal" based on SMAs and EMAs
+        signal_pipeline: SignalPipeline, #  send the signal generated from SignalGenerator and this is connected to the trade_manager
     ) -> None:
         """
         # func __init__():

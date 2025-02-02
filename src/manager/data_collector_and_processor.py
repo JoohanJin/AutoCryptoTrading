@@ -18,9 +18,7 @@ class DataCollectorAndProcessor:
     def __init__(
         self,
         pipeline: DataPipeline,
-        websocket: FutureWebSocket,
-        # provide the list of strategy as variable
-        # so that it can subscribe different values at the initiation.
+        websocket: FutureWebSocket, # assume that only fetches the price data.
     ) -> None:
         """
         # func __init__() for StrategyManager
