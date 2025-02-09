@@ -30,7 +30,7 @@ class SignalPipeline:
         self.signal_queue: Queue[Signal] = Queue()
         return
     
-    def push_indicator(
+    def push_signal(
         self,
         signal: Signal,
     ) -> bool:
@@ -58,7 +58,7 @@ class SignalPipeline:
             return False
         return
     
-    def pop_indicator(
+    def pop_signal(
         self,
         timeout: int | None = None,
         block: bool = True,

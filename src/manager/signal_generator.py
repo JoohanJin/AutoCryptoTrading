@@ -415,8 +415,8 @@ class SignalGenerator:
         """
         while True:
             with self.indicators_lock:
-                sma_data: dict = self.indicators.get("sma")
-                ema_data: dict = self.indicators.get("ema")
+                sma_data: dict | None = self.indicators.get("sma")
+                ema_data: dict | None = self.indicators.get("ema")
             
             if (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
