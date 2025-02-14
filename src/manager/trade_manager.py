@@ -1,4 +1,5 @@
 # Standard Library
+import threading
 import time
 
 # Custom Library
@@ -40,8 +41,64 @@ class TradeManager:
 
         logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
 
+        self.threads: threading.Threads = list()
+
+        self.start()       
+
         return None
     
+    def start(
+        self,
+    ) -> None:
+        """
+        # func start():
+            # start the TradeManager
+        """
+        self.__initialize_threads()
+        self.__start_threads()
+
+        return None
+
+    def __initialize_threads(
+        self,
+    ) -> None:
+        """
+        # func __initialize_threads():
+            # private method
+            # It will set up the thread pool for the TradeManager.
+
+        # param self:
+            # TradeManager object
+        """
+        tmp_threads: list[threading.Thread] = list()
+
+        # initialize the threads for the operations
+
+        return None
+    
+    def __start_threads(
+        self,
+    ) -> None:
+        """
+        # func __start_threads():
+            # private method
+            # It will start the thread pool for the TradeManager.
+
+        # param self:
+            # TradeManager object
+        """
+        for thread in self.threads:
+            try:
+                thread.start()
+                logger.info(f"{__name__} - Thread {thread.name} has been started")
+            except RuntimeError as e:
+                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                raise RuntimeError
+            except Exception as e:
+                logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
+                raise Exception
+        
+        return None
 
     """
     ######################################################################################################################
@@ -53,14 +110,39 @@ class TradeManager:
         signal_data: TradeSignal,
         timestamp_window: int = 5000,
     ) -> bool:
-        return TradeManager.generate_timestamp() - signal_data.timestamp < 5000
-    
-    def __execute_trade(self, signal: TradeSignal) -> None:
         """
+        # func __verify_signal():
+            # private method
+            # verify the signal based on the timestamp.
+
+        # param self:
+            # TradeManager object
+        # param signal_data:
+            # TradeSignal object
+            # signal data which is passed from the signal pipeline.
+        # param timestamp_window:
+            # int
+            # limit for the signal generation timestamp.
+            # If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
         
+        # return bool:
+            # True if the signal is valid, otherwise False
+        """
+        return TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
+    
+    def __execute_trade(
+        self,
+    ) -> None:
+        """
+        # func __execute_trade():
+            # private method
+            # execute the trade based on the signal.
+            # This function should be run by the other function which is monitoring some schema.
+
+        # param self:
+            # TradeManager object
         """
         return None
-
 
     def __get_signal(
         self,
@@ -69,6 +151,7 @@ class TradeManager:
         """
         # func __get_signal(): private method
             # get the signal from the signal pipeline
+            # This function should be run by other thread which is monitoring the system.
 
         # param self:
             # TradeManager object
