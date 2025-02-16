@@ -36,25 +36,53 @@ class TradeManager:
         # func __init__():
             # initialize the TradeManager with the given signal generator and REST API caller for MexC.
         """
+        # Set the signal piepline as a member variable
         self.signal_pipeline: SignalPipeline = signal_pipeline
+
+        # Set the MexC Future Market SDK as a member variable
+        # to send the REST API to the MexC API Gateway.
         self.mexc_future_market_sdk = mexc_future_market_sdk
+
+        # Set the thread pool as a member function.
+        self.threads: threading.Threads = list()
+
+        # Start the TradeManager
+        self.start()       
 
         logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
 
-        self.threads: threading.Threads = list()
+        return None
 
-        self.start()       
+    def __del__(
+        self: object,
+    ) -> None:
+        """
+        # func __del__():
+            # delete the TradeManager object
+            # need to remove all the threads and possibly dynamic objects as well.
+        """
+        logger.info(f"{__name__} - TradeManager has been deleted")
 
         return None
     
+    """
+    ######################################################################################################################
+    #                                             Multi-Thread Management                                                #
+    ######################################################################################################################
+    """
     def start(
         self,
     ) -> None:
         """
         # func start():
             # start the TradeManager
+            # It will initialize the threads and start the threads.
+            # make it as a public so that in the future, it will be started at the outside of the class.
         """
+        # Initialize the threads
         self.__initialize_threads()
+
+        # Start the threads
         self.__start_threads()
 
         return None
@@ -73,6 +101,7 @@ class TradeManager:
         tmp_threads: list[threading.Thread] = list()
 
         # initialize the threads for the operations
+        self.threads.extend(tmp_threads)
 
         return None
     
@@ -86,6 +115,9 @@ class TradeManager:
 
         # param self:
             # TradeManager object
+        
+        # return None:
+            # it is a void function.
         """
         for thread in self.threads:
             try:
@@ -102,7 +134,7 @@ class TradeManager:
 
     """
     ######################################################################################################################
-    #                                               Private Method                                                       #
+    #                                             Signal Management Method                                               #
     ######################################################################################################################
     """
     def __verify_signal(
@@ -115,15 +147,13 @@ class TradeManager:
             # private method
             # verify the signal based on the timestamp.
 
-        # param self:
-            # TradeManager object
-        # param signal_data:
-            # TradeSignal object
+        # param self: TradeManager object
+        # param signal_data: TradeSignal object
             # signal data which is passed from the signal pipeline.
-        # param timestamp_window:
-            # int
+        # param timestamp_window: int
             # limit for the signal generation timestamp.
             # If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
+            # the default value is 5000 ms == 5 seconds.
         
         # return bool:
             # True if the signal is valid, otherwise False
@@ -147,7 +177,7 @@ class TradeManager:
     def __get_signal(
         self,
         timestamp_window: int = 5000,    
-    ) -> TradeSignal:
+    ) -> TradeSignal | None:
         """
         # func __get_signal(): private method
             # get the signal from the signal pipeline
@@ -158,6 +188,8 @@ class TradeManager:
         
         # return TradeSignal:
             # it will return the parameter signal and decide the action based on the signal.
+        # return None
+            # if hte signal is not valid, then it will return None.
         """
         signal_data = self.signal_pipeline.pop_signal()
         return signal_data if self.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
