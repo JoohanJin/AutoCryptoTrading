@@ -35,6 +35,7 @@ class TradeManager:
         """
         # func __init__():
             # initialize the TradeManager with the given signal generator and REST API caller for MexC.
+            # initialize the necessary member variables and start the TradeManager.
         """
         # Set the signal piepline as a member variable
         self.signal_pipeline: SignalPipeline = signal_pipeline
@@ -50,7 +51,6 @@ class TradeManager:
         self.start()       
 
         logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
-
         return None
 
     def __del__(
