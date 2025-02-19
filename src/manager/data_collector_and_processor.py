@@ -17,7 +17,7 @@ from pipeline.data_pipeline import DataPipeline
 class DataCollectorAndProcessor:
     def __init__(
         self,
-        pipeline: DataPipeline,
+        data_pipeline: DataPipeline,
         websocket: FutureWebSocket, # assume that only fetches the price data.
     ) -> None:
         """
@@ -45,7 +45,7 @@ class DataCollectorAndProcessor:
         self._memory_saver: DataSaver = DataSaver() # can be here.
         self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
-        self.pipeline: DataPipeline = pipeline
+        self.pipeline: DataPipeline = data_pipeline
 
         # wait till WebSocket set up is done
         time.sleep(1)
