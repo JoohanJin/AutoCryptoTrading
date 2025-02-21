@@ -36,10 +36,11 @@ class DataCollectorAndProcessor:
             # pipeline to transmit the data to the StrategyManager.
 
         # return None
-        """
+
         # it will automatically connect the websocket to the host
         # and will continue to keep the connection between the client and host
-        # no need to provide api_key and secret_key, i.e., no authentication on API side
+        # no need to provide api_key and secret_key, i.e., no authentication on API side for data fetching.
+        """
         self.ws: FutureWebSocket = websocket
         self._ma_period: int = 20 # set the period of moving average
         self._memory_saver: DataSaver = DataSaver() # can be here.
