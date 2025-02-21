@@ -47,6 +47,10 @@ class TradeManager:
         # Set the thread pool as a member function.
         self.threads: threading.Threads = list()
 
+        # Set the trade score as a member variable.
+        self.trade_score_lock: threading.Lock = threading.Lock()
+        self.trade_score: int = 0
+
         # Start the TradeManager
         self.start()       
 
@@ -98,11 +102,12 @@ class TradeManager:
         # param self:
             # TradeManager object
         """
-        tmp_threads: list[threading.Thread] = list()
+        # Generate the threads for the function, need to plan it.
+        thread_get_signal: threading.Thread = threading.Thread(target = self.__thread_get_signal, name = "Thread-Get-Signal")
+        thread_decide_trade: threading.Thread = threading.Thread(target = self.__thread_decide_trade, name = "Thread-Decide-Trade")
 
         # initialize the threads for the operations
-        self.threads.extend(tmp_threads)
-
+        self.threads.extend([thread_get_signal, thread_decide_trade])
         return None
     
     def __start_threads(
@@ -137,10 +142,57 @@ class TradeManager:
     #                                             Signal Management Method                                               #
     ######################################################################################################################
     """
+    def __thread_get_signal(
+        self,
+        timestamp_window: int = 5000,
+    ) -> None:
+        """
+        # func __thread_get_signal():
+            # private method
+            # get the signal from the signal pipeline
+            # This function should be run by other thread which is monitoring the system.
+
+        # param self:
+            # TradeManager object
+        # param timestamp_window: int
+            # limit for the signal generation timestamp for the signal.
+            # If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
+        """
+        while True:
+            try:
+                signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window)
+                if signal:
+                    with self.trade_score_lock:
+                        self.trade_score += self.__calculate_signal_score_delta(signal_data = signal)
+            except Exception as e:
+                logger.error(f"{__name__} - Error while getting the signal: {e}")
+                continue
+        return None
+
+    def __calculate_signal_score_delta(
+        self,
+        signal_data: TradeSignal,
+    ) -> int:
+        """
+        func __calculate_delta():
+            # private method
+            # calculate the delta based on the signal data.
+            # It will return the delta value based on the signal data.
+
+        # param self:
+            # TradeManager object
+        # param signal_data: TradeSignal
+            # signal data which is passed from the signal pipeline.
+
+        # return int:
+            # delta value based on the signal data.
+        """
+        return 0
+
     def __verify_signal(
         self,
         signal_data: TradeSignal,
-        timestamp_window: int = 5000,
+        timestamp_window: int = 5_000,
     ) -> bool:
         """
         # func __verify_signal():
@@ -160,20 +212,6 @@ class TradeManager:
         """
         return TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
     
-    def __execute_trade(
-        self,
-    ) -> None:
-        """
-        # func __execute_trade():
-            # private method
-            # execute the trade based on the signal.
-            # This function should be run by the other function which is monitoring some schema.
-
-        # param self:
-            # TradeManager object
-        """
-        return None
-
     def __get_signal(
         self,
         timestamp_window: int = 5000,    
@@ -193,3 +231,28 @@ class TradeManager:
         """
         signal_data = self.signal_pipeline.pop_signal()
         return signal_data if self.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
+    
+    def __thread_decide_trade(
+        self,
+    ) -> None:
+        with self.trade_score_lock:
+            score: int = self.trade_score
+            self.trade_score = 0 # kinda reset the data. need to figure out.
+        # there should be condition for the score and execute the trade
+        if isinstance(score, str): # need to figure out the condition
+            self.__execute_trade()
+        return None
+
+    def __execute_trade(
+        self,
+    ) -> None:
+        """
+        # func __execute_trade():
+            # private method
+            # execute the trade based on the signal.
+            # This function should be run by the other function which is monitoring some schema.
+
+        # param self:
+            # TradeManager object
+        """
+        return None
