@@ -306,10 +306,12 @@ class SignalGenerator:
                 logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
                 logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
-                raise
+                print(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
+                raise RuntimeError(f"Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
                 logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
-                raise
+                print(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
+                raise Exception(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
         return
     
     """

@@ -1,6 +1,7 @@
 # Standard Library
 import threading
 import time
+from typing import List
 
 # Custom Library
 from logger.set_logger import logger
@@ -45,7 +46,7 @@ class TradeManager:
         self.mexc_future_market_sdk = mexc_future_market_sdk
 
         # Set the thread pool as a member function.
-        self.threads: threading.Threads = list()
+        self.threads: List[threading.Threads] = list()
 
         # Set the trade score as a member variable.
         self.trade_score_lock: threading.Lock = threading.Lock()
@@ -130,9 +131,11 @@ class TradeManager:
                 logger.info(f"{__name__} - Thread {thread.name} has been started")
             except RuntimeError as e:
                 logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                print(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError
             except Exception as e:
                 logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
+                print(f"{__name__} - Unknown Error while starting the threads: {e}")
                 raise Exception
         
         return None
@@ -164,6 +167,8 @@ class TradeManager:
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(signal_data = signal)
+                
+                time.sleep(1.5)
             except Exception as e:
                 logger.error(f"{__name__} - Error while getting the signal: {e}")
                 continue
@@ -235,16 +240,34 @@ class TradeManager:
     def __thread_decide_trade(
         self,
     ) -> None:
-        with self.trade_score_lock:
-            score: int = self.trade_score
-            self.trade_score = 0 # kinda reset the data. need to figure out.
-        # there should be condition for the score and execute the trade
-        if isinstance(score, str): # need to figure out the condition
-            self.__execute_trade()
+        while True:
+            try:
+                with self.trade_score_lock:
+                    score: int = self.trade_score
+                    # TODO: need to decide what to do with the score after each trade.
+                    self.trade_score = 0 # kinda reset the data. need to figure out.
+                # there should be condition for the score and execute the trade
+                if isinstance(score, str): # need to figure out the condition
+                    # self.__execute_trade(
+                    #     buy_or_sell = 1
+                    # )
+                    # self.__execute_trade(
+                    #     buy_or_sell = -1
+                    # )
+                    # self.__execute_trade(
+                    #     buy_or_sell = 0
+                    # )
+                    pass
+                time.sleep(1.5)
+            except Exception as e:
+                logger.error(f"{__name__} - Error while deciding the trade: {e}")
+                print(f"{__name__} - Error while deciding the trade: {e}")
+
         return None
 
     def __execute_trade(
         self,
+        buy_or_sell: int,
     ) -> None:
         """
         # func __execute_trade():
@@ -255,4 +278,13 @@ class TradeManager:
         # param self:
             # TradeManager object
         """
+        if buy_or_sell == 1:
+            # execute the buy order
+            pass
+        elif buy_or_sell == -1:
+            # execute the sell order
+            pass
+        else:
+            # do nothing - hold
+            pass
         return None

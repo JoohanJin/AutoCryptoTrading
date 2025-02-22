@@ -60,8 +60,10 @@ class SystemManager:
             sys.exit(0)
         except Exception as e:
             logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
-            sys.exit(0)
-            return
+            print(f"Program encounters critical errors.{e}\n Exiting...")
+            raise Exception(f"Program encounters critical errors.{e}\n Exiting...")
+
+        return
     
     def __set_up_telegram_bot(
         self,
