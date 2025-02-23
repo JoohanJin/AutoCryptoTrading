@@ -4,99 +4,106 @@ Documentation: https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#acce
 """
 from typing import Optional, Literal, Union, Callable
 
-try:
-    from mexc.base_sdk import FutureBase
-    from mexc.websocket_base import _FutureWebSocket
-    from logger.set_logger import logger, log_decorator
-except Exception as e:
-    print(f"Error occured: {e}")
-    from .base_sdk import FutureBase
-    from .websocket_base import _FutureWebSocket
-
-
-import sys, os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from typing import Union, Literal
+from mexc.base_sdk import FutureBase
+from mexc.websocket_base import _FutureWebSocket
+from logger.set_logger import logger
 
 # no need to authenticate
 class FutureMarket(FutureBase):
     def ping(self) -> dict:
         """
-        Function Name: ping
+        # func ping():
+            # Get The Server Time  
+            # Testing the connectivity of the server
 
-        Parameters: None
+        # Parameters: None
 
-        Task: Get The Server Time
+        # Rate Limit:
+            # 20 times / 2 seconds
 
-        Rate Limit: 20 times / 2 seconds
-
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-server-time
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-server-time
         """
         url: str = "api/v1/contract/ping"
-        return self.call('GET', url)
+        return self.call(
+            method = 'GET',
+            url = url,
+        )
     
     def detail(
         self,
         symbol: Optional[str] = "BTC_USDT",
     ) -> dict:
         """
-        Function Name: detail
+        # func detail():
+            # Get the contract information
 
-        Parameters:
+        # param:
             # symbol: Optional[str], the name of the contract
+            # the default value is "BTC_USDT"
+                # because I am only trading the BTC_USDT contract.
 
-        Task: Get the contract information
-
-        Rate Limit: 1 times / 5 seconds
+        # Rate Limit: 1 times / 5 seconds
         
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-information
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-information
         """    
         url: str = "api/v1/contract/detail"
-        return self.call("GET", url, params = dict(
-            symbol= symbol
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol
+            ),
+        )
 
     def support_currencies(self):
         """
-        Function Name: support_currencies
-
-        Parameters: None
-
-        Task:
+        # func support_currencies():
             # Get the transferable currencies
             # The returned "data" field contains a list of string with each string represents a supported currencies
 
-        Rate Limit: 20 times / 2 seconds
+        # params 
+            # None
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-transferable-currencies
+        # Rate Limit: 20 times / 2 seconds
+
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-transferable-currencies
         """
         url: str = "/api/v1/contract/support_currencies"
-        return self.call("GET", url)
+        return self.call(
+            method = "GET",
+            url = url,
+        )
     
-    def depth(self, symbol: str = "BTC_USDT", limit: Optional[int] = None) -> dict:
+    def depth(
+        self,
+        symbol: str = "BTC_USDT",
+        limit: Optional[int] = None,
+    ) -> dict:
         """
-        Function Name: depth
+        # func depth():
+            # Get the contract's depth information
 
-        Parameters:
+        # params:
             # symbol: str, the name of the contract
             # limit: Optional[int], tier
         
-        Task:
-            # Get the contract's depth information
+        # Rate Limit:
+            # 20 times / 2 seconds
 
-        Rate Limit: 20 times / 2 seconds
-
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-s-depth-information
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-s-depth-information
         """
         url: str = f"api/v1/contract/depth/{symbol}"
-        return self.call("GET", url, params = dict(
-            limit = limit
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                limit = limit
+            ),
+        )
 
     def depth_commits(
         self,
@@ -104,78 +111,96 @@ class FutureMarket(FutureBase):
         symbol: str = "BTC_USDT"
     ) -> dict:
         """
-        function name: depth_commits
+        # func depth_commits():
+            # Get a snapshot of the lastest N depth information of the contract
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # limit: int, count
 
-        Task:
-            # Get a snapshot of the lastest N depth information of the contract
-        
-        Rate Limit: 20 times / 2 seconds
+        # Rate Limit:
+            # 20 times / 2 seconds
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-a-snapshot-of-the-latest-n-depth-information-of-the-contract
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-a-snapshot-of-the-latest-n-depth-information-of-the-contract
         """
         url: str = f"api/v1/contract/depth_commits/{symbol}/{limit}"
-        return self.call("GET", url, params = dict(
-            limit = limit
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                limit = limit
+            ),
+        )
 
-    def index_price(self, symbol: str = "BTC_USDT"):
+    def index_price(
+        self,
+        symbol: str = "BTC_USDT"
+    ) -> dict:
         """
-        function name: index_price
-
-        parameters:
-            # symbol: str, the name of the contract
-        
-        Task:
+        # func index_price()
             # Get contract index price
 
-        Rate Limit: 20 times / 2 seconds
+        # params:
+            # symbol: str, the name of the contract
+        
+        # Rate Limit:
+            # 20 times / 2 seconds
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-index-price
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-index-price
         """
         url: str = f"api/v1/contract/index_price/{symbol}"
-        return self.call("GET", url)
+        return self.call(
+            method = "GET",
+            url = url,
+        )
 
-    def fair_price(self, symbol: str = "BTC_USDT"):
+    def fair_price(
+        self,
+        symbol: str = "BTC_USDT",
+    ) -> dict:
         """
-        function name: fair_price
-
-        parameters:
-            # symbol: str, the name of the contract
-
-        tasks:
+        # func fair_price():
             # Get contract fair price
-        
-        Rate Limit: 20 times / 2 seconds
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-fair-price
+        # params:
+            # symbol: str, the name of the contract
+        
+        # Rate Limit:
+            # 20 times / 2 seconds
+
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-fair-price
         """
         url: str = f"api/v1/contract/fair_price/{symbol}"
-        return self.call("GET", url)
+        return self.call(
+            method = "GET",
+            url = url,
+        )
 
-    def funding_rate(self, symbol: str = "BTC_USDT") -> dict:
+    def funding_rate(
+        self,
+        symbol: str = "BTC_USDT",
+    ) -> dict:
         """
-        function name: funding_rate
-
-        parameters:
-            # symbol: str, the name of the contract
-        
-        tasks:
+        # func funding_rate():
             # get contract funcding rate
 
-        Rate Limit: 20 times / 2 seconds
+        # params:
+            # symbol: str, the name of the contract
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-funding-rate
+        # Rate Limit:
+            # 20 times / 2 seconds
+
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-funding-rate
         """
         url: str = f"api/v1/contract/funding_rate/{symbol}"
-        return self.call("GET", url)
+        return self.call(
+            method = "GET",
+            url = url,
+        )
 
     def kline(
         self,
@@ -191,33 +216,31 @@ class FutureMarket(FutureBase):
                     Literal["Day1"],
                     Literal["Week1"],
                     Literal["Month1"]]
-            ] = "Min1",
+            ] = "Min1", # default value is one minute.
             start: Optional[int] = None,
             end: Optional[int] = None,
             symbol: str = "BTC_USDT"
         ):
         """
-        function name: kline
+        # func kline():
+            # get the candle stick, or k-line data, for the price of the given cryptocurrency
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # interval: Optional[str], interval for the k-line data
                 # must be one of the followings
-                "Min1", "Min5", "Min15", "Min30", "Min60", "Hour4", "Hour8", "Day1", "Week1", "Month1"
-                default value is "Min1"
+                    # "Min1", "Min5", "Min15", "Min30", "Min60", "Hour4", "Hour8", "Day1", "Week1", "Month1"
+                # default value is "Min1"
             # start: Optional[long], The start time of the k-line data in Unix timestamp format
             # end: Optional[long], The end time of the k-line data in Unix timestamp format
 
-        tasks:
-            # get the candle stick, or k-line data, for the price of the given cryptocurrency
+        # rate limit:
+            # 20 times / 2 seconds
 
-        rate limit:
-            20 times / 2 seconds
+        # Documentation:
+            # https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#k-line-data
 
-        Documentation:
-            https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#k-line-data
-
-        Warning:
+        # Warning:
             # the maximum number of data received in one request is 2000
                 # multiple requests are needed to get the fine and smooth data for a long period of time
             # if only the start time is provided, then query the data from the start time and the current system time
@@ -225,12 +248,16 @@ class FutureMarket(FutureBase):
             # if neither start time nor end time is provided, the 2000 pieces of data closest to the current time in the system are queried.
         """
         url: str = f"api/v1/contract/kline/{symbol}"
-        return self.call("GET", url, params = dict(
-            symbol = symbol,
-            interval = interval,
-            start = start,
-            end = end
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol,
+                interval = interval,
+                start = start,
+                end = end
+            ),
+        )
     
     def kline_index_price(
         self,
@@ -254,30 +281,32 @@ class FutureMarket(FutureBase):
         symbol: str = "BTC_USDT"
     ):
         """
-        function name: kline_index_price
+        # func kline_index_price():
+            # get the candle stick data for the index price of the given cryptocurrency
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # interval: Optional[str], interval for the k-line data
                 # must be one of the followings
-                "Min1", "Min5", "Min15", "Min30", "Min60", "Hour4", "Hour8", "Day1", "Week1", "Month1"
-                default value is "Min1"
+                # "Min1", "Min5", "Min15", "Min30", "Min60", "Hour4", "Hour8", "Day1", "Week1", "Month1"
+                # default value is "Min1"
             # start: Optional[long], The start time of the k-line data in Unix timestamp format
             # end: Optional[long], The end time of the k-line data in Unix timestamp format
 
-        task:
-            # get the candle stick data for the index price of the given cryptocurrency
-
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/kline/index_price/{symbol}"
-        return self.call("GET", url, params=dict(
-            symbol = symbol,
-            interval = interval,
-            start = start,
-            end = end
-        ))
+        return self.call(
+            "GET",
+            url,
+            params=dict(
+                symbol = symbol,
+                interval = interval,
+                start = start,
+                end = end,
+            ),
+        )
 
     def kline_fair_price(
         self,
@@ -301,9 +330,10 @@ class FutureMarket(FutureBase):
         symbol: str = "BTC_USDT"
     ):
         """
-        function name: kline_fair_price
+        # func kline_fair_price():
+            # get the candle stick data for the index price of the given cryptocurrency
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # interval: Optional[str], interval for the k-line data
                 # must be one of the followings
@@ -312,19 +342,20 @@ class FutureMarket(FutureBase):
             # start: Optional[long], the start time of the k-line data in Unix timestamp format
             # end: Optional[long], the end time of the k-line data in Unix timestamp format
         
-        task:
-            # get the candle stick data for the index price of the given cryptocurrency.
-
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/kline/fair_price/{symbol}"
-        return self.call("GET", url, params = dict(
-            symbol = symbol,
-            interval = interval,
-            start = start,
-            end = end
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol,
+                interval = interval,
+                start = start,
+                end = end,
+            ),
+        )
     
     def deals(
         self,
@@ -332,63 +363,65 @@ class FutureMarket(FutureBase):
         symbol: str = "BTC_USDT",
     ) -> dict:
         """
-        function name: deals
+        # func deals():
+            # get contract transaction data
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # limit: Optional[int], consequence set quantity, maximum is 100, default 100 without setting
-
-        task:
-            # get contract transaction data
         
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/deals/{symbol}"
-        return self.call("GET", url, params = dict(
-            symbol = symbol,
-            limit = limit
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol,
+                limit = limit,
+            ),
+        )
     
     def ticker(
         self,
-        symbol: Optional[str] = "BTC_USDT"
+        symbol: Optional[str] = "BTC_USDT",
     ):
         """
-        function name: ticker
-
-        parameters:
-            # symbol: Optional[str], the name of the contract
-
-        task:
+        # func ticker():
             # get contract trend data
+
+        # param:
+            # symbol: Optional[str], the name of the contract
         
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = "api/v1/contract/ticker"
         return self.call(
-            "GET",
-            url,
+            method = "GET",
+            url = url,
             params = dict(
-                symbol = symbol
-            )
+                symbol = symbol,
+            ),
         )
     
     def risk_reverse(self):
         """
-        function name: risk_reverse
-
-        parameters: None
-
-        task:
+        # func risk_reverse():
             # get all contract risk fund balance
 
-        rate limit:
-            20 times / 2 seconds
+        # params:
+            # None
+
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = "api/v1/contract/risk_reverse"
-        return self.call("GET", url)
+        return self.call(
+            method = "GET",
+            url = url,
+        )
 
     def risk_reverse_history(
         self, 
@@ -397,25 +430,27 @@ class FutureMarket(FutureBase):
         page_size: int = 100,
     ) -> dict:
         """
-        function name: risk_reverse_history
+        # func risk_reverse_history():
+            # get contract risk fund balance history
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # page number: int, current page number, default is 1
             # page size: int, the page size, default 20, maximum 100
         
-        task:
-            # get contract risk fund balance history
-        
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = "api/v1/contract/risk_reverse/history"
-        return self.call("GET", url, params = dict(
-            symbol = symbol,
-            page_num = page_num,
-            page_size = page_size
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol,
+                page_num = page_num,
+                page_size = page_size
+            ),
+        )
 
     def funding_rate_history(
         self,
@@ -424,25 +459,27 @@ class FutureMarket(FutureBase):
         page_size: int  = 100,
     ) -> dict:
         """
-        function name: funding_rate_history
+        # func funding_rate_history():
+            # get contract funcding rate history
 
-        parameters:
+        # params:
             # symbol: str, the name of the contract
             # page_num: int, current page number, default is 1
             # page_size: int, the page size, default 20, maximum 100
-        
-        task:
-            # get contract funcding rate history
 
-        rate limit:
-            20 times / 2 seconds
+        # rate limit:
+            # 20 times / 2 seconds
         """
         url: str = "api/v1/contract/funding_rate/history"
-        return self.call("GET", url, params = dict(
-            symbol = symbol,
-            page_num = page_num,
-            page_size = page_size
-        ))
+        return self.call(
+            method = "GET",
+            url = url,
+            params = dict(
+                symbol = symbol,
+                page_num = page_num,
+                page_size = page_size,
+            ),
+        )
 
     # need to authenticate, i.e., need to have apiKey and secretKey
     def assets(self):
@@ -678,7 +715,7 @@ class FutureMarket(FutureBase):
                     # 3: transact or cancel instantly
                     # 4: transact completely or cancel completely
                     # 5: market orders
-                    # 6: conver market price to current price
+                    # 6: convert market price to current price
             # openType
                 # int
                 # required
@@ -917,9 +954,9 @@ class FutureWebSocket(_FutureWebSocket):
         """
         method = "sub.index.price"
         self._method_subscribe(
-            method=method,
-            callback=callback,
-            param=param
+            method = method,
+            callback = callback,
+            param = param,
         )
         return
     
@@ -928,7 +965,7 @@ class FutureWebSocket(_FutureWebSocket):
         callback,
         param: Optional[dict] = dict(
             symbol = "BTC_USDT"
-        )
+        ),
     ): 
         """
         # Get the fair price and will keep updating if there is any changes
@@ -936,8 +973,8 @@ class FutureWebSocket(_FutureWebSocket):
         method = "sub.fair_price"
         self._method_subscribe(
             method = method,
-            callback=callback,
-            param=param
+            callback = callback,
+            param = param,
         )
         return
     """
@@ -965,8 +1002,8 @@ class FutureWebSocket(_FutureWebSocket):
         method = "sub.personal.order"
         self._method_subscribe(
             method = method,
-            callback=callback,
-            param=param
+            callback = callback,
+            param = param,
         )
         return
     
@@ -977,9 +1014,9 @@ class FutureWebSocket(_FutureWebSocket):
     ):
         method = "sub.personal.asset"
         self._method_subscribe(
-            method=method,
-            callback=callback,
-            param=param
+            method = method,
+            callback = callback,
+            param = param,
         )
         return
     

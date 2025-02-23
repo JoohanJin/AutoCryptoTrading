@@ -12,6 +12,9 @@ venv/
 
 # ignore every tmp files
 *tmp*
+tmp/
+*foo*
+foo/
 
 # ignore market data directory
 market_data/
@@ -22,7 +25,7 @@ market_data/
 *__pycache__*
 
 # auto-generated directories
-src/__pycache__/
+__pycache__/
 src/.ipynb_checkpoints/
 .ipynb_checkpoints
 src/pipeline/__pycache__/

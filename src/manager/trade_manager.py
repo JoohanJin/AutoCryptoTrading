@@ -83,6 +83,12 @@ class TradeManager:
             # start the TradeManager
             # It will initialize the threads and start the threads.
             # make it as a public so that in the future, it will be started at the outside of the class.
+        
+        # param self:
+            # TradeManager object
+        
+        # return None:
+            # it is a void function.
         """
         # Initialize the threads
         self.__initialize_threads()
@@ -132,11 +138,11 @@ class TradeManager:
             except RuntimeError as e:
                 logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 print(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-                raise RuntimeError
+                raise RuntimeError(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
                 logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
                 print(f"{__name__} - Unknown Error while starting the threads: {e}")
-                raise Exception
+                raise Exception(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
         
         return None
 
@@ -246,7 +252,7 @@ class TradeManager:
                     score: int = self.trade_score
                     # TODO: need to decide what to do with the score after each trade.
                     self.trade_score = 0 # kinda reset the data. need to figure out.
-                # there should be condition for the score and execute the trade
+                # TODO: should decide the condition for executing the trde - there should be condition for the score and execute the trade
                 if isinstance(score, str): # need to figure out the condition
                     # self.__execute_trade(
                     #     buy_or_sell = 1

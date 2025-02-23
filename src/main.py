@@ -6,7 +6,6 @@ def main():
         # Since __init__() for every class will activate them, no need to do anything here.
         # TODO: but expliciti activation should be better. In the near future.
         main_system_manager: SystemManager = SystemManager()
-
     except Exception as e:
         logger.critical(f"{__name__}: function main() has raised an Unexpected error starting the system: {e}")
         print(f"{__name__}: function main() has raised an Unexpected error starting the system: {e}")
