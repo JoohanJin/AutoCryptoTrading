@@ -1,5 +1,7 @@
+from typing import Tuple
 from telegram import Bot
 import asyncio
+import json
 
 class Test:
     def __init__(self) -> None:
@@ -37,15 +39,25 @@ class CustomTelegramBot:
         return
 
 """
-############################################################################################
-#                                     Running Code Zone                                    #
-############################################################################################
+########################################################################################################################################################################################
+#                                                                                            Test Run Zone                                                                             #
+########################################################################################################################################################################################
 """
+def get_credentials() -> Tuple[str, str]:
+    with open("../credentials/telegram_key.json", "r") as file:
+        data = json.load(file)
+        return data["api_key"], data["channel_id"]
 
 async def main():
-    test = Test()
+    api_key, channel_id = get_credentials()
+    test = CustomTelegramBot(
+        api_key = api_key,
+        channel_id = channel_id,
+    )
 
-    # await test.testing_message()
+    await test.send_text("test messaging")
+
+    return
 
 if __name__ == "__main__":
     asyncio.run(main())
