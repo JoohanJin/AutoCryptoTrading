@@ -485,6 +485,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
         ws_name: str = "FutureMarketWebSocketV1",
         **kwargs
     ):
+        """
+        """
         self.ws_name = ws_name
         self.endpoint = "wss://contract.mexc.com/edge"
 
@@ -502,30 +504,45 @@ class _FutureWebSocket(_FutureWebSocketManager):
         ]
 
         # initialize the WebSocket for Future End-point
-        self.ws = _FutureWebSocketManager(
+        self.__initialize_websocket()
+
+        return
+    
+    def __initialize_websocket(
+        self,
+    ):
+        """
+        """
+        try:
+            self.ws = _FutureWebSocketManager(
                 self.ws_name,
                 api_key = self.api_key,
-                secret_key = self.secret_key
+                secret_key = self.secret_key,
             )
-        # connect the WebSocket to the API
-        self.ws._connect(self.endpoint)
+            self.ws._connect(self.endpoint)
+        except Exception as e:
+            logger.error(f"{__name__} - func initialize_websocket(): {e}")
+            print(f"{__name__} - func initialize_websocket(): {e}")
+            return
 
         return
     
     def is_connected(self):
+        """
+        
+        """
         return self._are_connections_connected(self.active_connections)
 
     def _method_subscribe(self, method, callback, param: dict = {}):
+        """
+        """
         if not self.ws:
-            self.ws = _FutureWebSocketManager(
-                self.ws_name,
-                api_key = self.api_key,
-                secret_key = self.secret_key
-            )
+            # if there is no websocket object that has been established.
+            self.__initialize_websocket()
 
-            self.ws._connect(
-                url = self.endpoint,
-            )
-
-        self.ws.subscribe(method = method, callback_function = callback, param = param)
+        self.ws.subscribe(
+            method = method,
+            callback_function = callback,
+            param = param,
+        )
         return

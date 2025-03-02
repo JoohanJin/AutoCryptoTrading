@@ -18,13 +18,13 @@ class SystemManager:
             self,
         ):
         """
-        # func __init__():
-            # Initialize the System Manager.
+        func __init__():
+            - Initialize the System Manager.
 
-        # param self: SystemManager
-            # class object
+        param self: SystemManager
+            - class object
 
-        # return None
+        return None
         """
 
         self.ws: FutureWebSocket = FutureWebSocket()
@@ -69,15 +69,15 @@ class SystemManager:
         self,
     ) -> CustomTelegramBot:
         """
-        # func __set_up_telegram_bot():
-            # Set up the telegram bot with the given credentials.
+        func __set_up_telegram_bot():
+            - Set up the telegram bot with the given credentials.
 
-        # param self: SystemManager
-            # class object
+        param self: SystemManager
+            - class object
 
-        # return CustomTelegramBot
-            # CustomTelegramBot object
-            # has been registered with the custom channel id.
+        return CustomTelegramBot
+            - CustomTelegramBot object
+            - has been registered with the custom channel id.
         """
         api_key, channel_id = self.__get_telegram_credentials()
         return CustomTelegramBot(

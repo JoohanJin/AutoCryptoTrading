@@ -72,10 +72,10 @@ class CommonBaseSDK:
             url = f"/{url}"
 
         # Generate timestamp
-        timestamp = str(int(time.time() * 1000))
+        timestamp: int = str(int(time.time() * 1000))
 
         # Prepare query string for signature
-        query_string = ""
+        query_string: str = ""
         if params:
             params = {k: v for k, v in params.items() if v is not None}
             query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))

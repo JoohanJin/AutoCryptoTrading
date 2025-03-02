@@ -21,25 +21,25 @@ class DataCollectorAndProcessor:
         websocket: FutureWebSocket, # assume that only fetches the price data.
     ) -> None:
         """
-        # func __init__() for StrategyManager
-            # set the WebSocket() for data fetching
-                # set the subscription for the ticker data.
-            # set the DataSaver() for control of the DataFrame Size.
-            # set the Threads pool for the necessary operations for the Strategy Manager.
-            # set the Telegram Bot for the automated log system.
-            # set the DataBuffer for the price buffer.
-            # set the Price Data Table
+        func __init__() for StrategyManager
+            - set the WebSocket() for data fetching
+                - set the subscription for the ticker data.
+            - set the DataSaver() for control of the DataFrame Size.
+            - set the Threads pool for the necessary operations for the Strategy Manager.
+            - set the Telegram Bot for the automated log system.
+            - set the DataBuffer for the price buffer.
+            - set the Price Data Table
 
-        # params self
-            # class object
-        # params pipeline
-            # pipeline to transmit the data to the StrategyManager.
+        params self
+            - class object
+        params pipeline
+            - pipeline to transmit the data to the StrategyManager.
 
-        # return None
+        return None
 
-        # it will automatically connect the websocket to the host
-        # and will continue to keep the connection between the client and host
-        # no need to provide api_key and secret_key, i.e., no authentication on API side for data fetching.
+        - it will automatically connect the websocket to the host
+        - and will continue to keep the connection between the client and host
+        - no need to provide api_key and secret_key, i.e., no authentication on API side for data fetching.
         """
         self.ws: FutureWebSocket = websocket
         self._ma_period: int = 20 # set the period of moving average
@@ -100,23 +100,23 @@ class DataCollectorAndProcessor:
     """
     def _init_threads(self) -> None:
         """
-        # func _init_threads():
-            # set the threads for the necessary operations and append them into the list of thread pool
+        func _init_threads():
+            - set the threads for the necessary operations and append them into the list of thread pool
 
-        # params self
-            # class object
+        params self
+            - class object
 
-        # return None
+        return None
 
-        # The list of threads are as follows:
-            :price fetching
-                :get the price from the broker
-            :calculate the simple moving average
-                :calculate the simple moving average based on the 
-            :memory saver 
-                :used to control the size of the Price DataFrame.
+        The list of threads are as follows:
+            - price fetching
+                - get the price from the broker
+            - calculate the simple moving average
+                - calculate the simple moving average based on the 
+            - memory saver 
+                - used to control the size of the Price DataFrame.
 
-        :return None:
+        return None
         """
         # start the thread for the data fetch from the API
         thread_price_fetch: threading.Thread = threading.Thread(
@@ -145,14 +145,14 @@ class DataCollectorAndProcessor:
 
     def _start_threads(self) -> None:
         """
-        # func _start_threads():
-            # start the threads in the thread pool of the class.
-            # Will raise issues if there is  problem with the triggering of the thread.
+        func _start_threads():
+            - start the threads in the thread pool of the class.
+            - Will raise issues if there is  problem with the triggering of the thread.
         
-        # param self: dataCollectorAndProcessor
-            # class object
+        param self: dataCollectorAndProcessor
+            - class object
 
-        # return None
+        return None
         """
         for thread in self.threads:
             try:
@@ -178,15 +178,15 @@ class DataCollectorAndProcessor:
         msg: dict,
     ) -> None:
         """
-        # func _put_ticker_data():
-            # Put price data of the crypto into the buffer.
+        func _put_ticker_data():
+            - Put price data of the crypto into the buffer.
 
-        # param self: DataCollectorAndProcessor
-            # class object
-        # param msg: dict
-            # message from the MexC API, json format, but parsed as python dict.
+        param self: DataCollectorAndProcessor
+            - class object
+        param msg: dict
+            - message from the MexC API, json format, but parsed as python dict.
 
-        # return None
+        return None
         """
         try:
             self.price_fetch_buffer.put(
@@ -206,13 +206,13 @@ class DataCollectorAndProcessor:
     """
     def _price_data_fetch(self) -> None:
         '''
-        # func _price_data_fetch():
-            # It continuously fetches data from the queue, processes it and appends it to the DataFrame.
-            # the processing includes the followings:
-                # change the data to a dataframe
-                # get the timestamp
-                # set the timestamp as an index of the dataframe
-                # concatenate the dataframe to the entire data buffer.
+        func _price_data_fetch():
+            - It continuously fetches data from the queue, processes it and appends it to the DataFrame.
+            - the processing includes the followings:
+                - change the data to a dataframe
+                - get the timestamp
+                - set the timestamp as an index of the dataframe
+                - concatenate the dataframe to the entire data buffer.
         '''
         while True:
             try:
@@ -246,10 +246,10 @@ class DataCollectorAndProcessor:
     
     def _get_data_buffer(self) -> Optional[dict]:
         """
-        # func _get_data_buffer():
-            # Get the data from the buffer and return it.
-            # if there is no data in the buffer, then wait until the data is available.
-            # if there is an error then, return None
+        func _get_data_buffer():
+            - Get the data from the buffer and return it.
+            - if there is no data in the buffer, then wait until the data is available.
+            - if there is an error then, return None
         """
         try:
             result = self.price_fetch_buffer.get(block = True)
@@ -269,9 +269,9 @@ class DataCollectorAndProcessor:
         timestamp_buffer: list,
     ) -> bool:
         """
-        # func __append_df():
-            # Make the data as an Pandas dataframe.
-            # store the dataframe into the list, for the batch processing
+        func __append_df():
+            - Make the data as an Pandas dataframe.
+            - store the dataframe into the list, for the batch processing
         """
         try:
             tmp = pd.DataFrame(
@@ -296,12 +296,12 @@ class DataCollectorAndProcessor:
     """
     def _push_moving_averages(self) -> None:
         """
-        # func _push_moving_averages():
-            # call the function __calculate_ema_sma_price() to calculate the EMA and SMA
-            # get tuple of data where:
-                # data[0] = SMA values
-                # data[1] = EMA values
-            # when the data is available, push the data to the data pipeline.
+        func _push_moving_averages():
+            - call the function __calculate_ema_sma_price() to calculate the EMA and SMA
+            - get tuple of data where:
+                - data[0] = SMA values
+                - data[1] = EMA values
+            - when the data is available, push the data to the data pipeline.
         """
         while True:
             data: Tuple[Dict[int, float], Dict[int, float]] | None = self.__calculate_ema_sma_price()
@@ -324,16 +324,16 @@ class DataCollectorAndProcessor:
         periods: Tuple[int] = MA_WRITE_PERIODS,
     ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
         """
-        # func __calculate_ema_sma_price():
-            # It calculate the simple moving average (SMA) of the lastPrice
+        func __calculate_ema_sma_price():
+            - It calculate the simple moving average (SMA) of the lastPrice
 
-        # params self: DataCollectorAndProcessor
-            # class object
-        # params periods: Tuple[int]
-            # periods for the calculation of the SMA and EMA
+        params self: DataCollectorAndProcessor
+            - class object
+        params periods: Tuple[int]
+            - periods for the calculation of the SMA and EMA
 
-        # return (smas, emas): Tuple[Tuple[float], Tuple[float]] | None
-            # Tuple of SMA and EMA values
+        return (smas, emas): Tuple[Tuple[float], Tuple[float]] | None
+            - Tuple of SMA and EMA values
         """
 
         try:
@@ -357,7 +357,6 @@ class DataCollectorAndProcessor:
             
             price: float = tmpDataframe.iloc[-1]
             prices["price"] = price
-
 
             return smas, emas, price
 
@@ -387,15 +386,15 @@ class DataCollectorAndProcessor:
     """
     def _resize_df(self) -> None:
         """
-        # func __resize_df():
-            # using _data_saver to move the dataframe storing the price movement to the csv file in data
+        func __resize_df():
+            - using _data_saver to move the dataframe storing the price movement to the csv file in data
         
-        # make a use of data saver, i.e., custom class using the df.to_csv()
+        make a use of data saver, i.e., custom class using the df.to_csv()
 
-        # params self: DataCollectorAndProcessor
-            # class object
+        params self: DataCollectorAndProcessor
+            - class object
 
-        # return None
+        return None
         """
         while True:
             data = None

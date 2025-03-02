@@ -22,20 +22,17 @@ market_data/
 # ignore archieve data
 *archieve*
 
-*__pycache__*
 
 # auto-generated directories
+*__pycache__*
 __pycache__/
 src/.ipynb_checkpoints/
 .ipynb_checkpoints
 src/pipeline/__pycache__/
 
 # logging
-src/mexc/*.log*
-src/mexc/__pycache__
-src/binance/__pycache__
-src/binance/__pycache__
-src/*log
-src/telegram/__pycache__
-src/sdk/__pycache__/
-src/credentials/
+*.log*
+
+# Credentials
+*.json*
+credentials/
