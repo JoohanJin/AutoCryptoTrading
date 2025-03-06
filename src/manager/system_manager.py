@@ -9,6 +9,7 @@ from manager.data_collector_and_processor import DataCollectorAndProcessor
 from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
 from mexc.future import FutureWebSocket
+from object.score_mapping import ScoreMapper
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
 from pipeline.signal_pipeline import SignalPipeline
@@ -30,18 +31,19 @@ class SystemManager:
         self.ws: FutureWebSocket = FutureWebSocket()
         self.data_pipeline: DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()
+        self.mapper: ScoreMapper = ScoreMapper()
         
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
 
         self.data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
-            data_pipeline = self.pipeline,
+            data_pipeline = self.data_pipeline,
             websocket = self.ws,
         )
 
         self.signal_generator: SignalGenerator = SignalGenerator(
-            data_pipeline = self.pipeline,
+            data_pipeline = self.data_pipeline,
             custom_telegram_bot = self.telegram_bot,
             signal_pipeline = self.signal_pipline,
         )
@@ -50,6 +52,7 @@ class SystemManager:
         self.trade_manager: TradeManager = TradeManager(
             signal_pipeline = self.signal_pipline,
             mexc_future_market_sdk = self.ws,
+            delta_mapper = self.mapper,
         )
 
         try:
@@ -60,7 +63,6 @@ class SystemManager:
             sys.exit(0)
         except Exception as e:
             logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
-            print(f"Program encounters critical errors.{e}\n Exiting...")
             raise Exception(f"Program encounters critical errors.{e}\n Exiting...")
 
         return
@@ -86,7 +88,6 @@ class SystemManager:
         )
 
     def __get_telegram_credentials(self):
-        # TODO: need to refactor with the path manager.
         f = open('./credentials/telegram_key.json')
         credentials = json.load(f)
         

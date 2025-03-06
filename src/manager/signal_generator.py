@@ -10,7 +10,7 @@ from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
 from logger.set_logger import logger
-from object.signal_int import TradeSignal, Signal
+from object.signal import TradeSignal, Signal
 
 
 class SignalGenerator:
@@ -305,11 +305,9 @@ return None
                 logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
                 logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
-                print(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
                 logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
-                print(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise Exception(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
         return
     
@@ -385,7 +383,7 @@ return None
     """
     def __generate_signal(
         self,
-        signal: object.TradeSignal,
+        signal: TradeSignal,
         timestamp: int = None,
     ) -> Signal:
         """

@@ -160,11 +160,9 @@ class DataCollectorAndProcessor:
                 logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
                 logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-                print(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError
             except Exception as e:
                 logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
-                print(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise
         return
 
@@ -196,7 +194,6 @@ class DataCollectorAndProcessor:
             )
         except Exception as e:
             logger.critical(f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}")
-            print(f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}")
         return
     
     """
@@ -241,7 +238,6 @@ class DataCollectorAndProcessor:
 
             except Exception as e:
                 logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
-                print(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
     
     def _get_data_buffer(self) -> Optional[dict]:
@@ -259,7 +255,6 @@ class DataCollectorAndProcessor:
             return result
         except Exception as e:
             logger.critical(f"{__name__} - Error retreving data from queue: {e}")
-            print(f"{__name__} - Error retreving data from queue: {e}")
             return None
 
     # for batch processing of the data.
@@ -283,7 +278,6 @@ class DataCollectorAndProcessor:
             return True
         except Exception as e:
             logger.critical(f"{__name__} - Error in appending the data to the DataFrame: {e}")
-            print(f"{__name__} - Error in appending the data to the DataFrame: {e}")
             return False 
         finally:
             data_buffer.clear()
@@ -363,18 +357,15 @@ class DataCollectorAndProcessor:
         except KeyError as e:
             # Specific error handling for KeyError, i.e., missing collumn
             logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the KeyError: {e}")
-            print(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the KeyError: {e}")
             return None
         
         except IndexError as e:
             # Specific error handling for IndexError, i.e., out of range and slicing of the DataFrame.
             logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the IndexError: {e}")
-            print(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the IndexError: {e}")
             return None
 
         except Exception as e:
             logger.warning(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception.")
-            print(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception.")
             return None
         
 
@@ -405,17 +396,14 @@ class DataCollectorAndProcessor:
                         self.priceData = self.priceData.iloc[-self._df_size_limit:]
                     else:
                         logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
-                        print(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 
                 if (data is not None):
                     self._memory_saver.write(data)
                     logger.info(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
-                    print(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
 
                 time.sleep(300) # let the cpu to sleep for 5 minutes
             except Exception as e:
                 logger.warning(f"{__name__} - func _resize_df(): Exception caused: {e}")
-                print(f"{__name__} - func _resize_df(): Exception caused: {e}")
 
         return None
     

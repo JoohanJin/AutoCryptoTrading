@@ -36,9 +36,6 @@ test_ws.send(
     '{"method":"sub.ticker", "param":{"symbol":"BTC_USDT"}}'
 )
 
-
-
-
 # test = webSocket()
 # df = pd.DataFrame()
 # # df.set_index("ts")

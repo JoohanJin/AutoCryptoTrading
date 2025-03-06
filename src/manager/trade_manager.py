@@ -141,11 +141,9 @@ class TradeManager:
                 logger.info(f"{__name__} - Thread {thread.name} has been started")
             except RuntimeError as e:
                 logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-                print(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
                 logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
-                print(f"{__name__} - Unknown Error while starting the threads: {e}")
                 raise Exception(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
         
         return None
@@ -179,7 +177,6 @@ class TradeManager:
                         self.trade_score += self.__calculate_signal_score_delta(signal_data = signal)
             except Exception as e:
                 logger.error(f"{__name__} - Error while getting the signal: {e}")
-                print(f"{__name__} - Error while getting the signal: {e}")
         return None
 
     def __calculate_signal_score_delta(
@@ -200,7 +197,7 @@ class TradeManager:
         return int:
             - delta value based on the signal data.
         """
-        return self.delta_mapper.map(TradeSignal = signal_data)
+        return self.delta_mapper.map(signal = signal_data)
 
     def __verify_signal(
         self,
@@ -307,7 +304,6 @@ class TradeManager:
             
             except Exception as e:
                 logger.error(f"{__name__} - Error while deciding the trade: {e}")
-                print(f"{__name__} - Error while deciding the trade: {e}")
         return None
 
     def __execute_trade(
@@ -333,6 +329,5 @@ class TradeManager:
             pass
         else:
             # do nothing - hold
-            print("Hold")
             pass
         return None

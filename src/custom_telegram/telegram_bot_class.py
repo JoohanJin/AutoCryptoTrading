@@ -6,7 +6,6 @@ import json
 class Test:
     def __init__(self) -> None:
         self._telegram_bot = CustomTelegramBot()
-        # print(CustomTelegramBot.__api_key)
 
     async def testing_message(self) -> str:
         print("Sending the request to send a messge \"Testing\"") # Doing Some Synchronous Task
