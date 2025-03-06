@@ -173,8 +173,6 @@ class TradeManager:
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(signal_data = signal)
-                
-                time.sleep(1.5)
             except Exception as e:
                 logger.error(f"{__name__} - Error while getting the signal: {e}")
                 print(f"{__name__} - Error while getting the signal: {e}")

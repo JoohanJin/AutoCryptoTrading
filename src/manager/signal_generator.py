@@ -23,13 +23,13 @@ class SignalGenerator:
     @staticmethod
     def generate_timestamp() -> int:
         """
-        # static func generate_timestamp():
-            # Generate the timestamp using the current time, in the form of epoch in ms.
+        static func generate_timestamp():
+            - Generate the timestamp using the current time, in the form of epoch in ms.
 
-        # param None
+        param None
 
-        # return int
-            # the timestam in the form of epoch in ms.
+        return int
+            - the timestam in the form of epoch in ms.
         """
         return int(time.time() * 1000)
 
@@ -40,18 +40,18 @@ class SignalGenerator:
         signal_pipeline: SignalPipeline, #  send the signal generated from SignalGenerator and this is connected to the trade_manager
     ) -> None:
         """
-        # func __init__():
-            # Initialize the Strategy Handler.
-            # It gets the pipeline as a parameter for the indicator fetching.
-            # It initializes the telegram bot for the notification.
-            # It initializes the threads for the indicator fetching.
+        func __init__():
+            - Initialize the Strategy Handler.
+            - It gets the pipeline as a parameter for the indicator fetching.
+            - It initializes the telegram bot for the notification.
+            - It initializes the threads for the indicator fetching.
 
-        # param self: StrategyHandler
-            # class object
-        # param pipeline: DataPipeline
-            # Data pipeline for the indicator fetching.
+        param self: StrategyHandler
+            - class object
+        param pipeline: DataPipeline
+            - Data pipeline for the indicator fetching.
         
-        # return None
+        return None
         """
         # data pipeline to get the indicators
         self.data_pipeline: DataPipeline = data_pipeline
@@ -87,14 +87,14 @@ class SignalGenerator:
     """
     def get_test_data(self) -> Optional[Dict[int, float]]:
         """
-        # func get_test_data:
-            # Get the test data from the data pipeline.
-            # It will be used for the testing phase.
-            # It will be used by the threads to get the data from the pipeline.
+        func get_test_data:
+            - Get the test data from the data pipeline.
+            - It will be used for the testing phase.
+            - It will be used by the threads to get the data from the pipeline.
 
-        # param self: StrategyHandler
+        param self: StrategyHandler
         
-        # return None
+        return None
         """
         return self.data_pipeline.pop_data(
             type = "test",
@@ -104,13 +104,13 @@ class SignalGenerator:
 
     def get_smas(self) -> Optional[Dict[int, float]]:
         """
-        # func get_smas:
-            # Get the sma data from the data pipeline.
-            # It will be used by the threads to get the data from the pipeline.
+        func get_smas:
+            - Get the sma data from the data pipeline.
+            - It will be used by the threads to get the data from the pipeline.
 
-        # param self: StrategyHandler
+        param self: StrategyHandler
 
-        # return None
+return None
         """
         return self.data_pipeline.pop_data(
             type = "sma",

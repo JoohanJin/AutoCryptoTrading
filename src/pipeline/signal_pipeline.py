@@ -10,12 +10,12 @@ from object.trade_signal import Signal
 class SignalPipeline:
     def __init__(self):
         """
-        # func __init__:
-            # create a Queue of Dict to store indicator
-            # Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
+        func __init__:
+            - create a Queue of Dict to store indicator
+            - Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
 
-        # queue:
-            # indicator_queue: indicator buffer
+        queue:
+            - indicator_queue: indicator buffer
 
             indicator = {
                 "indicator": {
@@ -35,14 +35,14 @@ class SignalPipeline:
         signal: Signal,
     ) -> bool:
         """
-        # func push_indicator():
-            # push the indicator to the buffer.
+        func push_indicator():
+            - push the indicator to the buffer.
 
-        # param self
-            # class object
-        # param indicator
-            # indicator got as a parameter to push to the buffer.
-            # Dict[str, Dict[str, Any]]
+        param self
+            - class object
+        param indicator
+            - indicator got as a parameter to push to the buffer.
+            - Dict[str, Dict[str, Any]]
         """
         try:
             self.signal_queue.put(
@@ -61,24 +61,24 @@ class SignalPipeline:
     def pop_signal(
         self,
         timeout: int | None = None,
-        block: bool = True,
+        block: bool = True,  # Default is to be blocked
     ) -> Signal | None:
         """
-        # func pop_indicator():
-            # get the indicator from the buffer.
+        func pop_indicator():
+            - get the indicator from the buffer.
 
-        # param self
-            # class object
-        # param indicator
-            # indicator got as a parameter.
-            # Dict[str, Dict[str, Any]]
-        # param timeout
-            # the timeout value for getting indicator from the queue.
-        # param block
-            # the boolean value to indicate if the queue is blocked or not when we get the data.
+        param self
+            - class object
+        param indicator
+            - indicator got as a parameter.
+            - Dict[str, Dict[str, Any]]
+        param timeout
+            - the timeout value for getting indicator from the queue.
+        param block
+            - the boolean value to indicate if the queue is blocked or not when we get the data.
 
-        # return bool
-            # return indicator if there is a valid indicator.
+        return bool
+            - return indicator if there is a valid indicator.
         """
         try:
             return self.signal_queue.get(
