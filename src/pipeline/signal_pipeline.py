@@ -4,8 +4,7 @@ from typing import Literal, Optional, Dict, Any
 
 # Custom Library
 from logger.set_logger import logger
-from object.signal_int import TradeSignal # TODO: Need to define this class in another class
-from object.trade_signal import Signal
+from object.signal_int import TradeSignal, Signal # TODO: Need to define this class in another class
 
 class SignalPipeline:
     def __init__(self):

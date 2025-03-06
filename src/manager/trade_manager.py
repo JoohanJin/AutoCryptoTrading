@@ -6,7 +6,8 @@ from typing import List
 # Custom Library
 from logger.set_logger import logger
 from mexc.future import FutureMarket
-from object.signal_int import TradeSignal
+from object.score_mapping import ScoreMapper
+from object.signal import Signal, TradeSignal
 from pipeline.signal_pipeline import SignalPipeline
 
 class TradeManager:
@@ -32,6 +33,7 @@ class TradeManager:
         self,
         signal_pipeline: SignalPipeline,
         mexc_future_market_sdk: FutureMarket,
+        delta_mapper: ScoreMapper,
     ) -> None:
         """
         func __init__():
@@ -44,6 +46,8 @@ class TradeManager:
         # Set the MexC Future Market SDK as a member variable
         # to send the REST API to the MexC API Gateway.
         self.mexc_future_market_sdk = mexc_future_market_sdk
+
+        self.delta_mapper: ScoreMapper = delta_mapper
 
         # Set the thread pool as a member function.
         self.threads: List[threading.Threads] = list()
@@ -196,7 +200,7 @@ class TradeManager:
         return int:
             - delta value based on the signal data.
         """
-        return 0
+        return self.delta_mapper.map(TradeSignal = signal_data)
 
     def __verify_signal(
         self,
@@ -238,8 +242,8 @@ class TradeManager:
         return None
             - if the signal is not valid, then it will return None.
         """
-        signal_data = self.signal_pipeline.pop_signal()
-        return signal_data if self.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
+        signal_data: Signal = self.signal_pipeline.pop_signal()
+        return signal_data.signal if self.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
     
     def __decide_trade(
         self,
@@ -291,11 +295,15 @@ class TradeManager:
                     score = score,
                 )
 
+                self.__execute_trade(
+                    buy_or_sell = decision,
+                )
+
                 if decision != 0: # can be further improved in the future.
                     with self.trade_score_lock:
                         self.trade_score = 0
 
-                time.sleep(1.5)
+                time.sleep(0.5)
             
             except Exception as e:
                 logger.error(f"{__name__} - Error while deciding the trade: {e}")
@@ -317,11 +325,14 @@ class TradeManager:
         """
         if buy_or_sell == 1:
             # execute the buy order
+            print("Buy Order")
             pass
         elif buy_or_sell == -1:
             # execute the sell order
+            print("Sell Order")
             pass
         else:
             # do nothing - hold
+            print("Hold")
             pass
         return None

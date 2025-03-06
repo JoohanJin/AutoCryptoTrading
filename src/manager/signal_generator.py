@@ -10,8 +10,7 @@ from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
 from logger.set_logger import logger
-from object.signal_int import TradeSignal
-from object.trade_signal import Signal
+from object.signal_int import TradeSignal, Signal
 
 
 class SignalGenerator:
