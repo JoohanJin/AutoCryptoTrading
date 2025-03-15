@@ -48,9 +48,9 @@ class CommonBaseSDK:
         return hmac.new(
             self.secret_key.encode('utf-8'),
             query_string.encode('utf-8'),
-            hashlib.sha256
+            hashlib.sha256,
         ).hexdigest()
-
+    
     def call(
         self,
         method: Union[
@@ -72,22 +72,26 @@ class CommonBaseSDK:
             url = f"/{url}"
 
         # Generate timestamp
-        timestamp: int = str(int(time.time() * 1000))
+        timestamp: str = str(int(time.time() * 1000))
 
         # Prepare query string for signature
         query_string: str = ""
         if params:
             params = {k: v for k, v in params.items() if v is not None}
             query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
+        
+        query_string = f"{self.api_key}{timestamp}{query_string}"
 
         # Add signature if API key and secret key are provided
         if self.api_key and self.secret_key:
             if headers is None:
                 headers = {}
+
             headers.update({
                 "Request-Time": timestamp,
-                "Signature": self.generate_signature(query_string=query_string),
-            })
+                "Signature": self.generate_signature(query_string = query_string),
+                },
+            )
 
         # Add API key to headers if needed
         if self.api_key:
@@ -95,11 +99,11 @@ class CommonBaseSDK:
 
         # Perform the request
         response = self.session.request(
-            method=method,
-            url=f"{self.base_url}{url}",
-            params=params,
-            json=data,
-            headers=headers,
+            method = method,
+            url = f"{self.base_url}{url}",
+            params = params,
+            json = data,
+            headers = headers,
         )
 
         # Ensure a JSON response is returned
