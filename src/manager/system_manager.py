@@ -62,8 +62,8 @@ class SystemManager:
             logger.info("Program interrupted by user. Exiting...")
             sys.exit(0)
         except Exception as e:
-            logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
-            raise Exception(f"Program encounters critical errors.{e}\n Exiting...")
+            logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
 
         return
     
@@ -87,7 +87,14 @@ class SystemManager:
             channel_id = channel_id,
         )
 
-    def __get_telegram_credentials(self):
+
+    """
+    ######################################################################################################################
+    #                                                Static Method                                                       #
+    ######################################################################################################################
+    """
+    @staticmethod
+    def __get_telegram_credentials():
         f = open('./credentials/telegram_key.json')
         credentials = json.load(f)
         
