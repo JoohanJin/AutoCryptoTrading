@@ -1,9 +1,11 @@
 # Standard Library
 import threading
+import asyncio
 import time
 from typing import List, Dict, Tuple
 
 # Custom Library
+from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import logger
 from mexc.future import FutureMarket
 from object.score_mapping import ScoreMapper
@@ -57,6 +59,7 @@ class TradeManager:
         signal_pipeline: SignalPipeline,
         mexc_future_market_sdk: FutureMarket,
         delta_mapper: ScoreMapper,
+        telegram_bot: CustomTelegramBot,
         leverage: int = 20,
         trade_amount: float = 0.1, # 10% of the total asset
         take_profit_rate: float = 0.15, # 15%
@@ -76,6 +79,8 @@ class TradeManager:
 
         self.delta_mapper: ScoreMapper = delta_mapper
 
+        self.telegram_bot: CustomTelegramBot = telegram_bot
+
         # Set the thread pool as a member function.
         self.threads: List[threading.Threads] = list()
 
@@ -87,6 +92,8 @@ class TradeManager:
         self.trade_amount: float = trade_amount
         self.tp_rate: float = take_profit_rate
         self.sl_rate: float = stop_loss_rate
+
+        self.async_loop = asyncio.new_event_loop()
 
         # Start the TradeManager
         self.start()       
@@ -151,8 +158,9 @@ class TradeManager:
             name = "Thread-Get-Signal",
         )
         thread_decide_trade: threading.Thread = threading.Thread(
-            target = self.__thread_decide_trade,
+            target = self.thread_handle_async_trade_execution,
             name = "Thread-Decide-Trade",
+            args = (self.async_loop, ),
         )
 
         # initialize the threads for the operations
@@ -191,6 +199,13 @@ class TradeManager:
     #                                             Signal Management Method                                               #
     ######################################################################################################################
     """
+    def thread_handle_async_trade_execution(self, loop) -> None:
+        """
+        """
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(self.__thread_decide_trade())
+        return
+
     def __thread_get_signal(
         self,
         timestamp_window: int = 5000,
@@ -259,7 +274,7 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         signal_data: Signal = self.signal_pipeline.pop_signal()
-        return signal_data.signal if TradeManager.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
+        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
     
     def __decide_trade(
         self,
@@ -287,7 +302,7 @@ class TradeManager:
             return -1
         return 0 # default is do nothing
 
-    def __thread_decide_trade(
+    async def __thread_decide_trade(
         self,
     ) -> None:
         """
@@ -310,7 +325,7 @@ class TradeManager:
                     score = score,
                 )
 
-                self.__execute_trade(
+                await self.__execute_trade(
                     buy_or_sell = decision,
                 )
 
@@ -389,8 +404,7 @@ class TradeManager:
             raise Exception(f"{__name__} - Error while getting the trade amount: {open_amount_response}")
         return
 
-
-    def __execute_trade(
+    async def __execute_trade(
         self,
         buy_or_sell: int,
     ) -> None:
@@ -417,7 +431,12 @@ class TradeManager:
                 elif buy_or_sell == -1:
                     order_Type = 3 # Short
 
-                # trigger the order
+                # TODO: trigger the order
+                # TODO: add telegram notification.
+                await self.telegram_bot.send_text(
+                    f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                )
+                logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
     
         except Exception as e:
             logger.error(f"{__name__} - Error while executing the trade: {e}")
