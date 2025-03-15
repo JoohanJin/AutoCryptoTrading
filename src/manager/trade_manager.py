@@ -1,7 +1,7 @@
 # Standard Library
 import threading
 import time
-from typing import List
+from typing import List, Dict, Tuple
 
 # Custom Library
 from logger.set_logger import logger
@@ -57,6 +57,10 @@ class TradeManager:
         signal_pipeline: SignalPipeline,
         mexc_future_market_sdk: FutureMarket,
         delta_mapper: ScoreMapper,
+        leverage: int = 20,
+        trade_amount: float = 0.1, # 10% of the total asset
+        take_profit_rate: float = 0.15, # 15%
+        stop_loss_rate: float = 0.05, # 5%
     ) -> None:
         """
         func __init__():
@@ -78,6 +82,11 @@ class TradeManager:
         # Set the trade score as a member variable.
         self.trade_score_lock: threading.Lock = threading.Lock()
         self.trade_score: int = 0
+
+        self.leverage: int = leverage
+        self.trade_amount: float = trade_amount
+        self.tp_rate: float = take_profit_rate
+        self.sl_rate: float = stop_loss_rate
 
         # Start the TradeManager
         self.start()       
@@ -137,8 +146,14 @@ class TradeManager:
             - TradeManager object
         """
         # Generate the threads for the function, need to plan it.
-        thread_get_signal: threading.Thread = threading.Thread(target = self.__thread_get_signal, name = "Thread-Get-Signal")
-        thread_decide_trade: threading.Thread = threading.Thread(target = self.__thread_decide_trade, name = "Thread-Decide-Trade")
+        thread_get_signal: threading.Thread = threading.Thread(
+            target = self.__thread_get_signal,
+            name = "Thread-Get-Signal",
+        )
+        thread_decide_trade: threading.Thread = threading.Thread(
+            target = self.__thread_decide_trade,
+            name = "Thread-Decide-Trade",
+        )
 
         # initialize the threads for the operations
         self.threads.extend([thread_get_signal, thread_decide_trade])
@@ -194,10 +209,14 @@ class TradeManager:
         """
         while True:
             try:
-                signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window)
+                signal: TradeSignal = self.__get_signal(
+                    timestamp_window = timestamp_window,
+                )
                 if signal:
                     with self.trade_score_lock:
-                        self.trade_score += self.__calculate_signal_score_delta(signal_data = signal)
+                        self.trade_score += self.__calculate_signal_score_delta(
+                            signal_data = signal,
+                        )
             except Exception as e:
                 logger.error(f"{__name__} - Error while getting the signal: {e}")
         return None
@@ -281,7 +300,6 @@ class TradeManager:
             - TradeManager object
         
         return None:
-            - it is a void function
         """
         while True:
             try:
@@ -306,6 +324,72 @@ class TradeManager:
                 logger.error(f"{__name__} - Error while deciding the trade: {e}")
 
         return None
+
+    def __get_current_price(
+        self,
+    ) -> float:
+        """
+        func __get_current_price():
+            - private method
+            - get the current price from the MexC API Endpoint.
+        
+        param self:
+            - TradeManager object
+        
+        return float:
+            - current price of the asset
+        """
+        price_response: Dict = self.mexc_future_market_sdk.index_price()
+        if (price_response.get('success')):
+            return price_response.get('data').get('indexPrice')
+        else:
+            raise Exception(f"{__name__} - Error while getting the current price: {price_response}")
+        return
+    
+    def __get_target_prices(
+        self,
+        buy_or_sell: int,
+        current_price: float,
+    ) -> Tuple[float] | None:
+        """
+        func __get_target_prices():
+            - private method
+            - get the target prices based on the current price and the signal.
+            - It will return the target prices based on the signal.
+        
+        param self:
+            - TradeManager object
+        param buy_or_sell: int
+            - 1: buy
+            - -1: sell
+            - 0: hold, nothing to do with the function.
+        param current_price: float
+            - current price of the BTC_USDT, i.e., Index Price is used.
+
+        return Tuple[float]:
+            - take profit price, stop loss price
+        return None:
+            - if the signal is not valid, then it will return None.
+        """
+        if (buy_or_sell == 1): # Long
+            return current_price * (1 + (self.tp_rate / self.leverage)), current_price * (1 - (self.sl_rate / self.leverage))
+        else: # Short
+            return current_price * (1 - (self.tp_rate / self.leverage)), current_price * (1 + (self.sl_rate / self.leverage))
+
+    def __get_trade_amount(
+        self,
+    ) -> float:
+        open_amount_response: dict = self.mexc_future_market_sdk.asset(
+            currency = "USDT",
+        )
+
+        if (open_amount_response.get('success')):
+            return open_amount_response.get('data').get('availableOpen') * self.trade_amount
+        else:
+            raise Exception(f"{__name__} - Error while getting the trade amount: {open_amount_response}")
+        return
+
+
     def __execute_trade(
         self,
         buy_or_sell: int,
@@ -319,15 +403,22 @@ class TradeManager:
         param self:
             - TradeManager object
         """
-        if buy_or_sell == 1:
-            # execute the buy order
-            print("Buy Order")
-            pass
-        elif buy_or_sell == -1:
-            # execute the sell order
-            print("Sell Order")
-            pass
-        else:
-            # do nothing - hold
-            pass
+        try:
+            if (buy_or_sell == 1 or buy_or_sell == -1):
+                tp_price, sl_price = self.__get_target_prices(
+                    buy_or_sell = buy_or_sell,
+                    current_price = self.__get_current_price(),
+                )
+                trade_amount: float = self.__get_trade_amount()
+                order_type: int = 0
+
+                if buy_or_sell == 1:
+                    order_type = 1 # Long
+                elif buy_or_sell == -1:
+                    order_Type = 3 # Short
+
+                # trigger the order
+    
+        except Exception as e:
+            logger.error(f"{__name__} - Error while executing the trade: {e}")
         return None
