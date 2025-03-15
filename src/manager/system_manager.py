@@ -54,6 +54,7 @@ class SystemManager:
             signal_pipeline = self.signal_pipline,
             mexc_future_market_sdk = self.mexc_sdk,
             delta_mapper = self.mapper,
+            telegram_bot = self.telegram_bot,
         )
 
         try:
@@ -82,7 +83,7 @@ class SystemManager:
             - CustomTelegramBot object
             - has been registered with the custom channel id.
         """
-        api_key, channel_id = self.__get_telegram_credentials()
+        api_key, channel_id = SystemManager.__get_telegram_credentials()
         return CustomTelegramBot(
             api_key = api_key,
             channel_id = channel_id,
@@ -90,7 +91,7 @@ class SystemManager:
     
     def __set_up_mexc_sdk(
         self,
-    ) -> FutureWebSocket:
+    ) -> FutureMarket:
         """
         func __set_up_mexc_sdk():
             - Set up the MexC SDK with the given credentials.
@@ -102,8 +103,8 @@ class SystemManager:
             - FutureWebSocket object
             - has been registered with the given api_key and secret_key.
         """
-        api_key, secret_key = self.__get_mexc_crendentials()
-        return FutureWebSocket(
+        api_key, secret_key = SystemManager.__get_mexc_crendentials()
+        return FutureMarket(
             api_key = api_key,
             secret_key = secret_key,
         )
