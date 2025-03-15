@@ -8,7 +8,7 @@ from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor
 from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
-from mexc.future import FutureWebSocket
+from mexc.future import FutureMarket, FutureWebSocket
 from object.score_mapping import ScoreMapper
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
@@ -36,6 +36,7 @@ class SystemManager:
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
+        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
 
         self.data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
             data_pipeline = self.data_pipeline,
@@ -51,7 +52,7 @@ class SystemManager:
         # one more classs: trade_manager -> it will have the FutureMarket SDWK
         self.trade_manager: TradeManager = TradeManager(
             signal_pipeline = self.signal_pipline,
-            mexc_future_market_sdk = self.ws,
+            mexc_future_market_sdk = self.mexc_sdk,
             delta_mapper = self.mapper,
         )
 
@@ -86,7 +87,26 @@ class SystemManager:
             api_key = api_key,
             channel_id = channel_id,
         )
+    
+    def __set_up_mexc_sdk(
+        self,
+    ) -> FutureWebSocket:
+        """
+        func __set_up_mexc_sdk():
+            - Set up the MexC SDK with the given credentials.
 
+        param self: SystemManager
+            - class object
+
+        return FutureWebSocket
+            - FutureWebSocket object
+            - has been registered with the given api_key and secret_key.
+        """
+        api_key, secret_key = self.__get_mexc_crendentials()
+        return FutureWebSocket(
+            api_key = api_key,
+            secret_key = secret_key,
+        )
 
     """
     ######################################################################################################################
@@ -103,6 +123,15 @@ class SystemManager:
 
         return api_key, channel_id
     
+    def __get_mexc_crendentials():
+        f = open('./credentials/mexc_keys.json')
+        credentials = json.load(f)
+        
+        api_key = credentials["api_key"]
+        secret_key = credentials["secret_key"]
+
+        return api_key, secret_key
+
 
 def main(): # to test run the system manager.
     main_system_manager: SystemManager = SystemManager()
