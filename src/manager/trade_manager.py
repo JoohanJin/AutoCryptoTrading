@@ -24,6 +24,29 @@ class TradeManager:
         """
         return int(time.time() * 1000)
 
+    @staticmethod
+    def verify_signal(
+        signal_data: TradeSignal,
+        timestamp_window: int = 5_000,
+    ) -> bool:
+        """
+        func __verify_signal():
+            - private method
+            - verify the signal based on the timestamp.
+
+        param self: TradeManager object
+        param signal_data: TradeSignal object
+            - signal data which is passed from the signal pipeline.
+        param timestamp_window: int
+            - limit for the signal generation timestamp.
+            - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
+            - the default value is 5000 ms == 5 seconds.
+        
+        return bool:
+            - True if the signal is valid, otherwise False
+        """
+        return TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
+
     """
     ######################################################################################################################
     #                                                Class Method                                                        #
@@ -198,29 +221,6 @@ class TradeManager:
             - delta value based on the signal data.
         """
         return self.delta_mapper.map(signal = signal_data)
-
-    def __verify_signal(
-        self,
-        signal_data: TradeSignal,
-        timestamp_window: int = 5_000,
-    ) -> bool:
-        """
-        func __verify_signal():
-            - private method
-            - verify the signal based on the timestamp.
-
-        param self: TradeManager object
-        param signal_data: TradeSignal object
-            - signal data which is passed from the signal pipeline.
-        param timestamp_window: int
-            - limit for the signal generation timestamp.
-            - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
-            - the default value is 5000 ms == 5 seconds.
-        
-        return bool:
-            - True if the signal is valid, otherwise False
-        """
-        return TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
     
     def __get_signal(
         self,
@@ -240,7 +240,7 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         signal_data: Signal = self.signal_pipeline.pop_signal()
-        return signal_data.signal if self.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
+        return signal_data.signal if TradeManager.__verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
     
     def __decide_trade(
         self,
@@ -304,8 +304,8 @@ class TradeManager:
             
             except Exception as e:
                 logger.error(f"{__name__} - Error while deciding the trade: {e}")
-        return None
 
+        return None
     def __execute_trade(
         self,
         buy_or_sell: int,
