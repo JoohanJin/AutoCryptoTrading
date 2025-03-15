@@ -10,6 +10,11 @@ from logger.set_logger import logger
 
 # no need to authenticate
 class FutureMarket(FutureBase):
+    """
+    ######################################################################################################################
+    #                                                    Public Endpoint                                                 #
+    ######################################################################################################################
+    """
     def ping(self) -> dict:
         """
         - func ping():
@@ -475,7 +480,11 @@ class FutureMarket(FutureBase):
             ),
         )
 
-    # need to authenticate, i.e., need to have apiKey and secretKey
+    """
+    ######################################################################################################################
+    #                                                   Private Endpoint                                                 #
+    ######################################################################################################################
+    """
     def assets(self):
         """
         - method: assets()
@@ -491,7 +500,7 @@ class FutureMarket(FutureBase):
     
     def asset(
         self, 
-        currency: str = "USDT"
+        currency: str = "USDT",
     ):
         """
         - method: assets(currency: str)
@@ -637,14 +646,14 @@ class FutureMarket(FutureBase):
         side: int, # 1 and 3
         type: int = 5, # 5 for market, need to test 6
         openType: int = 2, # 2 for cross
-        positionId: Optional[int] = None,
-        externalOid: Optional[int] = None,
-        stopLossPrice: Optional[float] = None,
-        takeProfitPrice: Optional[float] = None,
-        positionMode: Optional[int] = None,
-        reduceOnly: Optional[bool] = False,
+        positionId: int = None,
+        externalOid: int = None,
+        stopLossPrice: float = None,
+        takeProfitPrice: float = None,
+        positionMode: int = None,
+        reduceOnly: bool = False,
         symbol: str = "BTC_USDT",
-        leverage: Optional[int] = 50,
+        leverage: int = 20,
     ):
         """
         - Under-Maintanence on Broker Side
