@@ -1,4 +1,0 @@
-{
-    "mexc_keys_file": "src/credentials/mexc_keys.json",
-    "telegram_bot_keys_file": "src/credentials/telegram_bot_keys.json"
-}
