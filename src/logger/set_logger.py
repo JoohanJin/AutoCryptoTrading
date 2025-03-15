@@ -7,18 +7,20 @@ import os
 
 # TODO: Need to debug the behavior of the logger, it is not working as expected.
 
+logger = logging.getLogger("AutoTradingBotGlobalLogger")
+
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level
+    level=logging.INFO,  # Set the logging level
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Format of the log messages
     handlers=[
         logging.FileHandler(f"log/{datetime.now().strftime('%Y-%m-%d')}~.log"),  # Log to a file
         logging.StreamHandler()  # Log to the console
-    ]
+    ],
 )
 
 
-logger = logging.getLogger("AutoTradingBot_Logger")
-logger.setLevel(logging.INFO)
+
+
 
 # define log_decorator for the function, future usage consideration
 def log_decorator(func):
