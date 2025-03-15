@@ -645,7 +645,7 @@ class FutureMarket(FutureBase):
         vol: float,
         side: int, # 1 and 3
         type: int = 5, # 5 for market, need to test 6
-        openType: int = 2, # 2 for cross
+        openType: int = 1, # 1 for isolatied, 2 for cross
         positionId: int = None,
         externalOid: int = None,
         stopLossPrice: float = None,
