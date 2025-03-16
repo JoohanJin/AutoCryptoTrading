@@ -381,8 +381,9 @@ class SignalGenerator:
     #                                                Generating Signal                                                   #
     ######################################################################################################################
     """
+    # TODO: make it abstract
+    @staticmethod
     def __generate_signal(
-        self,
         signal: TradeSignal,
         timestamp: int = None,
     ) -> Signal:
@@ -425,7 +426,7 @@ class SignalGenerator:
                 if (ten_sec_sma and five_min_ema):
                     if (ten_sec_sma > five_min_ema):
                         # generate the signal
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.LONG_TERM_BUY
                         )
                         self.signal_pipeline.push_signal(signal)
@@ -456,7 +457,7 @@ class SignalGenerator:
                 if (ten_sec_sma and five_min_ema):
                     if (ten_sec_sma < five_min_ema):
                         # generate the signal
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.LONG_TERM_SELL
                         )
                         self.signal_pipeline.push_signal(signal)
@@ -487,14 +488,14 @@ class SignalGenerator:
                 
                 if sma_60:
                     if current_price > sma_60:
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
                         self.signal_pipeline.push_signal(signal)
                         logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
                     
                     elif current_price < sma_60:
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
@@ -529,7 +530,7 @@ class SignalGenerator:
                 if (sma_60 and ema_60):
                     divergence: float = abs(sma_60 - ema_60)
                     if (divergence > threshold):
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.HOLD,
                         )
                         self.signal_pipeline.push_signal(signal)
@@ -556,13 +557,13 @@ class SignalGenerator:
 
                 if (sma_60):
                     if current_price > sma_60:
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
                         logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
                         self.signal_pipeline.push_signal(signal)
                     elif current_price < sma_60:
-                        signal: Signal = self.__generate_signal(
+                        signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
