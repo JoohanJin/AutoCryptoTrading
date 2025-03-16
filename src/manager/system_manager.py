@@ -7,51 +7,55 @@ import sys
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor
 from manager.signal_generator import SignalGenerator
-from mexc.future import FutureWebSocket
+from manager.trade_manager import TradeManager
+from mexc.future import FutureMarket, FutureWebSocket
+from object.score_mapping import ScoreMapper
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import logger
+from pipeline.signal_pipeline import SignalPipeline
 
 class SystemManager:
     def __init__(
             self,
         ):
         """
-        # func __init__():
-            # Initialize the System Manager.
+        func __init__():
+            - Initialize the System Manager.
 
-        # param self: SystemManager
-            # class object
+        param self: SystemManager
+            - class object
 
-        # return None
+        return None
         """
 
-        # TODO: getting credentials put it here for authentication of
-            # TelegramBot
-            # WebSocket API
-            # REST API SDK
-
-        telegram_api_key, telegram_channel_id = self.__get_telegram_credentials()
-
-        ws: FutureWebSocket = FutureWebSocket()
-        pipeline: DataPipeline = DataPipeline()
+        self.ws: FutureWebSocket = FutureWebSocket()
+        self.data_pipeline: DataPipeline = DataPipeline()
+        self.signal_pipline: SignalPipeline = SignalPipeline()
+        self.mapper: ScoreMapper = ScoreMapper()
+        
 
         # TODO: authentication can be done here.
-        telegram_bot: CustomTelegramBot = CustomTelegramBot(
-            api_key = telegram_api_key,
-            channel_id = telegram_channel_id,
+        self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
+        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
+
+        self.data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
+            data_pipeline = self.data_pipeline,
+            websocket = self.ws,
         )
 
-        data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
-            pipeline = pipeline,
-            websocket = ws,
+        self.signal_generator: SignalGenerator = SignalGenerator(
+            data_pipeline = self.data_pipeline,
+            custom_telegram_bot = self.telegram_bot,
+            signal_pipeline = self.signal_pipline,
         )
 
-        signal_generator: SignalGenerator = SignalGenerator(
-            data_pipeline = pipeline,
-            custom_telegram_bot = telegram_bot,
+        # one more classs: trade_manager -> it will have the FutureMarket SDWK
+        self.trade_manager: TradeManager = TradeManager(
+            signal_pipeline = self.signal_pipline,
+            mexc_future_market_sdk = self.mexc_sdk,
+            delta_mapper = self.mapper,
+            telegram_bot = self.telegram_bot,
         )
-
-        # one more classs: trade decider -> it will have the FutureMarket SDWK
 
         try:
             while True:
@@ -60,11 +64,58 @@ class SystemManager:
             logger.info("Program interrupted by user. Exiting...")
             sys.exit(0)
         except Exception as e:
-            logger.critical(f"Program encounters critical errors.{e}\n Exiting...")
-            sys.exit(0)
-            return
-        
-    def __get_telegram_credentials(self):
+            logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
+
+        return
+    
+    def __set_up_telegram_bot(
+        self,
+    ) -> CustomTelegramBot:
+        """
+        func __set_up_telegram_bot():
+            - Set up the telegram bot with the given credentials.
+
+        param self: SystemManager
+            - class object
+
+        return CustomTelegramBot
+            - CustomTelegramBot object
+            - has been registered with the custom channel id.
+        """
+        api_key, channel_id = SystemManager.__get_telegram_credentials()
+        return CustomTelegramBot(
+            api_key = api_key,
+            channel_id = channel_id,
+        )
+    
+    def __set_up_mexc_sdk(
+        self,
+    ) -> FutureMarket:
+        """
+        func __set_up_mexc_sdk():
+            - Set up the MexC SDK with the given credentials.
+
+        param self: SystemManager
+            - class object
+
+        return FutureWebSocket
+            - FutureWebSocket object
+            - has been registered with the given api_key and secret_key.
+        """
+        api_key, secret_key = SystemManager.__get_mexc_crendentials()
+        return FutureMarket(
+            api_key = api_key,
+            secret_key = secret_key,
+        )
+
+    """
+    ######################################################################################################################
+    #                                                Static Method                                                       #
+    ######################################################################################################################
+    """
+    @staticmethod
+    def __get_telegram_credentials():
         f = open('./credentials/telegram_key.json')
         credentials = json.load(f)
         
@@ -73,6 +124,15 @@ class SystemManager:
 
         return api_key, channel_id
     
+    def __get_mexc_crendentials():
+        f = open('./credentials/mexc_keys.json')
+        credentials = json.load(f)
+        
+        api_key = credentials["api_key"]
+        secret_key = credentials["secret_key"]
+
+        return api_key, secret_key
+
 
 def main(): # to test run the system manager.
     main_system_manager: SystemManager = SystemManager()

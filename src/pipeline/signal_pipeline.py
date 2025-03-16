@@ -4,17 +4,17 @@ from typing import Literal, Optional, Dict, Any
 
 # Custom Library
 from logger.set_logger import logger
-from object.signal_int import TradeSignal # TODO: Need to define this class in another class
+from object.signal import TradeSignal, Signal # TODO: Need to define this class in another class
 
 class SignalPipeline:
     def __init__(self):
         """
-        # func __init__:
-            # create a Queue of Dict to store indicator
-            # Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
+        func __init__:
+            - create a Queue of Dict to store indicator
+            - Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
 
-        # queue:
-            # indicator_queue: indicator buffer
+        queue:
+            - indicator_queue: indicator buffer
 
             indicator = {
                 "indicator": {
@@ -26,40 +26,61 @@ class SignalPipeline:
                 }
             }
         """
-        self.indicator_queue: Queue[Dict[str, Dict[str, Any]]] = Queue()
+        self.signal_queue: Queue[Signal] = Queue()
         return
     
-    def push_indicator(
+    def push_signal(
         self,
-        indicator: Dict[str, Dict[str, Any]],
+        signal: Signal,
     ) -> bool:
-        return
-    
-    def pop_indicator(
-        self,
-        indicator: Dict[str, Dict[str, Any]],
-        timeout: int | None = None,
-        block: bool = True,
-    ) -> Dict[str, Dict[str, Any]] | None:
         """
-        # func pop_indicator():
-            # get the indicator from the buffer.
+        func push_indicator():
+            - push the indicator to the buffer.
 
-        # param self
-            # class object
-        # param indicator
-            # indicator got as a parameter.
-            # Dict[str, Dict[str, Any]]
-        # param timeout
-            # the timeout value for getting indicator from the queue.
-        # param block
-            # the boolean value to indicate if the queue is blocked or not when we get the data.
-
-        # return bool
-            # return indicator if there is a valid indicator.
+        param self
+            - class object
+        param indicator
+            - indicator got as a parameter to push to the buffer.
+            - Dict[str, Dict[str, Any]]
         """
         try:
-            return self.queue.get(
+            self.signal_queue.put(
+                signal,
+                block = False,
+                timeout = 1,
+            )
+        except Full:
+            logger.warning(f"{__name__} - Indicator Queue is full. Data cannot be added.")
+            return False
+        except Exception as e:
+            logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            return False
+        return
+    
+    def pop_signal(
+        self,
+        timeout: int | None = None,
+        block: bool = True,  # Default is to be blocked
+    ) -> Signal | None:
+        """
+        func pop_indicator():
+            - get the indicator from the buffer.
+
+        param self
+            - class object
+        param indicator
+            - indicator got as a parameter.
+            - Dict[str, Dict[str, Any]]
+        param timeout
+            - the timeout value for getting indicator from the queue.
+        param block
+            - the boolean value to indicate if the queue is blocked or not when we get the data.
+
+        return bool
+            - return indicator if there is a valid indicator.
+        """
+        try:
+            return self.signal_queue.get(
                 block = block,
                 timeout = timeout,    
             )

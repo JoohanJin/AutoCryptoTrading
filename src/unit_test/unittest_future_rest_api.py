@@ -1,20 +1,23 @@
-import unittest
-from typing import Tuple
-import mexc.future as future
-import json
-
-
 import sys
 import os
+
+import unittest
+from typing import Tuple
+import json
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import mexc.future as future
 
 def get_keys() -> Tuple[str, str]:
     try:
-        f = open('mexc/keys.json')
-        data = json.load(f)
+        with open('/src/mexc/keys.json', 'r') as f:
+            data = json.load(f)
         api_key: str = data.get('api_key')
         secret_key: str= data.get('secret_key')
+
         return api_key, secret_key
+    
     except FileNotFoundError:
         print("The file containing keys for MexC broker has not been found")
         return None, None
@@ -22,8 +25,8 @@ def get_keys() -> Tuple[str, str]:
 
 api_key, secret_key = get_keys()
 future_market = future.FutureMarket(
-    api_key=api_key,
-    secret_key=secret_key
+    api_key = api_key,
+    secret_key = secret_key,
 )
 
 class unittest_FutureMarket(unittest.TestCase):
