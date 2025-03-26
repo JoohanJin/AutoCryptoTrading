@@ -64,6 +64,7 @@ class TradeManager:
         trade_amount: float = 0.1, # 10% of the total asset
         take_profit_rate: float = 0.15, # 15%
         stop_loss_rate: float = 0.05, # 5%
+        score_threashold: int = 1_000,
     ) -> None:
         """
         func __init__():
@@ -80,6 +81,8 @@ class TradeManager:
         self.delta_mapper: ScoreMapper = delta_mapper
 
         self.telegram_bot: CustomTelegramBot = telegram_bot
+
+        self.score_threshold: int = score_threashold
 
         # Set the thread pool as a member function.
         self.threads: List[threading.Threads] = list()
@@ -296,9 +299,9 @@ class TradeManager:
             - -1: sell
             - 0: hold
         """
-        if score > 100:
+        if score > self.score_threshold:
             return 1
-        elif score < -100:
+        elif score < (-1 * self.score_threshold):
             return -1
         return 0 # default is do nothing
 
@@ -331,9 +334,9 @@ class TradeManager:
 
                 if decision != 0: # can be further improved in the future.
                     with self.trade_score_lock:
-                        self.trade_score = 0
+                        self.trade_score = 200 if decision == 1 else -200
 
-                time.sleep(0.5)
+                time.sleep(0.25)
             
             except Exception as e:
                 logger.error(f"{__name__} - Error while deciding the trade: {e}")
@@ -419,9 +422,10 @@ class TradeManager:
         """
         try:
             if (buy_or_sell == 1 or buy_or_sell == -1):
+                current_price: float = self.__get_current_price()
                 tp_price, sl_price = self.__get_target_prices(
                     buy_or_sell = buy_or_sell,
-                    current_price = self.__get_current_price(),
+                    current_price = current_price,
                 )
                 trade_amount: float = self.__get_trade_amount()
                 order_type: int = 0
@@ -436,7 +440,7 @@ class TradeManager:
                 await self.telegram_bot.send_text(
                     f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                 )
-                logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
+                logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
     
         except Exception as e:
             logger.error(f"{__name__} - Error while executing the trade: {e}")

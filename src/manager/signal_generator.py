@@ -32,11 +32,17 @@ class SignalGenerator:
         """
         return int(time.time() * 1000)
 
+
+    """
+    ######################################################################################################################
+    #                                               Function Method                                                      #
+    ######################################################################################################################
+    """
     def __init__(
         self,
         data_pipeline: DataPipeline,
         custom_telegram_bot: CustomTelegramBot,
-        signal_pipeline: SignalPipeline, #  send the signal generated from SignalGenerator and this is connected to the trade_manager
+        signal_pipeline: SignalPipeline,
     ) -> None:
         """
         func __init__():
