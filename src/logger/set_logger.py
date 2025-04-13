@@ -5,36 +5,62 @@ from datetime import datetime
 from functools import wraps
 import os
 
-# TODO: Need to debug the behavior of the logger, it is not working as expected.
 
-logger = logging.getLogger("AutoTradingBotGlobalLogger")
+# Operation logger
+operation_logger: logging.Logger = logging.getLogger("SystemLogger") # operation logger
+operation_logger.setLevel(logging.INFO) # Set the logging level to INFO
 
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Format of the log messages
-    handlers=[
-        logging.FileHandler(f"log/{datetime.now().strftime('%Y-%m-%d')}~.log"),  # Log to a file
-        logging.StreamHandler()  # Log to the console
-    ],
-)
+# Operation logger - Formatter for log messages
+operation_logger_formatter: logging.Formatter = logging.Formatter('System - %(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
+# Operation logger - File Handler
+operation_logger_file_handler: logging.FileHandler = logging.FileHandler(
+    f"log/system-{datetime.now().strftime('%Y-%m-%d')}~.log",
+) # Log file handler    
+operation_logger_file_handler.setFormatter(operation_logger_formatter) # Set the formatter for the file handler
 
+# Operation logger - Console Handller
+operation_logger_console_handler: logging.StreamHandler = logging.StreamHandler() # Console handler
+operation_logger_console_handler.setFormatter(operation_logger_formatter) # Set the formatter for the console handler
+
+operation_logger.addHandler(operation_logger_file_handler) # Add the file handler to the logger
+operation_logger.addHandler(operation_logger_console_handler) # Add the console handler to the logger
+
+
+# Trading Logger
+trading_logger: logging.Logger = logging.getLogger("TradingLogger")
+trading_logger.setLevel(logging.INFO) # Set the logging level to INFO
+
+# Trading Logger - Formatter for log messages
+trading_logger_formatter: logging.Formatter = logging.Formatter('Trading - %(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Trading Logger - File Handler
+trading_logger_file_handler: logging.FileHandler = logging.FileHandler(
+    f"log/trading-{datetime.now().strftime('%Y-%m-%d')}~.log",
+) # Log file handler
+operation_logger_file_handler.setFormatter(trading_logger_formatter) # Set the formatter for the file handler
+
+operation_logger.addHandler(trading_logger_file_handler) # Add the file handler to the logger
+
+# Logger Generation has been completed.
+operation_logger.info(f"{__name__} - {operation_logger} - Operation Logger generation completed.")
+trading_logger.info(f"{__name__} - {trading_logger} - Trading Logger generation completed.")
 
 
 # define log_decorator for the function, future usage consideration
 def log_decorator(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
+        operation_logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
         try:
             result = func(*args, **kwargs)
             if (result is not None and type(result) is not bool):
-                logger.info(f"{func.__name__} returned {result}")
+                operation_logger.info(f"{func.__name__} returned {result}")
             else:
-                logger.info(f"{func.__name__} executed and returned {result}")
+                operation_logger.info(f"{func.__name__} executed and returned {result}")
             return result
         except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}")
+            operation_logger.error(f"Error in {func.__name__}: {e}")
             raise
     return wrapper
