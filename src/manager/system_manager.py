@@ -11,7 +11,7 @@ from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
 from object.score_mapping import ScoreMapper
 from pipeline.data_pipeline import DataPipeline
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 from pipeline.signal_pipeline import SignalPipeline
 
 class SystemManager:
@@ -61,10 +61,10 @@ class SystemManager:
             while True:
                 time.sleep(1) # Sleep to reduce the cpu usage.
         except KeyboardInterrupt:
-            logger.info("Program interrupted by user. Exiting...")
+            operation_logger.info("Program interrupted by user. Exiting...")
             sys.exit(0)
         except Exception as e:
-            logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            operation_logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
             raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
 
         return

@@ -9,7 +9,7 @@ from custom_telegram.telegram_bot_class import CustomTelegramBot
 from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
-from logger.set_logger import logger
+from logger.set_logger import operation_logger, trading_logger
 from object.signal import TradeSignal, Signal
 
 
@@ -180,7 +180,7 @@ class SignalGenerator:
                 message = message,
             )
         except Exception as e:
-            logger.error(f"Error sending Telegram message: {e}")
+            operation_logger.error(f"Error sending Telegram message: {e}")
 
     # TODO: This is not used currently.
     def generate_telegram_msg(self, data) -> str:
@@ -219,21 +219,21 @@ class SignalGenerator:
             target = self.get_sma,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
 
         ema_thread: threading.Thread = threading.Thread(
             name = "ema_data_getter",
             target = self.get_ema,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
 
         price_thread: threading.Thread = threading.Thread(
             name = "price_data_getter",
             target = self.get_price,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
 
         # add data-update threads into the Threads pool.
         self.threads.extend(
@@ -250,35 +250,35 @@ class SignalGenerator:
             target = self.generate_golden_cross_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for golden_cross_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for golden_cross_signal_generator has been set up!")
 
         death_cross_thread: threading.Thread = threading.Thread(
             name = "death_cross_signal_generator",
             target = self.generate_death_cross_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for death_cross_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for death_cross_signal_generator has been set up!")
 
         price_ma_thread: threading.Thread = threading.Thread(    
             name = "price_ma_signal_generator",
             target = self.generate_price_moving_average_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_ma_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_ma_signal_generator has been set up!")
 
         ema_sma_divergence_thread: threading.Thread = threading.Thread(
             name = "ema_sma_divergence_signal_generator",
             target = self.generate_ema_sma_divergence_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for ema_sma_divergence_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for ema_sma_divergence_signal_generator has been set up!")
 
         price_reversal_thread: threading.Thread = threading.Thread(
             name = "price_reversal_signal_generator",
             target = self.generate_price_reversal_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_reversal_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_reversal_signal_generator has been set up!")
 
         # add data consumptions threads into the Threads pool.
         self.threads.extend(
@@ -308,12 +308,12 @@ class SignalGenerator:
             try:
                 # start the thread.
                 thread.start()
-                logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
+                operation_logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
-                logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise Exception(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
         return
     
@@ -436,7 +436,7 @@ class SignalGenerator:
                             signal = TradeSignal.LONG_TERM_BUY
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
+                        trading_logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
             time.sleep(1.5)
         return None
     
@@ -467,7 +467,7 @@ class SignalGenerator:
                             signal = TradeSignal.LONG_TERM_SELL
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
+                        trading_logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
             time.sleep(1.5)
         return None
     
@@ -498,14 +498,14 @@ class SignalGenerator:
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
+                        trading_logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
                     
                     elif current_price < sma_60:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
+                        trading_logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
             time.sleep(1.5)
         return None
     
@@ -540,7 +540,7 @@ class SignalGenerator:
                             signal = TradeSignal.HOLD,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
+                        trading_logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
             time.sleep(1.5)
         return None
     
@@ -566,13 +566,13 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
-                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
+                        trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
                         self.signal_pipeline.push_signal(signal)
                     elif current_price < sma_60:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
+                        trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
             time.sleep(1.5)
         return None

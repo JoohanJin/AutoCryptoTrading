@@ -3,7 +3,7 @@ from queue import Queue, Full, Empty
 from typing import Literal, Optional, Dict, Any
 
 # Custom Library
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 from object.signal import TradeSignal, Signal # TODO: Need to define this class in another class
 
 class SignalPipeline:
@@ -50,10 +50,10 @@ class SignalPipeline:
                 timeout = 1,
             )
         except Full:
-            logger.warning(f"{__name__} - Indicator Queue is full. Data cannot be added.")
+            operation_logger.warning(f"{__name__} - Indicator Queue is full. Data cannot be added.")
             return False
         except Exception as e:
-            logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
             return False
         return
     
@@ -85,8 +85,8 @@ class SignalPipeline:
                 timeout = timeout,    
             )
         except Empty:
-            logger.warning(f"{__name__} -  Indicator Queue is empty. Data cannot be added.")
+            operation_logger.warning(f"{__name__} -  Indicator Queue is empty. Data cannot be added.")
             return None
         except Exception as e:
-            logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
             return None

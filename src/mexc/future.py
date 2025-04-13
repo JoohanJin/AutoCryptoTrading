@@ -6,7 +6,7 @@ from typing import Optional, Literal, Union, Callable
 
 from mexc.base_sdk import FutureBase
 from mexc.websocket_base import _FutureWebSocket
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 # no need to authenticate
 class FutureMarket(FutureBase):

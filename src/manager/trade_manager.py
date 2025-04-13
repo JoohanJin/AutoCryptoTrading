@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple
 
 # Custom Library
 from custom_telegram.telegram_bot_class import CustomTelegramBot
-from logger.set_logger import logger
+from logger.set_logger import operation_logger, trading_logger
 from mexc.future import FutureMarket
 from object.score_mapping import ScoreMapper
 from object.signal import Signal, TradeSignal
@@ -101,7 +101,7 @@ class TradeManager:
         # Start the TradeManager
         self.start()       
 
-        logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
+        operation_logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
         return None
 
     def __del__(
@@ -112,7 +112,7 @@ class TradeManager:
             - delete the TradeManager object
             - need to remove all the threads and possibly dynamic objects as well.
         """
-        logger.info(f"{__name__} - TradeManager has been deleted")
+        operation_logger.info(f"{__name__} - TradeManager has been deleted")
 
         return None
     
@@ -187,12 +187,12 @@ class TradeManager:
         for thread in self.threads:
             try:
                 thread.start()
-                logger.info(f"{__name__} - Thread {thread.name} has been started")
+                operation_logger.info(f"{__name__} - Thread {thread.name} has been started")
             except RuntimeError as e:
-                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
-                logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
+                operation_logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
                 raise Exception(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
         
         return None
@@ -236,7 +236,7 @@ class TradeManager:
                             signal_data = signal,
                         )
             except Exception as e:
-                logger.error(f"{__name__} - Error while getting the signal: {e}")
+                operation_logger.error(f"{__name__} - Error while getting the signal: {e}")
         return None
 
     def __calculate_signal_score_delta(
@@ -341,7 +341,7 @@ class TradeManager:
                 time.sleep(0.25)
             
             except Exception as e:
-                logger.error(f"{__name__} - Error while deciding the trade: {e}")
+                operation_logger.error(f"{__name__} - Error while deciding the trade: {e}")
 
         return None
 
@@ -441,8 +441,8 @@ class TradeManager:
                 await self.telegram_bot.send_text(
                     f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                 )
-                logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
+                trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
     
         except Exception as e:
-            logger.error(f"{__name__} - Error while executing the trade: {e}")
+            operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
         return None

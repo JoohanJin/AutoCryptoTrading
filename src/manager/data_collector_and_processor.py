@@ -8,7 +8,7 @@ from queue import Queue
 
 # Custom Module
 from mexc.future import FutureWebSocket
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 from manager.data_saver import DataSaver
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from object.constants import MA_WRITE_PERIODS
@@ -124,21 +124,21 @@ class DataCollectorAndProcessor:
             target = self._price_data_fetch,
             daemon = True
         )
-        logger.info(f"{__name__}: Thread for price fetch has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
         thread_calculate_sma: threading.Thread = threading.Thread(
             name = "provide_moving_average_thread",
             target = self._push_moving_averages,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for calculating sma has been set up!")
+        operation_logger.info(f"{__name__}: Thread for calculating sma has been set up!")
 
         thread_memory_save: threading.Thread = threading.Thread(
             name= "resize_df",
             target=self._resize_df,
             daemon=True
         )
-        logger.info(f"{__name__}: Thread for DataFrame size limit has been set up!")
+        operation_logger.info(f"{__name__}: Thread for DataFrame size limit has been set up!")
 
         self.threads.extend([thread_price_fetch, thread_calculate_sma, thread_memory_save])
         return
@@ -157,12 +157,12 @@ class DataCollectorAndProcessor:
         for thread in self.threads:
             try:
                 thread.start()
-                logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
+                operation_logger.info(f"{__name__}: Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError
             except Exception as e:
-                logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__}: Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise
         return
 
@@ -193,7 +193,7 @@ class DataCollectorAndProcessor:
                 timeout = None,
             )
         except Exception as e:
-            logger.critical(f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}")
+            operation_logger.critical(f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}")
         return
     
     """
@@ -237,7 +237,7 @@ class DataCollectorAndProcessor:
                         )
 
             except Exception as e:
-                logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
+                operation_logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
     
     def _get_data_buffer(self) -> Optional[dict]:
@@ -254,7 +254,7 @@ class DataCollectorAndProcessor:
 
             return result
         except Exception as e:
-            logger.critical(f"{__name__} - Error retreving data from queue: {e}")
+            operation_logger.critical(f"{__name__} - Error retreving data from queue: {e}")
             return None
 
     # for batch processing of the data.
@@ -277,7 +277,7 @@ class DataCollectorAndProcessor:
                 self.priceData=pd.concat([self.priceData, tmp], axis=0)
             return True
         except Exception as e:
-            logger.critical(f"{__name__} - Error in appending the data to the DataFrame: {e}")
+            operation_logger.critical(f"{__name__} - Error in appending the data to the DataFrame: {e}")
             return False 
         finally:
             data_buffer.clear()
@@ -356,16 +356,16 @@ class DataCollectorAndProcessor:
 
         except KeyError as e:
             # Specific error handling for KeyError, i.e., missing collumn
-            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the KeyError: {e}")
+            operation_logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the KeyError: {e}")
             return None
         
         except IndexError as e:
             # Specific error handling for IndexError, i.e., out of range and slicing of the DataFrame.
-            logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the IndexError: {e}")
+            operation_logger.error(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has raised the IndexError: {e}")
             return None
 
         except Exception as e:
-            logger.warning(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception.")
+            operation_logger.warning(f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception.")
             return None
         
 
@@ -395,15 +395,15 @@ class DataCollectorAndProcessor:
                         data = self.priceData.iloc[:-self._df_size_limit]
                         self.priceData = self.priceData.iloc[-self._df_size_limit:]
                     else:
-                        logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
+                        operation_logger.info(f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}")
 
                 if (data is not None):
                     self._memory_saver.write(data)
-                    logger.info(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
+                    operation_logger.info(f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns")
 
                 time.sleep(300) # let the cpu to sleep for 5 minutes
             except Exception as e:
-                logger.warning(f"{__name__} - func _resize_df(): Exception caused: {e}")
+                operation_logger.warning(f"{__name__} - func _resize_df(): Exception caused: {e}")
 
         return None
     

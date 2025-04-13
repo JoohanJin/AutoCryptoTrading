@@ -7,7 +7,8 @@ import time
 import logging
 from typing import Union, Literal, Optional
 
-logger = logging.getLogger('__name__')
+from logger.set_logger import operation_logger
+
 
 class CommonBaseSDK:
     """

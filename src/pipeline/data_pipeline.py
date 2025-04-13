@@ -3,7 +3,7 @@ from queue import Full, Queue, Empty
 from typing import Dict, Union, Optional, Literal, Tuple
 
 # CUSTOM LIBRARY
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 
 class DataPipeline:
@@ -82,13 +82,13 @@ class DataPipeline:
             )
             return True
         except Full:
-            logger.warning(f"{__name__} - {type} Queue is full. Data cannot be added.")
+            operation_logger.warning(f"{__name__} - {type} Queue is full. Data cannot be added.")
             return False
         except KeyError:
-            logger.warning(f"{__name__} - push_data(): Invalid Queue Type.")
+            operation_logger.warning(f"{__name__} - push_data(): Invalid Queue Type.")
             return False
         except Exception as e:
-            logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}")
             return False
 
     def pop_data(
@@ -127,11 +127,11 @@ class DataPipeline:
             data: Tuple[float] = self.queues[type].get(block = block, timeout = timeout)
             return data
         except Empty:
-            logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")
+            operation_logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")
             return None
         except KeyError:
-            logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}")
+            operation_logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}")
             return None
         except Exception as e:
-            logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}.")
+            operation_logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}.")
             return None

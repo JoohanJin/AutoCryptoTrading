@@ -13,7 +13,7 @@ import json
 import websocket
 
 # get the Logger
-from logger.set_logger import logger, log_decorator
+from logger.set_logger import operation_logger
 
 class __BasicWebSocketManager:
     def __init__(
@@ -87,7 +87,7 @@ class __BasicWebSocketManager:
             # if api_key and secret_key are given, then it should be authentication needed.
             self.auth = False if (self.api_key is None or self.secret_key is None) else True
         except Exception as e:
-            logger.error(f"{__name__} - func __init__(): {e}")
+            operation_logger.error(f"{__name__} - func __init__(): {e}")
             raise e
 
         return None
@@ -145,12 +145,12 @@ class __BasicWebSocketManager:
 
             # if timeout occurred
             if (not self.conn_timeout):
-                logger.warning(f"{__name__}: connection to the host time out. You may restart the entire program.")
+                operation_logger.warning(f"{__name__}: connection to the host time out. You may restart the entire program.")
                 # connection timeout
                 # retry connection is set to False
                 return
 
-        logger.info(f"{__name__} - func _connect: Websocket Connection to the host has been established.")
+        operation_logger.info(f"{__name__} - func _connect: Websocket Connection to the host has been established.")
         # if api_key and secret_key are given, login to the WebSocketApi
         if self.auth:
             time.sleep(1)
@@ -313,7 +313,7 @@ class __BasicWebSocketManager:
             # Exit and raise errors OR
             # attempt to reconnect
         """
-        logger.error(f"{__name__} - WebSocket API: Unknown Error Occurred: {exception}")
+        operation_logger.error(f"{__name__} - WebSocket API: Unknown Error Occurred: {exception}")
         sys.exit()
         return
 
@@ -324,7 +324,7 @@ class __BasicWebSocketManager:
         """
         # when the websocket is open
         """
-        logger.info(f"{__name__} - WebSocket has been opened")
+        operation_logger.info(f"{__name__} - WebSocket has been opened")
         return
 
     def __on_close(
@@ -335,9 +335,9 @@ class __BasicWebSocketManager:
     ):
         """
         # websocket close
-        # logging the status code and the msg into the logger
+        # logging the status code and the msg into the operation_logger
         """
-        logger.warning(f"{__name__} - the websocket has been closed. Need to reconnect")
+        operation_logger.warning(f"{__name__} - the websocket has been closed. Need to reconnect")
         # TODO: need to implement the function for reconnect.
         sys.exit()
         return
@@ -365,7 +365,7 @@ class __BasicWebSocketManager:
         self.subscriptions.clear()
         self.callback_dictionary.clear()
         self.auth = False
-        logger.info(f"{__name__} - WebSocket {self.ws_name} has been reset.")
+        operation_logger.info(f"{__name__} - WebSocket {self.ws_name} has been reset.")
         return
 
     def exit(self):
@@ -374,7 +374,7 @@ class __BasicWebSocketManager:
         """
         self.ws.close()
 
-        logger.warning("The WebSocket Manager has been terminated - You might need to restart the entire program")
+        operation_logger.warning("The WebSocket Manager has been terminated - You might need to restart the entire program")
 
         while self.ws.sock:
             continue
@@ -419,7 +419,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         # if there is no given callback function, we just put _print_normal_msg as a callback function
         self._set_callback(method.replace("sub.", ""), callback_function)
 
-        # logger.info(f"new sub has been established: {self.subscriptions}")
+        # operation_logger.info(f"new sub has been established: {self.subscriptions}")
 
         return
     
@@ -457,7 +457,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         elif is_sub_response():
             self._deal_with_sub_msg(msg=msg)
         elif is_error_msg():
-            logger.info(f"{__name__} - func _deal_with_response(): The error has been received from the host: {msg}")
+            operation_logger.info(f"{__name__} - func _deal_with_response(): The error has been received from the host: {msg}")
         elif is_pong_msg():
             pass
         else:
@@ -471,13 +471,13 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
     ):
         """
         Determine if the login has been successful.
-        # notify the result to the user by logger.
+        # notify the result to the user by operation_logger.
         """
         if msg.get("data") == "success": # login success
-            logger.info(f"Authorization for {self.ws_name} has been successful.")
+            operation_logger.info(f"Authorization for {self.ws_name} has been successful.")
             self.auth = True
         else: # login fail
-            logger.debug(
+            operation_logger.debug(
                 f"Authoriztion for {self.ws_name} has not been successful."
                 f"Please check your keys!"
             )
@@ -497,9 +497,9 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             ) and
                 msg.get("channel", "") != "rs.error"
             ):
-            logger.info(f"{__name__} - func _dealwith_sub_msg(): Subcription to {topic} has been establisehd")
+            operation_logger.info(f"{__name__} - func _dealwith_sub_msg(): Subcription to {topic} has been establisehd")
         else:
-            logger.info(f"{__name__} - func _dealwith_sub_msg(): Subscription to {topic} has failed to establish.")
+            operation_logger.info(f"{__name__} - func _dealwith_sub_msg(): Subscription to {topic} has failed to establish.")
 
         return
 
@@ -521,7 +521,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
     ):
         for topic in topics:
             if topic in self.callback_dictionary:
-                logger.info(f"{__name__} - func _deal_with_normal_msg(): {topic} is already subscribed")
+                operation_logger.info(f"{__name__} - func _deal_with_normal_msg(): {topic} is already subscribed")
                 raise Exception
             
 
@@ -567,7 +567,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
             )
             self.ws._connect(self.endpoint)
         except Exception as e:
-            logger.error(f"{__name__} - func initialize_websocket(): {e}")
+            operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
             print(f"{__name__} - func initialize_websocket(): {e}")
             return
 

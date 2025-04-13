@@ -1,4 +1,4 @@
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 from base_sdk import _BinanceFutureSdk
 
