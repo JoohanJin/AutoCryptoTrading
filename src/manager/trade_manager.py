@@ -64,7 +64,7 @@ class TradeManager:
         trade_amount: float = 0.1, # 10% of the total asset
         take_profit_rate: float = 0.15, # 15%
         stop_loss_rate: float = 0.05, # 5%
-        score_threashold: int = 1_000,
+        score_threashold: int = 2_000,
     ) -> None:
         """
         func __init__():
@@ -96,7 +96,7 @@ class TradeManager:
         self.tp_rate: float = take_profit_rate
         self.sl_rate: float = stop_loss_rate
 
-        self.async_loop = asyncio.new_event_loop()
+        self.async_loop = asyncio.new_event_loop() # only for Telegram Client
 
         # Start the TradeManager
         self.start()       
@@ -333,6 +333,8 @@ class TradeManager:
                 )
 
                 if decision != 0: # can be further improved in the future.
+                    # reset the score, but based on the trend
+                    # 
                     with self.trade_score_lock:
                         self.trade_score = 200 if decision == 1 else -200
 
@@ -436,9 +438,8 @@ class TradeManager:
                     order_Type = 3 # Short
 
                 # TODO: trigger the order
-                # TODO: add telegram notification.
                 await self.telegram_bot.send_text(
-                    f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                    f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                 )
                 logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
     

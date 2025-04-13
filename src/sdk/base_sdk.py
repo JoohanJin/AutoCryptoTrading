@@ -40,7 +40,16 @@ class CommonBaseSDK:
         query_string: str,
     ) -> str:
         """
-        Generate an HMAC SHA256 signature. Child classes can override this if needed.
+        fucn generate_signature:
+            - Generate a signature for the request using HMAC SHA256.
+            - This is used for authentication with the API.
+            - Child classes would override this method if needed.
+
+        param query_string:
+        - The query string to be signed.
+
+        return: The generated signature as a hex digest (readable string).
+            - if we do not disgest using hexdigest, the signature will be a hmac object.
         """
         if not self.secret_key:
             raise ValueError("Secret key is required for signature generation.")
@@ -63,9 +72,20 @@ class CommonBaseSDK:
         params: Optional[dict] = None,
         data: Optional[dict] = None,
         headers: Optional[dict] = None,
-    ):
+    ) -> dict | None:
         """
-        Make a generic API call with the specified method, URL, and parameters.
+        func call:
+            - Make a generic API call with the specified method, URL, and parameters.
+            - Automatically handles signature generation and timestamping.
+            - Returns the JSON response from the API.
+        
+        param method: HTTP method (GET, POST, PUT, DELETE)
+        param url: API endpoint URL (should start with "/")
+        param params: Query parameters for the request
+        param data: JSON body for the request
+        param headers: Additional headers for the request
+
+        return: JSON response from the API
         """
         # Ensure the URL starts with "/"
         if not url.startswith("/"):
