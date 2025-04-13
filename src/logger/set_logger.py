@@ -15,8 +15,13 @@ operation_logger_formatter: logging.Formatter = logging.Formatter('System - %(as
 
 
 # Operation logger - File Handler
-operation_logger_file_handler: logging.FileHandler = logging.FileHandler(
-    f"log/system-{datetime.now().strftime('%Y-%m-%d')}~.log",
+operation_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
+    f"log/system-logging.log",
+    when = 'midnight', # rotate at midnight
+    interval = 1, # Rotate every day
+    backupCount = 14, # keep 14 days of logs
+    encoding = 'utf-8', # Set the encoding to utf-8
+    delay = False, # Do not delay the creation of the log file
 ) # Log file handler    
 operation_logger_file_handler.setFormatter(operation_logger_formatter) # Set the formatter for the file handler
 
@@ -31,17 +36,22 @@ operation_logger.addHandler(operation_logger_console_handler) # Add the console 
 # Trading Logger
 trading_logger: logging.Logger = logging.getLogger("TradingLogger")
 trading_logger.setLevel(logging.INFO) # Set the logging level to INFO
-
+ 
 # Trading Logger - Formatter for log messages
 trading_logger_formatter: logging.Formatter = logging.Formatter('Trading - %(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Trading Logger - File Handler
-trading_logger_file_handler: logging.FileHandler = logging.FileHandler(
-    f"log/trading-{datetime.now().strftime('%Y-%m-%d')}~.log",
+trading_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
+    filename = f"log/trading-logging.log",
+    when = 'midnight', # rotate at midnight
+    interval = 1, # Rotate every day
+    backupCount = 14, # keep 14 days of logs
+    encoding = 'utf-8', # Set the encoding to utf-8
+    delay = False, # Do not delay the creation of the log file
 ) # Log file handler
-operation_logger_file_handler.setFormatter(trading_logger_formatter) # Set the formatter for the file handler
+trading_logger_file_handler.setFormatter(trading_logger_formatter) # Set the formatter for the file handler
 
-operation_logger.addHandler(trading_logger_file_handler) # Add the file handler to the logger
+trading_logger.addHandler(trading_logger_file_handler) # Add the file handler to the logger
 
 # Logger Generation has been completed.
 operation_logger.info(f"{__name__} - {operation_logger} - Operation Logger generation completed.")
