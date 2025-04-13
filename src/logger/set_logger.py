@@ -54,8 +54,8 @@ trading_logger_file_handler.setFormatter(trading_logger_formatter) # Set the for
 trading_logger.addHandler(trading_logger_file_handler) # Add the file handler to the logger
 
 # Logger Generation has been completed.
-operation_logger.info(f"{__name__} - {operation_logger} - Operation Logger generation completed.")
-trading_logger.info(f"{__name__} - {trading_logger} - Trading Logger generation completed.")
+operation_logger.info(f"{__name__} - {operation_logger.name} - Operation Logger generation completed.")
+trading_logger.info(f"{__name__} - {trading_logger.name} - Trading Logger generation completed.")
 
 
 # define log_decorator for the function, future usage consideration

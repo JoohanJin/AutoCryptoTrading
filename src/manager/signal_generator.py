@@ -75,6 +75,10 @@ class SignalGenerator:
 
         # threads pool
         self.threads: List[threading.Thead] = list()
+        
+        # shared data structure to store Timestamp of the previoius invokation of each signal.
+        self.signal_timestamps: dict[str, int] = dict()
+        self.signal_timestamps_lock: threading.Lock = threading.Lock()
 
         # TODO: separate this part as strat()
         # initialize the threads
@@ -418,12 +422,17 @@ class SignalGenerator:
             - a short-term moving average (SMA) crosses above
             - a long-term moving average, indicating a potential bullish trend.
         """
+        key: str = "golden_cross"
         while True:
             with self.indicators_lock:
                 sma_data: dict | None = self.indicators.get("sma")
                 ema_data: dict | None = self.indicators.get("ema")
-            
-            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
+
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -436,6 +445,10 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
+
+            with self.signal_timestamps_lock:
+                self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -449,12 +462,17 @@ class SignalGenerator:
             - a long-term moving average,
             - indicating a potential bearish trend.
         """
+        key: str = "death_cross"
         while True:
             with self.indicators_lock:
                 sma_data: dict = self.indicators.get("sma")
                 ema_data: dict = self.indicators.get("ema")
 
-            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -467,6 +485,10 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
+            
+            with self.signal_timestamps_lock:
+                self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -483,12 +505,17 @@ class SignalGenerator:
             - If the current price crosses above the moving average, generate a "Price Above MA" signal.
             - If the current price crosses below the movign average, generate a "Price Below MA" signal.
         """
+        key: str = "price_moving_average" # TODO: Check if we need to have the direction -> maybe separate this as well?
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 current_price: float = self.indicators.get("price")
-            
-            if (sma_data and current_price):
+
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and current_price):
                 sma_60 = sma_data.get(60) # Example for 1 min SMA
                 
                 if sma_60:
@@ -505,6 +532,10 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
+            
+            with self.signal_timestamps_lock:
+                self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -523,12 +554,17 @@ class SignalGenerator:
             - There is a significant difference between the EMA and SMA.
             - This divergence can indicate potential changes in makret trends or momentum.
         """
+        key: str = "ema_sma_divergence"
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 ema_data: Dict[int, float] = self.indicators.get("ema")
 
-            if (sma_data and ema_data):
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data):
                 sma_60 = sma_data.get(60) # data for 1 min SMA
                 ema_60 = ema_data.get(60) # data for 1 min EMA
 
@@ -540,6 +576,10 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
+
+            with self.signal_timestamps_lock:
+                self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -552,12 +592,17 @@ class SignalGenerator:
             - the price changes direction after a sustained trend.
             - This cna indicate potential buy or sell opportunities based on this.
         """
+        key: str = "price_reversal"
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 current_price: float = self.indicators.get("price")
 
-            if (sma_data and current_price):
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and current_price):
                 sma_60: float = sma_data.get(60) # data for 1 min SMA
 
                 if (sma_60):
@@ -573,5 +618,9 @@ class SignalGenerator:
                         )
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
+
+            with self.signal_timestamps_lock:
+                self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
