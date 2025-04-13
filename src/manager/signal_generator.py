@@ -42,6 +42,7 @@ class SignalGenerator:
         data_pipeline: DataPipeline,
         custom_telegram_bot: CustomTelegramBot,
         signal_pipeline: SignalPipeline,
+        signal_window: int = 5_000,
     ) -> None:
         """
         func __init__():
@@ -79,6 +80,7 @@ class SignalGenerator:
         # shared data structure to store Timestamp of the previoius invokation of each signal.
         self.signal_timestamps: dict[str, int] = dict()
         self.signal_timestamps_lock: threading.Lock = threading.Lock()
+        self.signal_window: int = signal_window
 
         # TODO: separate this part as strat()
         # initialize the threads
@@ -432,7 +434,7 @@ class SignalGenerator:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -472,7 +474,7 @@ class SignalGenerator:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -515,7 +517,7 @@ class SignalGenerator:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and current_price):
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and current_price):
                 sma_60 = sma_data.get(60) # Example for 1 min SMA
                 
                 if sma_60:
@@ -564,7 +566,7 @@ class SignalGenerator:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and ema_data):
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data):
                 sma_60 = sma_data.get(60) # data for 1 min SMA
                 ema_60 = ema_data.get(60) # data for 1 min EMA
 
@@ -602,7 +604,7 @@ class SignalGenerator:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > 5000) and (sma_data and current_price):
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and current_price):
                 sma_60: float = sma_data.get(60) # data for 1 min SMA
 
                 if (sma_60):
