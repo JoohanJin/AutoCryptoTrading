@@ -409,6 +409,35 @@ class TradeManager:
             raise Exception(f"{__name__} - Error while getting the trade amount: {open_amount_response}")
         return
 
+    def __decide_to_make_trade(
+        self,
+    ) -> bool:
+        '''
+        func __decide_to_make_trade():
+            - private method
+            - decide whether to make the trade or not.
+            - It will return True if there is an order/orders held by the account.
+            - To make sure that only one order can be made at one moment.
+        
+        param self:
+            - TradeManager object
+
+        return bool: 
+            - if there is no order held, then we will make an order.
+                - return True
+            - if there is an order held, then we will not make an order.
+                - return False
+        '''
+        try:
+            currently_holing_order: Dict = self.mexc_future_market_sdk.current_position()
+            if not len(currently_holing_order.get('data')):
+                return False
+            else:
+                return True
+        except Exception as e:
+            operation_logger.error(f"{__name__} - Error while deciding to make trade: {e}")
+        return
+
     async def __execute_trade(
         self,
         buy_or_sell: int,
@@ -438,10 +467,15 @@ class TradeManager:
                     order_Type = 3 # Short
 
                 # TODO: trigger the order
-                await self.telegram_bot.send_text(
-                    f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
-                )
-                trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
+                # order trigger to the telgram bot
+                if self.__decide_to_make_trade(): # make the trade
+                    await self.telegram_bot.send_text(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                    )
+                    trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
+                else:
+                    trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured.")
+
     
         except Exception as e:
             operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
