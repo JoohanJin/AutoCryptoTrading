@@ -446,8 +446,8 @@ class SignalGenerator:
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
 
-            with self.signal_timestamps_lock:
-                self.signal_timestamps[key] = curr_timestamp
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
 
             time.sleep(1.5)
         return None
@@ -486,8 +486,8 @@ class SignalGenerator:
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
             
-            with self.signal_timestamps_lock:
-                self.signal_timestamps[key] = curr_timestamp
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
 
             time.sleep(1.5)
         return None
@@ -533,8 +533,8 @@ class SignalGenerator:
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
             
-            with self.signal_timestamps_lock:
-                self.signal_timestamps[key] = curr_timestamp
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
 
             time.sleep(1.5)
         return None
@@ -577,8 +577,8 @@ class SignalGenerator:
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
 
-            with self.signal_timestamps_lock:
-                self.signal_timestamps[key] = curr_timestamp
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
 
             time.sleep(1.5)
         return None
@@ -619,8 +619,8 @@ class SignalGenerator:
                         self.signal_pipeline.push_signal(signal)
                         trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
 
-            with self.signal_timestamps_lock:
-                self.signal_timestamps[key] = curr_timestamp
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
 
             time.sleep(1.5)
         return None
