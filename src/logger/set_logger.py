@@ -70,20 +70,38 @@ trading_logger.info(f"{__name__} - {trading_logger.name} - Trading Logger genera
 
 
 # define log_decorator for the function, future usage consideration
+# def log_decorator(func):
+#     @wraps(func)
+#     def wrapper(*args, **kwargs):
+#         operation_logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
+#         try:
+#             result = func(*args, **kwargs)
+#             if (result is not None and type(result) is not bool):
+#                 operation_logger.info(f"{func.__name__} returned {result}")
+#             else:
+#                 operation_logger.info(f"{func.__name__} executed and returned {result}")
+#             return result
+#         except Exception as e:
+#             operation_logger.error(f"Error in {func.__name__}: {e}")
+#             raise
+#     return wrapper
+
 def log_decorator(func):
+    def entering(func, *args):
+        operation_logger.debug(f"Entering function '{func.__name__}'")
+        # operation_logger.info(func.__doc__)
+        operation_logger.info(f"Function at line {func.__code__.co_firstlineno} in {func.__code__.co_filename}")
+
+    def exiting(func):
+        operation_logger.debug(f"Exiting function '{func.__name__}'")
+
     @wraps(func)
     def wrapper(*args, **kwargs):
-        operation_logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
-        try:
-            result = func(*args, **kwargs)
-            if (result is not None and type(result) is not bool):
-                operation_logger.info(f"{func.__name__} returned {result}")
-            else:
-                operation_logger.info(f"{func.__name__} executed and returned {result}")
-            return result
-        except Exception as e:
-            operation_logger.error(f"Error in {func.__name__}: {e}")
-            raise
+        entering(func, *args)
+        result = func(*args, **kwargs)
+        exiting(func)
+        return result
+
     return wrapper
 
 if __name__ == "__main__":

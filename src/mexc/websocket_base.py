@@ -4,7 +4,7 @@ import sys
 from .base_sdk import *
 
 import threading
-from typing import Literal, Union, Optional, Callable
+from typing import Optional, Callable
 import time
 import hashlib
 import threading
@@ -58,20 +58,20 @@ class __BasicWebSocketManager:
             self.secret_key = secret_key
             
             # ping settings
-            self.ping_interval = ping_interval
-            self.ping_timeout = ping_timeout
+            self.ping_interval: int = ping_interval
+            self.ping_timeout: int = ping_timeout
 
             # default callback
-            self.callback_function = default_callback
+            self.callback_function: Callable = default_callback
 
             # Connection interval
-            self.conn_interval = connection_interval
+            self.conn_interval: Callable = connection_interval
 
             # connection timeout interval
-            self.conn_timeout = conn_timeout
+            self.conn_timeout: Callable = conn_timeout
 
             # to save the list of subcriptions and the function for each subcription
-            self.callback_dictionary = {}
+            self.callback_dictionary: dict = {}
 
             # setup the directory as follow:
             """
