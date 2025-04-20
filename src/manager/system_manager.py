@@ -27,7 +27,7 @@ class SystemManager:
 
         return None
         """
-
+        # prepare the necessary parts for injection.
         self.ws: FutureWebSocket = FutureWebSocket()
         self.data_pipeline: DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()

@@ -6,13 +6,19 @@ from functools import wraps
 import os
 
 
+'''
+############################################################################################################################################
+# Operator Logger
+# This logger is used to log the operations of the system
+# It logs the operations of the system, such as starting and stopping the system, and any errors that occur.
+############################################################################################################################################
+'''
 # Operation logger
 operation_logger: logging.Logger = logging.getLogger("SystemLogger") # operation logger
 operation_logger.setLevel(logging.INFO) # Set the logging level to INFO
 
 # Operation logger - Formatter for log messages
 operation_logger_formatter: logging.Formatter = logging.Formatter('System - %(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
 
 # Operation logger - File Handler
 operation_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
@@ -32,7 +38,12 @@ operation_logger_console_handler.setFormatter(operation_logger_formatter) # Set 
 operation_logger.addHandler(operation_logger_file_handler) # Add the file handler to the logger
 operation_logger.addHandler(operation_logger_console_handler) # Add the console handler to the logger
 
-
+'''
+############################################################################################################################################
+# Trading Logger
+# This logger is used for signal generator
+############################################################################################################################################
+'''
 # Trading Logger
 trading_logger: logging.Logger = logging.getLogger("TradingLogger")
 trading_logger.setLevel(logging.INFO) # Set the logging level to INFO
@@ -74,3 +85,10 @@ def log_decorator(func):
             operation_logger.error(f"Error in {func.__name__}: {e}")
             raise
     return wrapper
+
+if __name__ == "__main__":
+    # Test the logger
+    operation_logger.info("This is a test log message.")
+    trading_logger.info("This is a test trading log message.")
+    operation_logger.error("This is a test error log message.")
+    trading_logger.error("This is a test trading error log message.")
