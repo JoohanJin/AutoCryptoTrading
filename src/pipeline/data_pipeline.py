@@ -26,7 +26,7 @@ class DataPipeline:
         # return None
         """
         # data buffer, can be added in the future.
-        self.queues: Queue[Tuple[Dict[int, float]]] = {
+        self.queues: Dict[str, Queue[Tuple[Dict[int, float]]]] = {
             "price": Queue(
                 maxsize=100,
             ),
@@ -101,7 +101,7 @@ class DataPipeline:
         ],
         block: bool = True,
         timeout: int | None = None
-    ) -> Optional[Dict[int, float]]:
+    ) -> Tuple[Dict[int, float]] | None:
         """
         # func pop_data():
             # get the data from the queue with the given type.
@@ -124,7 +124,7 @@ class DataPipeline:
             # return data if there is a valid data.
         """
         try:
-            data: Tuple[float] = self.queues[type].get(block = block, timeout = timeout)
+            data: Tuple[Dict[int, float]] = self.queues[type].get(block = block, timeout = timeout)
             return data
         except Empty:
             operation_logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")

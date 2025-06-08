@@ -32,14 +32,14 @@
 <div align="center">
 
 
-<h3 align="center">AutoTradingBot</h3>
+<h2 align="center">AutoTradingBot</h3>
 
   <p align="center">
-    project_description
-    <br />
-    <a href="https://github.com/JoohanJin/AutoCryptoTrading"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
+    <!-- project_description -->
+    <!-- <br /> -->
+    <!-- <a href="https://github.com/JoohanJin/AutoCryptoTrading"><strong>Explore the docs »</strong></a> -->
+    <!-- <br /> -->
+    <!-- <br /> -->
     <!-- <a href="https://github.com/JoohanJin/AutoCryptoTrading">View Demo</a> -->
     <!-- · -->
     <!-- <a href="https://github.com/JoohanJin/AutoCryptoTrading/issues">Report Bug</a> -->
@@ -52,7 +52,7 @@
 
 
 <!-- TABLE OF CONTENTS -->
-<details>
+<!-- <details>
   <summary>Table of Contents</summary>
   <ol>
     <li>
@@ -75,7 +75,7 @@
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
-</details>
+</details> -->
 
 
 

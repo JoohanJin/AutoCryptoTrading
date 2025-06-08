@@ -32,7 +32,7 @@ class SignalPipeline:
     def push_signal(
         self,
         signal: Signal,
-    ) -> bool:
+    ) -> bool | None:
         """
         func push_indicator():
             - push the indicator to the buffer.
