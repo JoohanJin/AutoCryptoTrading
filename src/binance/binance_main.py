@@ -1,9 +1,9 @@
 from websocket_base import _FutureWebsocketManager
 
 # Logger
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 
 if __name__ == "__main__":
-    logger.info("yeah")
+    operation_logger.info("yeah")
     # do something

@@ -45,7 +45,10 @@
     - Position Size Algorithm
     - Trailing Stop Strategies
 - Profit Targets?
-- Multiple Technical Anlysis Indicator: To be decided.
+- Multiple Technical Anlysis Indicator:
+    - EMA
+    - SMA
+    - To be added
 
 ##### How to run the code in parallel computation manner?
 - Threading

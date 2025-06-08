@@ -9,7 +9,7 @@ from custom_telegram.telegram_bot_class import CustomTelegramBot
 from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
-from logger.set_logger import logger
+from logger.set_logger import operation_logger, trading_logger
 from object.signal import TradeSignal, Signal
 
 
@@ -32,11 +32,17 @@ class SignalGenerator:
         """
         return int(time.time() * 1000)
 
+    """
+    ######################################################################################################################
+    #                                               Function Method                                                      #
+    ######################################################################################################################
+    """
     def __init__(
         self,
         data_pipeline: DataPipeline,
         custom_telegram_bot: CustomTelegramBot,
-        signal_pipeline: SignalPipeline, #  send the signal generated from SignalGenerator and this is connected to the trade_manager
+        signal_pipeline: SignalPipeline,
+        signal_window: int = 5_000,
     ) -> None:
         """
         func __init__():
@@ -70,6 +76,11 @@ class SignalGenerator:
 
         # threads pool
         self.threads: List[threading.Thead] = list()
+        
+        # shared data structure to store Timestamp of the previoius invokation of each signal.
+        self.signal_timestamps: dict[str, int] = dict()
+        self.signal_timestamps_lock: threading.Lock = threading.Lock()
+        self.signal_window: int = signal_window
 
         # TODO: separate this part as strat()
         # initialize the threads
@@ -174,7 +185,7 @@ class SignalGenerator:
                 message = message,
             )
         except Exception as e:
-            logger.error(f"Error sending Telegram message: {e}")
+            operation_logger.error(f"Error sending Telegram message: {e}")
 
     # TODO: This is not used currently.
     def generate_telegram_msg(self, data) -> str:
@@ -213,21 +224,21 @@ class SignalGenerator:
             target = self.get_sma,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for sma_data_getter has been set up!")
 
         ema_thread: threading.Thread = threading.Thread(
             name = "ema_data_getter",
             target = self.get_ema,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for ema_data_getter has been set up!")
 
         price_thread: threading.Thread = threading.Thread(
             name = "price_data_getter",
             target = self.get_price,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_data_getter has been set up!")
 
         # add data-update threads into the Threads pool.
         self.threads.extend(
@@ -244,35 +255,35 @@ class SignalGenerator:
             target = self.generate_golden_cross_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for golden_cross_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for golden_cross_signal_generator has been set up!")
 
         death_cross_thread: threading.Thread = threading.Thread(
             name = "death_cross_signal_generator",
             target = self.generate_death_cross_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for death_cross_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for death_cross_signal_generator has been set up!")
 
         price_ma_thread: threading.Thread = threading.Thread(    
             name = "price_ma_signal_generator",
             target = self.generate_price_moving_average_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_ma_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_ma_signal_generator has been set up!")
 
         ema_sma_divergence_thread: threading.Thread = threading.Thread(
             name = "ema_sma_divergence_signal_generator",
             target = self.generate_ema_sma_divergence_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for ema_sma_divergence_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for ema_sma_divergence_signal_generator has been set up!")
 
         price_reversal_thread: threading.Thread = threading.Thread(
             name = "price_reversal_signal_generator",
             target = self.generate_price_reversal_signal,
             daemon = True,
         )
-        logger.info(f"{__name__}: Thread for price_reversal_signal_generator has been set up!")
+        operation_logger.info(f"{__name__}: Thread for price_reversal_signal_generator has been set up!")
 
         # add data consumptions threads into the Threads pool.
         self.threads.extend(
@@ -302,12 +313,12 @@ class SignalGenerator:
             try:
                 # start the thread.
                 thread.start()
-                logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
+                operation_logger.info(f"{__name__} - Thread '{thread.name}' (ID: {thread.ident}) has started")
             except RuntimeError as e:
-                logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__} - Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"Failed to start thread '{thread.name}': {str(e)}")
             except Exception as e:
-                logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
+                operation_logger.critical(f"{__name__} - Unexpected error starting thread: '{thread.name}': {str(e)}")
                 raise Exception(f"Unexpected error starting thread: '{thread.name}': {str(e)}")
         return
     
@@ -413,12 +424,17 @@ class SignalGenerator:
             - a short-term moving average (SMA) crosses above
             - a long-term moving average, indicating a potential bullish trend.
         """
+        key: str = "golden_cross"
         while True:
             with self.indicators_lock:
                 sma_data: dict | None = self.indicators.get("sma")
                 ema_data: dict | None = self.indicators.get("ema")
-            
-            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
+
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -430,7 +446,11 @@ class SignalGenerator:
                             signal = TradeSignal.LONG_TERM_BUY
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
+                        trading_logger.info(f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend.")
+
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -444,12 +464,17 @@ class SignalGenerator:
             - a long-term moving average,
             - indicating a potential bearish trend.
         """
+        key: str = "death_cross"
         while True:
             with self.indicators_lock:
                 sma_data: dict = self.indicators.get("sma")
                 ema_data: dict = self.indicators.get("ema")
 
-            if (sma_data and ema_data): # only need to check if the sma and ema data are available.
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data): # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -461,7 +486,11 @@ class SignalGenerator:
                             signal = TradeSignal.LONG_TERM_SELL
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
+                        trading_logger.info(f"{__name__} - Death Cross Signal has been generated!: Bearish Trend.")
+            
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -478,12 +507,17 @@ class SignalGenerator:
             - If the current price crosses above the moving average, generate a "Price Above MA" signal.
             - If the current price crosses below the movign average, generate a "Price Below MA" signal.
         """
+        key: str = "price_moving_average" # TODO: Check if we need to have the direction -> maybe separate this as well?
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 current_price: float = self.indicators.get("price")
-            
-            if (sma_data and current_price):
+
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and current_price):
                 sma_60 = sma_data.get(60) # Example for 1 min SMA
                 
                 if sma_60:
@@ -492,14 +526,18 @@ class SignalGenerator:
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
+                        trading_logger.info(f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend.")
                     
                     elif current_price < sma_60:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
+                        trading_logger.info(f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend.")
+            
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -518,12 +556,17 @@ class SignalGenerator:
             - There is a significant difference between the EMA and SMA.
             - This divergence can indicate potential changes in makret trends or momentum.
         """
+        key: str = "ema_sma_divergence"
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 ema_data: Dict[int, float] = self.indicators.get("ema")
 
-            if (sma_data and ema_data):
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data):
                 sma_60 = sma_data.get(60) # data for 1 min SMA
                 ema_60 = ema_data.get(60) # data for 1 min EMA
 
@@ -534,7 +577,11 @@ class SignalGenerator:
                             signal = TradeSignal.HOLD,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
+                        trading_logger.info(f"{__name__} - Divergence Signal has been generated!: Potential Trend Change.")
+
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None
     
@@ -547,12 +594,17 @@ class SignalGenerator:
             - the price changes direction after a sustained trend.
             - This cna indicate potential buy or sell opportunities based on this.
         """
+        key: str = "price_reversal"
         while True:
             with self.indicators_lock:
                 sma_data: Dict[int, float] = self.indicators.get("sma")
                 current_price: float = self.indicators.get("price")
 
-            if (sma_data and current_price):
+            with self.signal_timestamps_lock:
+                prev_timestamp: int = self.signal_timestamps.get(key, 0)
+            curr_timestamp: int = SignalGenerator.generate_timestamp()
+
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and current_price):
                 sma_60: float = sma_data.get(60) # data for 1 min SMA
 
                 if (sma_60):
@@ -560,13 +612,17 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
-                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
+                        trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral.")
                         self.signal_pipeline.push_signal(signal)
                     elif current_price < sma_60:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_SELL,
                         )
                         self.signal_pipeline.push_signal(signal)
-                        logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
+                        trading_logger.info(f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral.")
+
+                with self.signal_timestamps_lock:
+                    self.signal_timestamps[key] = curr_timestamp
+
             time.sleep(1.5)
         return None

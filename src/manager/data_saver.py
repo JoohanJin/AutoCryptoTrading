@@ -1,7 +1,7 @@
 import os
 import time
 import pandas as pd
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 
 class DataSaver:
@@ -22,10 +22,10 @@ class DataSaver:
 
             # Validate the input data
             if data is None or not isinstance(data, pd.DataFrame):
-                logger.error(f"{__name__} - TypeError - DataSaver.write: Provided data is not a Pandas DataFrame.")
+                operation_logger.error(f"{__name__} - TypeError - DataSaver.write: Provided data is not a Pandas DataFrame.")
                 return
             if data.empty:
-                logger.error(f"{__name__} - No Data in DataSaver.write: Provided data is empty after dropna.")
+                operation_logger.error(f"{__name__} - No Data in DataSaver.write: Provided data is empty after dropna.")
                 return
 
             # Drop NaN values
@@ -51,15 +51,15 @@ class DataSaver:
                 )
 
         except FileNotFoundError as e:
-            logger.error(f"{__name__} - FileNotFoundError in DataSaver.write: {str(e)}")
+            operation_logger.error(f"{__name__} - FileNotFoundError in DataSaver.write: {str(e)}")
         except PermissionError as e:
-            logger.error(f"{__name__} - PermissionError in DataSaver.write: {str(e)}")
+            operation_logger.error(f"{__name__} - PermissionError in DataSaver.write: {str(e)}")
         except AttributeError as e:
-            logger.error(f"{__name__} - AttributeError in DataSaver.write: {str(e)}")
+            operation_logger.error(f"{__name__} - AttributeError in DataSaver.write: {str(e)}")
         except OSError as e:
-            logger.error(f"{__name__} - OSError in DataSaver.write: {str(e)}")
+            operation_logger.error(f"{__name__} - OSError in DataSaver.write: {str(e)}")
         except Exception as e:
-            logger.error(f"{__name__} - Unexpected error in DataSaver.write: {str(e)}")
+            operation_logger.error(f"{__name__} - Unexpected error in DataSaver.write: {str(e)}")
 
 
 # Test Code Run Zone

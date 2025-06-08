@@ -6,7 +6,7 @@ from typing import Optional, Literal, Union, Callable
 
 from mexc.base_sdk import FutureBase
 from mexc.websocket_base import _FutureWebSocket
-from logger.set_logger import logger
+from logger.set_logger import operation_logger
 
 # no need to authenticate
 class FutureMarket(FutureBase):
@@ -973,7 +973,7 @@ class FutureWebSocket(_FutureWebSocket):
         param: Optional[dict] = dict()
     ) -> None:
         '''
-            - place an order on the MexC broker
+            - It fetches the order list of the user's account.
             - currently on the maintanence
                 - tmeporarily closed
                 # TODO: keep checking the upload log of MEXC API and testing
@@ -990,20 +990,33 @@ class FutureWebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
+        """
+        func asset:
+            - A function to subscribe to the asset information of the user.
+        
+        param callback:
+            - The callback function to handle the asset information.
+        param param:
+            - Optional[dict], optional parameters for the subscription.
+            - default is empty dictionary
+        
+        return None
+        """
         method = "sub.personal.asset"
         self._method_subscribe(
             method = method,
             callback = callback,
             param = param,
         )
-        return
+        return None
     
     def position(
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
+        # TODO: Need to implement the position function
         method = "sub.personal.position"
         return
     
@@ -1011,14 +1024,16 @@ class FutureWebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
+        # TODO: Need to implement the risk_limitation function
         return
     
     def adl(
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
+        # TODO: Need to implement the adl function
         method = "sub.personal.adl.level"
         return
     
@@ -1026,6 +1041,7 @@ class FutureWebSocket(_FutureWebSocket):
         self,
         callback,
         param: Optional[dict] = dict()
-    ):
+    ) -> None:
+        # TODO: Need to implement the position_mode function
         method = "sub.personal.position.mode"
         return

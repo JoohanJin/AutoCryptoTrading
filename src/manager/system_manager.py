@@ -11,10 +11,11 @@ from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
 from object.score_mapping import ScoreMapper
 from pipeline.data_pipeline import DataPipeline
-from logger.set_logger import logger
+from logger.set_logger import operation_logger, log_decorator
 from pipeline.signal_pipeline import SignalPipeline
 
 class SystemManager:
+    @log_decorator
     def __init__(
             self,
         ):
@@ -27,7 +28,7 @@ class SystemManager:
 
         return None
         """
-
+        # prepare the necessary parts for injection.
         self.ws: FutureWebSocket = FutureWebSocket()
         self.data_pipeline: DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()
@@ -61,14 +62,15 @@ class SystemManager:
             while True:
                 time.sleep(1) # Sleep to reduce the cpu usage.
         except KeyboardInterrupt:
-            logger.info("Program interrupted by user. Exiting...")
+            operation_logger.info("Program interrupted by user. Exiting...")
             sys.exit(0)
         except Exception as e:
-            logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            operation_logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
             raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
 
         return
     
+    @log_decorator
     def __set_up_telegram_bot(
         self,
     ) -> CustomTelegramBot:
@@ -89,6 +91,7 @@ class SystemManager:
             channel_id = channel_id,
         )
     
+    @log_decorator
     def __set_up_mexc_sdk(
         self,
     ) -> FutureMarket:
@@ -124,6 +127,7 @@ class SystemManager:
 
         return api_key, channel_id
     
+    @staticmethod
     def __get_mexc_crendentials():
         f = open('./credentials/mexc_keys.json')
         credentials = json.load(f)
