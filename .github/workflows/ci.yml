@@ -1,0 +1,14 @@
+name: basicCI
+
+on:
+    push:
+        branches:
+            - 'dev-*' # Feature Branches
+    pull_request:
+        branches: # main and dev branches won't accept any direct push.
+            - main
+            - dev
+
+jobs:
+
+    

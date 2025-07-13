@@ -63,7 +63,7 @@ class DataCollectorAndProcessor:
         self.df_lock = threading.Lock()
 
         # default dataframe with the given columns
-        self.priceData: pd.DataFrmae = pd.DataFrame(
+        self.priceData: pd.DataFrame = pd.DataFrame(
             columns = [
                 'symbol',
                 'lastPrice',
@@ -85,12 +85,13 @@ class DataCollectorAndProcessor:
                 'riseFallRates',
                 'riseFallRatesOfTimezone'
             ],
-            index = [int(time.time() * 1000)]
+            index = [int(time.time() * 1000)],
         )
-        self.priceData.index.name = "timestamp"
+        self.priceData.index.name = "timestamp" # force the index name
 
-        self._init_threads()
-        self._start_threads()
+        self._init_threads() # initialize the thread pool
+        self._start_threads() # start the thread after all the thread pool is there.
+
         return
     
     """
@@ -213,7 +214,7 @@ class DataCollectorAndProcessor:
         '''
         while True:
             try:
-                response: dict = self._get_data_buffer() # data from the data buffer
+                response: dict | None = self._get_data_buffer() # data from the data buffer
                 if response:
                     # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
                     timestamp = response['timestamp']
@@ -240,7 +241,7 @@ class DataCollectorAndProcessor:
                 operation_logger.critical(f"Unexpected Error Occurred in function \"_price_data_fetch\": {e}")
         return
     
-    def _get_data_buffer(self) -> Optional[dict]:
+    def _get_data_buffer(self) -> dict | None:
         """
         func _get_data_buffer():
             - Get the data from the buffer and return it.
@@ -248,6 +249,7 @@ class DataCollectorAndProcessor:
             - if there is an error then, return None
         """
         try:
+            # price_fetch_buffer is a queue.
             result = self.price_fetch_buffer.get(block = True)
 
             self.price_fetch_buffer.task_done()
@@ -298,7 +300,7 @@ class DataCollectorAndProcessor:
             - when the data is available, push the data to the data pipeline.
         """
         while True:
-            data: Tuple[Dict[int, float], Dict[int, float]] | None = self.__calculate_ema_sma_price()
+            data: Tuple[Dict[int, float], Dict[int, float], ] | None = self.__calculate_ema_sma_price()
 
             if data:
                 sma_values: Dict[int, float] = data[0]
