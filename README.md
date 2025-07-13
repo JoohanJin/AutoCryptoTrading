@@ -103,7 +103,7 @@ Potentially, a high frequency trading can be developed in the future based on th
 
 ## Architecture Diagram
 
-![Architecture Diagram](Media/AutoTradingBot Diagram.png)
+![Architecture Diagram](https://github.com/JoohanJin/AutoCryptoTrading/blob/dev/Media/AutoTradingBot%20Diagram.png)
 
 ---
 
