@@ -32,7 +32,7 @@
 <div align="center">
 
 
-<h2 align="center">AutoTradingBot</h3>
+<h2 align="center">Crypto-Currency Automatic Trading Bot</h3>
 
   <p align="center">
     <!-- project_description -->
