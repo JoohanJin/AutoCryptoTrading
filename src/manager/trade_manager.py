@@ -28,7 +28,7 @@ class TradeManager:
 
     @staticmethod
     def verify_signal(
-        signal_data: TradeSignal,
+        signal_data: Signal,
         timestamp_window: int = 5_000,
     ) -> bool:
         """
@@ -85,7 +85,7 @@ class TradeManager:
         self.score_threshold: int = score_threashold
 
         # Set the thread pool as a member function.
-        self.threads: List[threading.Threads] = list()
+        self.threads: List[threading.Thread] = list()
 
         # Set the trade score as a member variable.
         self.trade_score_lock: threading.Lock = threading.Lock()
@@ -109,12 +109,12 @@ class TradeManager:
     ) -> None:
         """
         func __del__():
-            - delete the TradeManager object
+            - Destructor is the TradeManager.
+            - delete the TradeManager object.
             - need to remove all the threads and possibly dynamic objects as well.
         """
         operation_logger.info(f"{__name__} - TradeManager has been deleted")
-
-        return None
+        return
     
     """
     ######################################################################################################################
@@ -160,6 +160,7 @@ class TradeManager:
             target = self.__thread_get_signal,
             name = "Thread-Get-Signal",
         )
+        
         thread_decide_trade: threading.Thread = threading.Thread(
             target = self.thread_handle_async_trade_execution,
             name = "Thread-Decide-Trade",
@@ -185,13 +186,15 @@ class TradeManager:
             - it is a void function.
         """
         for thread in self.threads:
-            try:
+            try: # try this first
                 thread.start()
                 operation_logger.info(f"{__name__} - Thread {thread.name} has been started")
-            except RuntimeError as e:
+
+            except RuntimeError as e: # If there is an error during the runtime
                 operation_logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
                 raise RuntimeError(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-            except Exception as e:
+
+            except Exception as e: # Unknown Exception
                 operation_logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
                 raise Exception(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
         
@@ -370,7 +373,7 @@ class TradeManager:
         self,
         buy_or_sell: int,
         current_price: float,
-    ) -> Tuple[float] | None:
+    ) -> Tuple[float, float] | None:
         """
         func __get_target_prices():
             - private method

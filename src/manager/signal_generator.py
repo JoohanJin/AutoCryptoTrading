@@ -68,7 +68,7 @@ class SignalGenerator:
         # Shared Structure
         # Mutex Lock
         self.indicators_lock: threading.Lock = threading.Lock()
-        self.indicators: dict[str, dict[int, float]] = {
+        self.indicators: dict[str, dict[int, float]] | dict[str, None] = {
             "sma": None, # Latest SMA data
             "ema": None, # latest EMA data
             "price": None, # latest Price data
