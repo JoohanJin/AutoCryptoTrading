@@ -48,7 +48,7 @@
   </p>
 </div>
 
-
+A personal crypto trading bot project built to automate trading strategies using real-time data from the MEXC Exchange. More brokers can be added in the future for more accurate and reiliable data fetching.
 
 
 <!-- TABLE OF CONTENTS -->
@@ -80,39 +80,49 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## 📌 About The Project
 
 <!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
-This is a small project of mine, focused on automating the trading flow. As a personal trader and a Computer Engineering student who is not doing very well XD, it is challenging to balance both trading and studying simultaneously. Therefore, I decided to develop a program that can automate my trading activities.
+This bot connects to the MEXC Broker via WebSocket, processes market data, and is desinged to execute trades based on predefined strategies. Currently under development, with order placement and strategy refinedment in progress.
 
-It is not a high-frequency trading system; rather, it is a simple tool that will execute orders based on a trading strategy I have established.
+It is not a high-frequency trading system; rather, it is a simple tool that will execute orders based on a trading strategy I have been used.
+Potentially, a high frequency trading can be developed in the future based on the needs.
 
-Implemented Features So Far
-- MexC Broker connection
-  - Currently, the order placement functionality is not working but will be tested in the near future
-- Data Fetching using Websocket
-  - Resizing the pandas dataframe for memory management and save them in the csv file.
-- Calculate the indicators based on the price data
-  - EMA
-  - SMA
-- Data buffer to pass the indicators to strategy manager.
-- Signal buffer to pass the signal to the Order Maker.
+---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## 🛠️ Features
+- Real-time market data fetching via websocket api.
+- Strategy logic for automated decision-making.
+- Future support for order placement.
+- Modular design for testing and expansion.
+- ⚠️ Note: Order placement is currently disabled for safety and testing.
 
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
+---
 
-### Built With
+## 🧰 Tech Stack
 
-* [![Python3][Python3-img]][Python3-url]
-* [![Jupyter Notebook][Jupyter-img]][Jupyter-url]
-* [![Pandas][Pandas-img]][Pandas-url]
-* [![NumPy][Numpy-img]][Numpy-url]
+* **Lanauge**: [![Python3][Python3-img]][Python3-url]
+* **Exchange**: MEXC, Binance (coming soon!)
+* **libraires**:
+  * [![Pandas][Pandas-img]][Pandas-url]
+  * [![NumPy][Numpy-img]][Numpy-url]
+* **Tools**:
+  * [![Jupyter Notebook][Jupyter-img]][Jupyter-url]
+  * Github Actions (CI)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
+---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10+
+- MEXC API Credentials
 
 <!-- GETTING STARTED -->
 <!-- ## Getting Started -->
