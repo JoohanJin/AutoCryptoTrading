@@ -120,6 +120,18 @@ Potentially, a high frequency trading can be developed in the future based on th
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
+--- 
+
+## Branch Structure
+
+```text
+stable
+└── dev
+    ├── dev-feature1
+    ├── dev-feature2
+    └── dev-feature3
+```
+
 ---
 
 ## 🚀 Getting Started
