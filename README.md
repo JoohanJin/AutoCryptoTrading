@@ -32,7 +32,7 @@
 <div align="center">
 
 
-<h2 align="center">AutoTradingBot</h3>
+<h2 align="center">Crypto-Currency Automatic Trading Bot</h3>
 
   <p align="center">
     <!-- project_description -->
@@ -99,6 +99,11 @@ Potentially, a high frequency trading can be developed in the future based on th
 - ⚠️ Note: Order placement is currently disabled for safety and testing.
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
+---
+
+## Architecture Diagram
+
+![Architecture Diagram](https://github.com/JoohanJin/AutoCryptoTrading/blob/dev/Media/AutoTradingBot%20Diagram.png)
 
 ---
 
