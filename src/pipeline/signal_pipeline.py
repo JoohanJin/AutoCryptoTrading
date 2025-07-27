@@ -11,7 +11,7 @@ from object.signal import (
 from .base_pipeline import BasePipeline  # TODO: Need to define this class in another class
 
 
-class SignalPipeline(BasePipeline):
+class SignalPipeline(BasePipeline[Signal]):
     def __init__(self):
         """
         func __init__:
@@ -34,10 +34,10 @@ class SignalPipeline(BasePipeline):
         self.signal_queue: Queue[Signal] = Queue()
         return
 
-    def push_signal(
+    def push(
         self,
         signal: Signal,
-    ) -> bool | None:
+    ) -> bool:
         """
         func push_indicator():
             - push the indicator to the buffer.
@@ -64,9 +64,9 @@ class SignalPipeline(BasePipeline):
                 f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
             )
             return False
-        return
+        return False
 
-    def pop_signal(
+    def pop(
         self,
         timeout: int | None = None,
         block: bool = True,  # Default is to be blocked

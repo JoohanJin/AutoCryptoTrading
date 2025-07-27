@@ -1,26 +1,26 @@
 from queue import Queue
-from typing import Dict, Any
+from typing import Dict, Any, TypeVar, Generic
 from abc import ABC, abstractmethod
 
-class BasePipeline(ABC):
+T = TypeVar("T")
+
+class BasePipeline(ABC, Generic[T]):
     @abstractmethod
     def __init__(self) -> None:
-        return
+        raise NotImplementedError
 
     @abstractmethod
-    def push_data(
+    def push(
         self,
         *args,
         **kwargs,
-    ) -> Any:
-        return False
-    
+    ) -> bool:
+        raise NotImplementedError
+        
     @abstractmethod
-    def pop_data(
+    def pop(
         self,
         *args,
         **kwagrs,
-    ) -> Any:
-        return
-
-    
+    ) -> T | None:
+        raise NotImplementedError

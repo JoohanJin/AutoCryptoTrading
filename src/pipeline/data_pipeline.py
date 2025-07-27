@@ -44,7 +44,7 @@ class DataPipeline(BasePipeline):
 
         return
 
-    def push_data(
+    def push(
         self,
         key: Union[
             Literal["test"], # only this one is used for the test phase.
@@ -92,7 +92,7 @@ class DataPipeline(BasePipeline):
             operation_logger.warning(f"{__name__} - {key} Queue: Unknown exception has occurred: {str(e)}")
             return False
 
-    def pop_data(
+    def pop(
         self,
         key: Union[
             Literal["test"],
