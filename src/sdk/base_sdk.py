@@ -1,13 +1,10 @@
 import requests
 import hmac
 import hashlib
-from urllib.parse import urlencode
-import logging
 import time
-import logging
 from typing import Union, Literal, Optional
 
-from logger.set_logger import operation_logger
+# from logger.set_logger import operation_logger
 
 
 class CommonBaseSDK:

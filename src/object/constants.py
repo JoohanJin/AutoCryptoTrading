@@ -2,7 +2,7 @@ from typing import Tuple
 
 # EMA and SMA PERIODS
 # this is the DataCollectorProcessor side.
-MA_WRITE_PERIODS: Tuple[int] = (
+MA_WRITE_PERIODS: Tuple[int, ...] = (
     5, # 10 sec
     15, # 30 sec
     30, # 60 sec, 1 min
@@ -13,7 +13,7 @@ MA_WRITE_PERIODS: Tuple[int] = (
 )
 
 # this is the Signal Generator side
-MA_READ_PERIODS: Tuple[int] = (
+MA_READ_PERIODS: Tuple[int, ...] = (
     10, # 10 sec
     30, # 30 sec
     60, # 60 sec, 1 min
