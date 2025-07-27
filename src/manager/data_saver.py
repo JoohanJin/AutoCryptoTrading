@@ -85,7 +85,7 @@ if __name__ == "__main__":
     __test_drive = DataSaver()
 
     # Print the output path to verify correctness
-    print(__test_drive._output_path())
+    print(__test_drive._output_path()) # type: ignore
 
     # Example of writing data (you can adjust this for testing)
     test_data = pd.DataFrame(

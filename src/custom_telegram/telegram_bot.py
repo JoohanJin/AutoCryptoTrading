@@ -1,10 +1,11 @@
+from typing import Tuple
 import telegram
 import json
 import asyncio
 import os
 
 
-def get_credential() -> str:
+def get_credential() -> Tuple[str, ...]:
     """
     get the telegram bot credential stored locally.
     """
@@ -25,10 +26,6 @@ async def send_message(bot: telegram.Bot, channel_id: str, message: str) -> None
     return
 
 
-async def send_update() -> None:
-    await telegram.pdate.message.reply_text("Hi!")
-
-
 async def main() -> None:
     api_key, channel_id = get_credential()
 
@@ -38,6 +35,11 @@ async def main() -> None:
         await send_message(bot, channel_id, "Test Message 1, 2, 3")
     return
 
+'''
+###############################################################
+#                          Test Run                           #
+###############################################################
+'''
 
 if __name__ == "__main__":
     asyncio.run(main())

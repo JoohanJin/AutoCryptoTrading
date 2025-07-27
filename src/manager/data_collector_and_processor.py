@@ -1,6 +1,6 @@
 # Standard Module
 import time
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 import pandas as pd
 import numpy as np
 import threading
@@ -318,14 +318,14 @@ class DataCollectorAndProcessor:
                 Tuple[
                     Dict[int, float],
                     Dict[int, float],
-                ]
-                | None
+                    Dict[int, float],
+                ] | None
             ) = self.__calculate_ema_sma_price()
 
             if data:
                 sma_values: Dict[int, float] = data[0]
                 ema_values: Dict[int, float] = data[1]
-                price: Dict[str, float] = data[2]
+                price: Dict[int, float] = data[2]
 
                 # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
                 if sma_values:
@@ -333,15 +333,15 @@ class DataCollectorAndProcessor:
                 if ema_values:
                     self.__push_ema_data(ema_values)
                 if price:
-                    self.__push_price_data(price)
+                    self.__push_price_data(price) # type: ignore
 
             time.sleep(2)
         return
 
     def __calculate_ema_sma_price(
         self,
-        periods: Tuple[int] = MA_WRITE_PERIODS,
-    ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
+        periods: Tuple[int, ...] = MA_WRITE_PERIODS,
+    ) -> Tuple[Any, ...] | None:
         """
         func __calculate_ema_sma_price():
             - It calculate the simple moving average (SMA) of the lastPrice
@@ -362,9 +362,9 @@ class DataCollectorAndProcessor:
 
                 tmpDataframe = self.priceData[-periods[-1] :]["lastPrice"].copy()
 
-            smas: Dict[int, float] = dict()
-            emas: Dict[int, float] = dict()
-            prices: Dict[str, float] = dict()
+            smas: Dict[int, float | Any] = dict()
+            emas: Dict[int, float | Any] = dict()
+            prices: Dict[str, float | Any] = dict()
 
             # TODO: this should be fast enough, but can be optimized further.
             for period in periods:
@@ -458,16 +458,16 @@ class DataCollectorAndProcessor:
         self,
         data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type="ema", data=data)
+        return self.pipeline.push_data(type = "ema", data = data) # type: ignore
 
     def __push_sma_data(
         self,
-        data: Tuple[Dict[int, float]],
+        data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type="sma", data=data)
+        return self.pipeline.push_data(type = "sma", data = data) # type: ignore
 
     def __push_price_data(
         self,
         data: Dict[str, float],
     ):
-        return self.pipeline.push_data(type="price", data=data)
+        return self.pipeline.push_data(type = "price", data = data) # type: ignore

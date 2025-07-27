@@ -250,7 +250,7 @@ class TradeManager:
             try:
                 signal: TradeSignal = self.__get_signal(
                     timestamp_window=timestamp_window,
-                )
+                ) # type: ignore
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(
@@ -280,7 +280,9 @@ class TradeManager:
         return int:
             - delta value based on the signal data.
         """
-        return self.delta_mapper.map(signal=signal_data)
+        return self.delta_mapper.map(
+            signal = signal_data
+        ) # type: ignore
 
     def __get_signal(
         self,
@@ -299,7 +301,7 @@ class TradeManager:
         return None
             - if the signal is not valid, then it will return None.
         """
-        signal_data: Signal = self.signal_pipeline.pop_signal()
+        signal_data: Signal = self.signal_pipeline.pop_signal() # type: ignore
         return (
             signal_data.signal
             if TradeManager.verify_signal(
@@ -392,7 +394,7 @@ class TradeManager:
         """
         price_response: Dict = self.mexc_future_market_sdk.index_price()
         if price_response.get("success"):
-            return price_response.get("data").get("indexPrice")
+            return price_response.get("data").get("indexPrice") # type: ignore
         else:
             raise Exception(
                 f"{__name__} - Error while getting the current price: {price_response}"
@@ -438,11 +440,11 @@ class TradeManager:
     ) -> float:
         open_amount_response: dict = self.mexc_future_market_sdk.asset(
             currency="USDT",
-        )
+        ) # type: ignore
 
         if open_amount_response.get("success"):
             return (
-                open_amount_response.get("data").get("availableOpen")
+                open_amount_response.get("data").get("availableOpen") # type: ignore
                 * self.trade_amount
             )
         else:
@@ -473,8 +475,8 @@ class TradeManager:
         try:
             currently_holing_order: Dict = (
                 self.mexc_future_market_sdk.current_position()
-            )
-            if not len(currently_holing_order.get("data")):
+            ) # type: ignore
+            if not len(currently_holing_order.get("data")): # type: ignore
                 return False
             else:
                 return True
@@ -482,7 +484,7 @@ class TradeManager:
             operation_logger.error(
                 f"{__name__} - Error while deciding to make trade: {e}"
             )
-        return
+        return False
 
     async def __execute_trade(
         self,
@@ -503,7 +505,7 @@ class TradeManager:
                 tp_price, sl_price = self.__get_target_prices(
                     buy_or_sell=buy_or_sell,
                     current_price=current_price,
-                )
+                ) # type: ignore
                 trade_amount: float = self.__get_trade_amount()
                 order_type: int = 0
 
@@ -518,11 +520,11 @@ class TradeManager:
                     await self.telegram_bot.send_text(
                         f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                     )
-                    trading_logger.INFO(
+                    trading_logger.info(
                         f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                     )
                 else:
-                    trading_logger.INFO(
+                    trading_logger.info(
                         f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured."
                     )
 
