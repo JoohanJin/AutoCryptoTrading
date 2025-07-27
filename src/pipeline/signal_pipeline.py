@@ -4,7 +4,11 @@ from typing import Literal, Optional, Dict, Any
 
 # Custom Library
 from logger.set_logger import operation_logger
-from object.signal import TradeSignal, Signal # TODO: Need to define this class in another class
+from object.signal import (
+    TradeSignal,
+    Signal,
+)  # TODO: Need to define this class in another class
+
 
 class SignalPipeline:
     def __init__(self):
@@ -28,7 +32,7 @@ class SignalPipeline:
         """
         self.signal_queue: Queue[Signal] = Queue()
         return
-    
+
     def push_signal(
         self,
         signal: Signal,
@@ -46,17 +50,21 @@ class SignalPipeline:
         try:
             self.signal_queue.put(
                 signal,
-                block = False,
-                timeout = 1,
+                block=False,
+                timeout=1,
             )
         except Full:
-            operation_logger.warning(f"{__name__} - Indicator Queue is full. Data cannot be added.")
+            operation_logger.warning(
+                f"{__name__} - Indicator Queue is full. Data cannot be added."
+            )
             return False
         except Exception as e:
-            operation_logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(
+                f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
+            )
             return False
         return
-    
+
     def pop_signal(
         self,
         timeout: int | None = None,
@@ -81,12 +89,16 @@ class SignalPipeline:
         """
         try:
             return self.signal_queue.get(
-                block = block,
-                timeout = timeout,    
+                block=block,
+                timeout=timeout,
             )
         except Empty:
-            operation_logger.warning(f"{__name__} -  Indicator Queue is empty. Data cannot be added.")
+            operation_logger.warning(
+                f"{__name__} -  Indicator Queue is empty. Data cannot be added."
+            )
             return None
         except Exception as e:
-            operation_logger.warning(f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(
+                f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
+            )
             return None

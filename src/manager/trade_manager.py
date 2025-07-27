@@ -12,12 +12,14 @@ from object.score_mapping import ScoreMapper
 from object.signal import Signal, TradeSignal
 from pipeline.signal_pipeline import SignalPipeline
 
+
 class TradeManager:
     """
     ######################################################################################################################
     #                                               Static Method                                                        #
     ######################################################################################################################
     """
+
     @staticmethod
     def generate_timestamp() -> int:
         """
@@ -43,17 +45,20 @@ class TradeManager:
             - limit for the signal generation timestamp.
             - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
             - the default value is 5000 ms == 5 seconds.
-        
+
         return bool:
             - True if the signal is valid, otherwise False
         """
-        return TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
+        return (
+            TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
+        )
 
     """
     ######################################################################################################################
     #                                                Class Method                                                        #
     ######################################################################################################################
     """
+
     def __init__(
         self,
         signal_pipeline: SignalPipeline,
@@ -61,9 +66,9 @@ class TradeManager:
         delta_mapper: ScoreMapper,
         telegram_bot: CustomTelegramBot,
         leverage: int = 20,
-        trade_amount: float = 0.1, # 10% of the total asset
-        take_profit_rate: float = 0.15, # 15%
-        stop_loss_rate: float = 0.05, # 5%
+        trade_amount: float = 0.1,  # 10% of the total asset
+        take_profit_rate: float = 0.15,  # 15%
+        stop_loss_rate: float = 0.05,  # 5%
         score_threashold: int = 2_000,
     ) -> None:
         """
@@ -96,12 +101,14 @@ class TradeManager:
         self.tp_rate: float = take_profit_rate
         self.sl_rate: float = stop_loss_rate
 
-        self.async_loop = asyncio.new_event_loop() # only for Telegram Client
+        self.async_loop = asyncio.new_event_loop()  # only for Telegram Client
 
         # Start the TradeManager
-        self.start()       
+        self.start()
 
-        operation_logger.info(f"{__name__} - TradeManager has been intialized and ready to get the signal")
+        operation_logger.info(
+            f"{__name__} - TradeManager has been intialized and ready to get the signal"
+        )
         return None
 
     def __del__(
@@ -115,12 +122,13 @@ class TradeManager:
         """
         operation_logger.info(f"{__name__} - TradeManager has been deleted")
         return
-    
+
     """
     ######################################################################################################################
     #                                             Multi-Thread Management                                                #
     ######################################################################################################################
     """
+
     def start(
         self,
     ) -> None:
@@ -129,10 +137,10 @@ class TradeManager:
             - start the TradeManager
             - It will initialize the threads and start the threads.
             - make it as a public so that in the future, it will be started at the outside of the class.
-        
+
         param self:
             - TradeManager object
-        
+
         return None:
             - it is a void function.
         """
@@ -157,20 +165,20 @@ class TradeManager:
         """
         # Generate the threads for the function, need to plan it.
         thread_get_signal: threading.Thread = threading.Thread(
-            target = self.__thread_get_signal,
-            name = "Thread-Get-Signal",
+            target=self.__thread_get_signal,
+            name="Thread-Get-Signal",
         )
-        
+
         thread_decide_trade: threading.Thread = threading.Thread(
-            target = self.thread_handle_async_trade_execution,
-            name = "Thread-Decide-Trade",
-            args = (self.async_loop, ),
+            target=self.thread_handle_async_trade_execution,
+            name="Thread-Decide-Trade",
+            args=(self.async_loop,),
         )
 
         # initialize the threads for the operations
         self.threads.extend([thread_get_signal, thread_decide_trade])
         return None
-    
+
     def __start_threads(
         self,
     ) -> None:
@@ -181,23 +189,33 @@ class TradeManager:
 
         param self:
             - TradeManager object
-        
+
         return None:
             - it is a void function.
         """
         for thread in self.threads:
-            try: # try this first
+            try:  # try this first
                 thread.start()
-                operation_logger.info(f"{__name__} - Thread {thread.name} has been started")
+                operation_logger.info(
+                    f"{__name__} - Thread {thread.name} has been started"
+                )
 
-            except RuntimeError as e: # If there is an error during the runtime
-                operation_logger.critical(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-                raise RuntimeError(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
+            except RuntimeError as e:  # If there is an error during the runtime
+                operation_logger.critical(
+                    f"{__name__}: Failed to start thread '{thread.name}': {str(e)}"
+                )
+                raise RuntimeError(
+                    f"{__name__}: Failed to start thread '{thread.name}': {str(e)}"
+                )
 
-            except Exception as e: # Unknown Exception
-                operation_logger.error(f"{__name__} - Unknown Error while starting the threads: {e}")
-                raise Exception(f"{__name__}: Failed to start thread '{thread.name}': {str(e)}")
-        
+            except Exception as e:  # Unknown Exception
+                operation_logger.error(
+                    f"{__name__} - Unknown Error while starting the threads: {e}"
+                )
+                raise Exception(
+                    f"{__name__}: Failed to start thread '{thread.name}': {str(e)}"
+                )
+
         return None
 
     """
@@ -205,9 +223,9 @@ class TradeManager:
     #                                             Signal Management Method                                               #
     ######################################################################################################################
     """
+
     def thread_handle_async_trade_execution(self, loop) -> None:
-        """
-        """
+        """ """
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.__thread_decide_trade())
         return
@@ -231,15 +249,17 @@ class TradeManager:
         while True:
             try:
                 signal: TradeSignal = self.__get_signal(
-                    timestamp_window = timestamp_window,
+                    timestamp_window=timestamp_window,
                 )
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(
-                            signal_data = signal,
+                            signal_data=signal,
                         )
             except Exception as e:
-                operation_logger.error(f"{__name__} - Error while getting the signal: {e}")
+                operation_logger.error(
+                    f"{__name__} - Error while getting the signal: {e}"
+                )
         return None
 
     def __calculate_signal_score_delta(
@@ -260,11 +280,11 @@ class TradeManager:
         return int:
             - delta value based on the signal data.
         """
-        return self.delta_mapper.map(signal = signal_data)
-    
+        return self.delta_mapper.map(signal=signal_data)
+
     def __get_signal(
         self,
-        timestamp_window: int = 5000,    
+        timestamp_window: int = 5000,
     ) -> TradeSignal | None:
         """
         func __get_signal(): private method
@@ -273,15 +293,21 @@ class TradeManager:
 
         param self:
             - TradeManager object
-        
+
         return TradeSignal:
             - it will return the parameter signal and decide the action based on the signal.
         return None
             - if the signal is not valid, then it will return None.
         """
         signal_data: Signal = self.signal_pipeline.pop_signal()
-        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
-    
+        return (
+            signal_data.signal
+            if TradeManager.verify_signal(
+                signal_data=signal_data, timestamp_window=timestamp_window
+            )
+            else None
+        )
+
     def __decide_trade(
         self,
         score: int,
@@ -306,7 +332,7 @@ class TradeManager:
             return 1
         elif score < (-1 * self.score_threshold):
             return -1
-        return 0 # default is do nothing
+        return 0  # default is do nothing
 
     async def __thread_decide_trade(
         self,
@@ -319,32 +345,34 @@ class TradeManager:
 
         param self:
             - TradeManager object
-        
+
         return None:
         """
         while True:
             try:
                 with self.trade_score_lock:
                     score: int = self.trade_score
-                
+
                 decision: int = self.__decide_trade(
-                    score = score,
+                    score=score,
                 )
 
                 await self.__execute_trade(
-                    buy_or_sell = decision,
+                    buy_or_sell=decision,
                 )
 
-                if decision != 0: # can be further improved in the future.
+                if decision != 0:  # can be further improved in the future.
                     # reset the score, but based on the trend
-                    # 
+                    #
                     with self.trade_score_lock:
                         self.trade_score = 200 if decision == 1 else -200
 
                 time.sleep(0.25)
-            
+
             except Exception as e:
-                operation_logger.error(f"{__name__} - Error while deciding the trade: {e}")
+                operation_logger.error(
+                    f"{__name__} - Error while deciding the trade: {e}"
+                )
 
         return None
 
@@ -355,20 +383,22 @@ class TradeManager:
         func __get_current_price():
             - private method
             - get the current price from the MexC API Endpoint.
-        
+
         param self:
             - TradeManager object
-        
+
         return float:
             - current price of the asset
         """
         price_response: Dict = self.mexc_future_market_sdk.index_price()
-        if (price_response.get('success')):
-            return price_response.get('data').get('indexPrice')
+        if price_response.get("success"):
+            return price_response.get("data").get("indexPrice")
         else:
-            raise Exception(f"{__name__} - Error while getting the current price: {price_response}")
+            raise Exception(
+                f"{__name__} - Error while getting the current price: {price_response}"
+            )
         return
-    
+
     def __get_target_prices(
         self,
         buy_or_sell: int,
@@ -379,7 +409,7 @@ class TradeManager:
             - private method
             - get the target prices based on the current price and the signal.
             - It will return the target prices based on the signal.
-        
+
         param self:
             - TradeManager object
         param buy_or_sell: int
@@ -394,51 +424,64 @@ class TradeManager:
         return None:
             - if the signal is not valid, then it will return None.
         """
-        if (buy_or_sell == 1): # Long
-            return current_price * (1 + (self.tp_rate / self.leverage)), current_price * (1 - (self.sl_rate / self.leverage))
-        else: # Short
-            return current_price * (1 - (self.tp_rate / self.leverage)), current_price * (1 + (self.sl_rate / self.leverage))
+        if buy_or_sell == 1:  # Long
+            return current_price * (
+                1 + (self.tp_rate / self.leverage)
+            ), current_price * (1 - (self.sl_rate / self.leverage))
+        else:  # Short
+            return current_price * (
+                1 - (self.tp_rate / self.leverage)
+            ), current_price * (1 + (self.sl_rate / self.leverage))
 
     def __get_trade_amount(
         self,
     ) -> float:
         open_amount_response: dict = self.mexc_future_market_sdk.asset(
-            currency = "USDT",
+            currency="USDT",
         )
 
-        if (open_amount_response.get('success')):
-            return open_amount_response.get('data').get('availableOpen') * self.trade_amount
+        if open_amount_response.get("success"):
+            return (
+                open_amount_response.get("data").get("availableOpen")
+                * self.trade_amount
+            )
         else:
-            raise Exception(f"{__name__} - Error while getting the trade amount: {open_amount_response}")
+            raise Exception(
+                f"{__name__} - Error while getting the trade amount: {open_amount_response}"
+            )
         return
 
     def __decide_to_make_trade(
         self,
     ) -> bool:
-        '''
+        """
         func __decide_to_make_trade():
             - private method
             - decide whether to make the trade or not.
             - It will return True if there is an order/orders held by the account.
             - To make sure that only one order can be made at one moment.
-        
+
         param self:
             - TradeManager object
 
-        return bool: 
+        return bool:
             - if there is no order held, then we will make an order.
                 - return True
             - if there is an order held, then we will not make an order.
                 - return False
-        '''
+        """
         try:
-            currently_holing_order: Dict = self.mexc_future_market_sdk.current_position()
-            if not len(currently_holing_order.get('data')):
+            currently_holing_order: Dict = (
+                self.mexc_future_market_sdk.current_position()
+            )
+            if not len(currently_holing_order.get("data")):
                 return False
             else:
                 return True
         except Exception as e:
-            operation_logger.error(f"{__name__} - Error while deciding to make trade: {e}")
+            operation_logger.error(
+                f"{__name__} - Error while deciding to make trade: {e}"
+            )
         return
 
     async def __execute_trade(
@@ -455,31 +498,34 @@ class TradeManager:
             - TradeManager object
         """
         try:
-            if (buy_or_sell == 1 or buy_or_sell == -1):
+            if buy_or_sell == 1 or buy_or_sell == -1:
                 current_price: float = self.__get_current_price()
                 tp_price, sl_price = self.__get_target_prices(
-                    buy_or_sell = buy_or_sell,
-                    current_price = current_price,
+                    buy_or_sell=buy_or_sell,
+                    current_price=current_price,
                 )
                 trade_amount: float = self.__get_trade_amount()
                 order_type: int = 0
 
                 if buy_or_sell == 1:
-                    order_type = 1 # Long
+                    order_type = 1  # Long
                 elif buy_or_sell == -1:
-                    order_Type = 3 # Short
+                    order_Type = 3  # Short
 
                 # TODO: trigger the order
                 # order trigger to the telgram bot
-                if self.__decide_to_make_trade(): # make the trade
+                if self.__decide_to_make_trade():  # make the trade
                     await self.telegram_bot.send_text(
                         f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                     )
-                    trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}")
+                    trading_logger.INFO(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                    )
                 else:
-                    trading_logger.INFO(f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured.")
+                    trading_logger.INFO(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured."
+                    )
 
-    
         except Exception as e:
             operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
         return None

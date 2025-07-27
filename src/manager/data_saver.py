@@ -8,12 +8,17 @@ class DataSaver:
     def __init__(self):
         # Set the base directory to the correct location of 'src'
         self.base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        self.data_dir = os.path.join(self.base_dir, "data")  # Absolute path to 'src/data'
+        self.data_dir = os.path.join(
+            self.base_dir, "data"
+        )  # Absolute path to 'src/data'
 
     @property
     def _output_path(self):
         # Construct the absolute path for the CSV file
-        return os.path.join(self.data_dir, f"{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.csv")
+        return os.path.join(
+            self.data_dir,
+            f"{time.strftime('%Y-%m-%d', time.localtime(time.time()))}.csv",
+        )
 
     def write(self, data: pd.DataFrame):
         try:
@@ -22,10 +27,14 @@ class DataSaver:
 
             # Validate the input data
             if data is None or not isinstance(data, pd.DataFrame):
-                operation_logger.error(f"{__name__} - TypeError - DataSaver.write: Provided data is not a Pandas DataFrame.")
+                operation_logger.error(
+                    f"{__name__} - TypeError - DataSaver.write: Provided data is not a Pandas DataFrame."
+                )
                 return
             if data.empty:
-                operation_logger.error(f"{__name__} - No Data in DataSaver.write: Provided data is empty after dropna.")
+                operation_logger.error(
+                    f"{__name__} - No Data in DataSaver.write: Provided data is empty after dropna."
+                )
                 return
 
             # Drop NaN values
@@ -51,15 +60,23 @@ class DataSaver:
                 )
 
         except FileNotFoundError as e:
-            operation_logger.error(f"{__name__} - FileNotFoundError in DataSaver.write: {str(e)}")
+            operation_logger.error(
+                f"{__name__} - FileNotFoundError in DataSaver.write: {str(e)}"
+            )
         except PermissionError as e:
-            operation_logger.error(f"{__name__} - PermissionError in DataSaver.write: {str(e)}")
+            operation_logger.error(
+                f"{__name__} - PermissionError in DataSaver.write: {str(e)}"
+            )
         except AttributeError as e:
-            operation_logger.error(f"{__name__} - AttributeError in DataSaver.write: {str(e)}")
+            operation_logger.error(
+                f"{__name__} - AttributeError in DataSaver.write: {str(e)}"
+            )
         except OSError as e:
             operation_logger.error(f"{__name__} - OSError in DataSaver.write: {str(e)}")
         except Exception as e:
-            operation_logger.error(f"{__name__} - Unexpected error in DataSaver.write: {str(e)}")
+            operation_logger.error(
+                f"{__name__} - Unexpected error in DataSaver.write: {str(e)}"
+            )
 
 
 # Test Code Run Zone

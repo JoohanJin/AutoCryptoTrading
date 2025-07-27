@@ -12,6 +12,7 @@ class CommonBaseSDK:
     A common base class for handling API requests, signature generation, and session management
     for different exchange SDKs (e.g., MEXC and Binance).
     """
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -29,9 +30,11 @@ class CommonBaseSDK:
         """
         Set the Content-Type header for the session.
         """
-        self.session.headers.update({
-            "Content-Type": content_type,
-        })
+        self.session.headers.update(
+            {
+                "Content-Type": content_type,
+            }
+        )
 
     def generate_signature(
         self,
@@ -53,11 +56,11 @@ class CommonBaseSDK:
             raise ValueError("Secret key is required for signature generation.")
 
         return hmac.new(
-            self.secret_key.encode('utf-8'),
-            query_string.encode('utf-8'),
+            self.secret_key.encode("utf-8"),
+            query_string.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
-    
+
     def call(
         self,
         method: Union[
@@ -76,7 +79,7 @@ class CommonBaseSDK:
             - Make a generic API call with the specified method, URL, and parameters.
             - Automatically handles signature generation and timestamping.
             - Returns the JSON response from the API.
-        
+
         param method: HTTP method (GET, POST, PUT, DELETE)
         param url: API endpoint URL (should start with "/")
         param params: Query parameters for the request
@@ -97,7 +100,7 @@ class CommonBaseSDK:
         if params:
             params = {k: v for k, v in params.items() if v is not None}
             query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-        
+
         query_string = f"{self.api_key}{timestamp}{query_string}"
 
         # Add signature if API key and secret key are provided
@@ -105,9 +108,10 @@ class CommonBaseSDK:
             if headers is None:
                 headers = {}
 
-            headers.update({
-                "Request-Time": timestamp,
-                "Signature": self.generate_signature(query_string = query_string),
+            headers.update(
+                {
+                    "Request-Time": timestamp,
+                    "Signature": self.generate_signature(query_string=query_string),
                 },
             )
 
@@ -117,11 +121,11 @@ class CommonBaseSDK:
 
         # Perform the request
         response = self.session.request(
-            method = method,
-            url = f"{self.base_url}{url}",
-            params = params,
-            json = data,
-            headers = headers,
+            method=method,
+            url=f"{self.base_url}{url}",
+            params=params,
+            json=data,
+            headers=headers,
         )
 
         # Ensure a JSON response is returned

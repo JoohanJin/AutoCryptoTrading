@@ -14,11 +14,12 @@ from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import operation_logger, log_decorator
 from pipeline.signal_pipeline import SignalPipeline
 
+
 class SystemManager:
     @log_decorator
     def __init__(
-            self,
-        ):
+        self,
+    ):
         """
         func __init__():
             - Initialize the System Manager.
@@ -33,43 +34,46 @@ class SystemManager:
         self.data_pipeline: DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()
         self.mapper: ScoreMapper = ScoreMapper()
-        
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
         self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
 
-        self.data_collector_processor: DataCollectorAndProcessor = DataCollectorAndProcessor(
-            data_pipeline = self.data_pipeline,
-            websocket = self.ws,
+        self.data_collector_processor: DataCollectorAndProcessor = (
+            DataCollectorAndProcessor(
+                data_pipeline=self.data_pipeline,
+                websocket=self.ws,
+            )
         )
 
         self.signal_generator: SignalGenerator = SignalGenerator(
-            data_pipeline = self.data_pipeline,
-            custom_telegram_bot = self.telegram_bot,
-            signal_pipeline = self.signal_pipline,
+            data_pipeline=self.data_pipeline,
+            custom_telegram_bot=self.telegram_bot,
+            signal_pipeline=self.signal_pipline,
         )
 
         # one more classs: trade_manager -> it will have the FutureMarket SDWK
         self.trade_manager: TradeManager = TradeManager(
-            signal_pipeline = self.signal_pipline,
-            mexc_future_market_sdk = self.mexc_sdk,
-            delta_mapper = self.mapper,
-            telegram_bot = self.telegram_bot,
+            signal_pipeline=self.signal_pipline,
+            mexc_future_market_sdk=self.mexc_sdk,
+            delta_mapper=self.mapper,
+            telegram_bot=self.telegram_bot,
         )
 
         try:
             while True:
-                time.sleep(1) # Sleep to reduce the cpu usage.
+                time.sleep(1)  # Sleep to reduce the cpu usage.
         except KeyboardInterrupt:
             operation_logger.info("Program interrupted by user. Exiting...")
             sys.exit(0)
         except Exception as e:
-            operation_logger.critical(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            operation_logger.critical(
+                f"Program encounters critical errors.{str(e)}\n Exiting..."
+            )
             raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
 
         return
-    
+
     @log_decorator
     def __set_up_telegram_bot(
         self,
@@ -87,10 +91,10 @@ class SystemManager:
         """
         api_key, channel_id = SystemManager.__get_telegram_credentials()
         return CustomTelegramBot(
-            api_key = api_key,
-            channel_id = channel_id,
+            api_key=api_key,
+            channel_id=channel_id,
         )
-    
+
     @log_decorator
     def __set_up_mexc_sdk(
         self,
@@ -108,8 +112,8 @@ class SystemManager:
         """
         api_key, secret_key = SystemManager.__get_mexc_crendentials()
         return FutureMarket(
-            api_key = api_key,
-            secret_key = secret_key,
+            api_key=api_key,
+            secret_key=secret_key,
         )
 
     """
@@ -117,28 +121,29 @@ class SystemManager:
     #                                                Static Method                                                       #
     ######################################################################################################################
     """
+
     @staticmethod
     def __get_telegram_credentials():
-        f = open('./credentials/telegram_key.json')
+        f = open("./credentials/telegram_key.json")
         credentials = json.load(f)
-        
+
         api_key = credentials["api_key"]
         channel_id = credentials["channel_id"]
 
         return api_key, channel_id
-    
+
     @staticmethod
     def __get_mexc_crendentials():
-        f = open('./credentials/mexc_keys.json')
+        f = open("./credentials/mexc_keys.json")
         credentials = json.load(f)
-        
+
         api_key = credentials["api_key"]
         secret_key = credentials["secret_key"]
 
         return api_key, secret_key
 
 
-def main(): # to test run the system manager.
+def main():  # to test run the system manager.
     main_system_manager: SystemManager = SystemManager()
 
 
