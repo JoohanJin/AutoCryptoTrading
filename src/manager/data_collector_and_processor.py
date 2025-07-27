@@ -10,7 +10,6 @@ from queue import Queue
 from mexc.future import FutureWebSocket
 from logger.set_logger import operation_logger
 from manager.data_saver import DataSaver
-from custom_telegram.telegram_bot_class import CustomTelegramBot
 from object.constants import MA_WRITE_PERIODS
 from pipeline.data_pipeline import DataPipeline
 
@@ -231,7 +230,7 @@ class DataCollectorAndProcessor:
                 )  # data from the data buffer
                 if response:
                     # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
-                    timestamp = response["timestamp"]
+                    # timestamp = response["timestamp"]
 
                     # make the data, dictionary, into the pandas dataframe.
                     tmp = pd.DataFrame(
@@ -401,7 +400,7 @@ class DataCollectorAndProcessor:
 
         except Exception as e:
             operation_logger.warning(
-                f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception."
+                f"{__name__}: function {self.__class__.__name__}.__calculate_ema_sma_price has has raised the Unknown Exception - {str(e)}."
             )
             return None
 

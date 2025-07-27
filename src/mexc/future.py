@@ -34,8 +34,8 @@ class FutureMarket(FutureBase):
         """
         url: str = "api/v1/contract/ping"
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
         )
 
     def detail(

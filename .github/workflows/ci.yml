@@ -40,7 +40,7 @@ jobs: # defines a list of jobs to run
            pip install -r requirements.txt
            pip install flake8 black pylint pytest
           
-        # Runs flaked8 on the entire project to check for style violation.
+        # Runs flake8 on the entire project to check for style violation.
         # - name: Run flake8 linting
         #   run: |
         #    flake8 .

@@ -1,13 +1,10 @@
 # Built-in Library
 import sys
 
-from .base_sdk import *
-
 import threading
 from typing import Optional, Callable
 import time
 import hashlib
-import threading
 import hmac
 import json
 import websocket

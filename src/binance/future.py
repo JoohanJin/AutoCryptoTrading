@@ -1,9 +1,7 @@
-from logger.set_logger import operation_logger
-
-from base_sdk import _BinanceFutureSdk
+from base_sdk import BinanceFutureSDK
 
 
-class BinanceFuture(_BinanceFutureSdk):
+class BinanceFuture(BinanceFutureSDK):
     # Public
     # TODO need to implement the basic public
 

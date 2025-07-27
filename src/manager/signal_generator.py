@@ -1,12 +1,10 @@
 # STANDARD LIBRARY
 import threading
-from typing import Dict, Optional, Tuple, Literal, Union, List
+from typing import Dict, Optional, List
 import time
-from queue import Queue
 
 # CUSTOM LIBRARY
 from custom_telegram.telegram_bot_class import CustomTelegramBot
-from mexc.future import FutureMarket
 from pipeline.data_pipeline import DataPipeline
 from pipeline.signal_pipeline import SignalPipeline
 from logger.set_logger import operation_logger, trading_logger

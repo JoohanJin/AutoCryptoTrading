@@ -1,7 +1,5 @@
 # Built in libraries
-from urllib.parse import urlencode
-import logging
-from typing import Union, Literal, Optional
+from typing import Optional
 
 # Custom libraries
 from sdk.base_sdk import CommonBaseSDK

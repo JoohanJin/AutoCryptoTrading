@@ -1,7 +1,6 @@
 import telegram
 import json
 import asyncio
-import tracemalloc
 import os
 
 
