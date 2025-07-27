@@ -5,16 +5,13 @@ from typing import Optional, Union, Literal
 # Custom libraries
 from sdk.base_sdk import CommonBaseSDK
 
-"""
+'''
 Class for Base SDK for MEXC APIs including SpotV3, Spot V2, Futures V1 and so on
-"""
-
-
+'''
 class FutureBase(CommonBaseSDK):
     """
     SDK for MEXC API, inheriting from CommonBaseAPI.
     """
-
     def __init__(
         self,
         api_key: Optional[str] = None,

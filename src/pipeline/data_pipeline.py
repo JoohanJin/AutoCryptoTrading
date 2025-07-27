@@ -4,9 +4,10 @@ from typing import Dict, Union, Optional, Literal, Tuple
 
 # CUSTOM LIBRARY
 from logger.set_logger import operation_logger
+from .base_pipeline import BasePipeline
 
 
-class DataPipeline:
+class DataPipeline(BasePipeline):
     def __init__(
         self,
     ) -> None:
@@ -45,7 +46,7 @@ class DataPipeline:
 
     def push_data(
         self,
-        type: Union[
+        key: Union[
             Literal["test"], # only this one is used for the test phase.
             Literal["sma"],
             Literal["ema"],
@@ -55,11 +56,11 @@ class DataPipeline:
     ) -> bool:
         """
         # func push_data:
-            # pushes the data to the corresponding queue based on the type.
+            # pushes the data to the corresponding queue based on the key.
             # will be used by data fetcher.
         
         # param self
-        # param type
+        # param key
             # will get the key value for self.queues to seletively push the data into the respective queue.
             # Enum:
                 # "test"
@@ -75,25 +76,25 @@ class DataPipeline:
             # return False if the operation is not successful.
         """
         try:
-            self.queues[type].put(
+            self.queues[key].put(
                 data,
                 block = False,
                 timeout = 1,
             )
             return True
         except Full:
-            operation_logger.warning(f"{__name__} - {type} Queue is full. Data cannot be added.")
+            operation_logger.warning(f"{__name__} - {key} Queue is full. Data cannot be added.")
             return False
         except KeyError:
-            operation_logger.warning(f"{__name__} - push_data(): Invalid Queue Type.")
+            operation_logger.warning(f"{__name__} - push_data(): Invalid Queue Type {key}.")
             return False
         except Exception as e:
-            operation_logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(f"{__name__} - {key} Queue: Unknown exception has occurred: {str(e)}")
             return False
 
     def pop_data(
         self,
-        type: Union[
+        key: Union[
             Literal["test"],
             Literal["sma"],
             Literal["ema"],
@@ -104,11 +105,11 @@ class DataPipeline:
     ) -> Tuple[Dict[int, float]] | None:
         """
         # func pop_data():
-            # get the data from the queue with the given type.
+            # get the data from the queue with the given key.
         
         # param self
             # class object
-        # param type
+        # param key
             # will get the key value for self.queues to seletively push the data into the respective queue.
             # Enum:
                 # "test"
@@ -124,14 +125,14 @@ class DataPipeline:
             # return data if there is a valid data.
         """
         try:
-            data: Tuple[Dict[int, float]] = self.queues[type].get(block = block, timeout = timeout)
+            data: Tuple[Dict[int, float]] = self.queues[key].get(block = block, timeout = timeout)
             return data
         except Empty:
-            operation_logger.warning(f"{__name__} - {type} Queue is empty. Data cannot be retrieved.")
+            operation_logger.warning(f"{__name__} - {key} Queue is empty. Data cannot be retrieved.")
             return None
         except KeyError:
-            operation_logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}")
+            operation_logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {key}")
             return None
         except Exception as e:
-            operation_logger.warning(f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}.")
+            operation_logger.warning(f"{__name__} - {key} Queue: Unknown exception has occurred: {str(e)}.")
             return None

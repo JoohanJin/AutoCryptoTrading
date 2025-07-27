@@ -7,10 +7,11 @@ from logger.set_logger import operation_logger
 from object.signal import (
     TradeSignal,
     Signal,
-)  # TODO: Need to define this class in another class
+)
+from .base_pipeline import BasePipeline  # TODO: Need to define this class in another class
 
 
-class SignalPipeline:
+class SignalPipeline(BasePipeline):
     def __init__(self):
         """
         func __init__:
@@ -89,8 +90,8 @@ class SignalPipeline:
         """
         try:
             return self.signal_queue.get(
-                block=block,
-                timeout=timeout,
+                block = block,
+                timeout = timeout,
             )
         except Empty:
             operation_logger.warning(
