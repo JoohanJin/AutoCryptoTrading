@@ -14,7 +14,7 @@
 
     - TradingView APIs
 
-    - Trading Algorithm
+    - Trading Algorithmg
         - Multiple Technical Analysis Indicators for comprehensive trading decision making.
     - Machine Learning
     - Large-Language Model (LLM)

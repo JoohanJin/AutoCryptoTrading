@@ -4,12 +4,12 @@ from object.signal import TradeSignal
 class ScoreMapper:
     def __init__(self) -> None:
         self.score_map: dict[TradeSignal, int] = {
-                TradeSignal.SHORT_TERM_BUY: 1,
-                TradeSignal.LONG_TERM_BUY: 2,
-                TradeSignal.SHORT_TERM_SELL: -1,
-                TradeSignal.LONG_TERM_SELL: -2,
-                TradeSignal.HOLD: 0,
-            }
+            TradeSignal.SHORT_TERM_BUY: 1,
+            TradeSignal.LONG_TERM_BUY: 2,
+            TradeSignal.SHORT_TERM_SELL: -1,
+            TradeSignal.LONG_TERM_SELL: -2,
+            TradeSignal.HOLD: 0,
+        }
         return
 
     def map(
@@ -17,12 +17,13 @@ class ScoreMapper:
         signal: TradeSignal,
     ) -> float:
         return self.score_map.get(signal, 0)
-    
-'''
+
+
+"""
 #############################################################################################################
 #                                        Mapping Testing Code                                               #
 #############################################################################################################
-'''
+"""
 if __name__ == "__main__":
     mapper = ScoreMapper()
     print(mapper.map(TradeSignal.SHORT_TERM_BUY))

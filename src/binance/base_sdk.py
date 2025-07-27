@@ -1,15 +1,15 @@
 # Built in libraries
-from urllib.parse import urlencode
-import logging
-from typing import Union, Literal, Optional
+from typing import Optional
 
 # Custom libraries
 from sdk.base_sdk import CommonBaseSDK
+
 
 class BinanceFutureSDK(CommonBaseSDK):
     """
     SDK for Binance Futures API, inheriting from CommonBaseAPI.
     """
+
     def __init__(
         self,
         api_key: Optional[str] = None,
