@@ -6,6 +6,7 @@ import websocket_base  # as 1.recommended in the API page, https://websocket-cli
 from typing import Optional
 import time
 import hashlib
+
 # import threading
 
 # Customized Library
@@ -409,16 +410,15 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         topic = msg.get("channel")
 
         if (
-            (
-                msg.get("channel", "").startswith("rs.")
-                or msg.get("channel", "").startswith("push.")
-            )
-            and msg.get("channel", "") != "rs.error"
-        ):
+            msg.get("channel", "").startswith("rs.")
+            or msg.get("channel", "").startswith("push.")
+        ) and msg.get("channel", "") != "rs.error":
             operation_logger.info(f"Subcription to {topic} has been establisehd")
 
         else:
-            operation_logger.info(f"Estabilishment of {topic} subscription has been failed.")
+            operation_logger.info(
+                f"Estabilishment of {topic} subscription has been failed."
+            )
 
         if msg.get("channel", "") != "rs.error":
             operation_logger.info(f"Subscription to {topic} has been established")

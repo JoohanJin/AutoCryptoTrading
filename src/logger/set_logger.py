@@ -22,11 +22,11 @@ operation_logger_formatter: logging.Formatter = logging.Formatter(
 # Operation logger - File Handler
 operation_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
     "log/system-logging.log",
-    when = "midnight",  # rotate at midnight
-    interval = 1,  # Rotate every day
-    backupCount = 14,  # keep 14 days of logs
-    encoding = "utf-8",  # Set the encoding to utf-8
-    delay = False,  # Do not delay the creation of the log file
+    when="midnight",  # rotate at midnight
+    interval=1,  # Rotate every day
+    backupCount=14,  # keep 14 days of logs
+    encoding="utf-8",  # Set the encoding to utf-8
+    delay=False,  # Do not delay the creation of the log file
 )  # Log file handler
 operation_logger_file_handler.setFormatter(
     operation_logger_formatter
@@ -64,12 +64,12 @@ trading_logger_formatter: logging.Formatter = logging.Formatter(
 
 # Trading Logger - File Handler
 trading_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
-    filename = "log/trading-logging.log",
-    when = "midnight",  # rotate at midnight
-    interval = 1,  # Rotate every day
-    backupCount = 14,  # keep 14 days of logs
-    encoding = "utf-8",  # Set the encoding to utf-8
-    delay = False,  # Do not delay the creation of the log file
+    filename="log/trading-logging.log",
+    when="midnight",  # rotate at midnight
+    interval=1,  # Rotate every day
+    backupCount=14,  # keep 14 days of logs
+    encoding="utf-8",  # Set the encoding to utf-8
+    delay=False,  # Do not delay the creation of the log file
 )  # Log file handler
 trading_logger_file_handler.setFormatter(
     trading_logger_formatter
