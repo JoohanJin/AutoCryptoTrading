@@ -42,7 +42,7 @@ class DataCollectorAndProcessor:
         - no need to provide api_key and secret_key, i.e., no authentication on API side for data fetching.
         """
         self.ws: FutureWebSocket = websocket
-        self._ma_period: int = 20  # set the period of moving average
+        self._ma_period: int = 20  # ! No need to be here I think.
         self._memory_saver: DataSaver = DataSaver()  # can be here.
         self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
@@ -51,11 +51,11 @@ class DataCollectorAndProcessor:
         # wait till WebSocket set up is done
         time.sleep(1)
 
-        # used as  buffer for data fetching from the MEXC Endpoint
+        # used as buffer for data fetching from the MEXC Endpoint
         self.price_fetch_buffer = Queue()
 
         # subsribe to the ticker data from the MexC data
-        self.ws.ticker(callback=self._put_ticker_data)
+        self.ws.ticker(callback = self._put_ticker_data)
 
         # lock for accessing Price DataFrame.
         self.df_lock = threading.Lock()
@@ -97,7 +97,6 @@ class DataCollectorAndProcessor:
     #                                               Threading Management                                                 #
     ######################################################################################################################
     """
-
     def _init_threads(self) -> None:
         """
         func _init_threads():
@@ -198,8 +197,8 @@ class DataCollectorAndProcessor:
         try:
             self.price_fetch_buffer.put(
                 msg.get("data"),
-                block=False,
-                timeout=None,
+                block = False,
+                timeout = None,
             )
         except Exception as e:
             operation_logger.critical(
@@ -259,7 +258,7 @@ class DataCollectorAndProcessor:
         """
         try:
             # price_fetch_buffer is a queue.
-            result = self.price_fetch_buffer.get(block=True)
+            result = self.price_fetch_buffer.get(block = True)
 
             self.price_fetch_buffer.task_done()
 
