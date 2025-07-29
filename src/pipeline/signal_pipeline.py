@@ -3,7 +3,7 @@ from queue import Queue, Full, Empty
 from typing import Literal, Optional, Dict, Any
 
 # Custom Library
-from src.logger.set_logger import operation_logger
+from logger.set_logger import operation_logger
 from object.signal import TradeSignal, Signal
 from .base_pipeline import BasePipeline  # TODO: Need to define this class in another class
 

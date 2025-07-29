@@ -41,23 +41,23 @@ class SystemManager:
 
         self.data_collector_processor: DataCollectorAndProcessor = (
             DataCollectorAndProcessor(
-                data_pipeline=self.data_pipeline,
-                websocket=self.ws,
+                data_pipeline = self.data_pipeline,
+                websocket = self.ws,
             )
         )
 
         self.signal_generator: SignalGenerator = SignalGenerator(
-            data_pipeline=self.data_pipeline,
-            custom_telegram_bot=self.telegram_bot,
-            signal_pipeline=self.signal_pipline,
+            data_pipeline = self.data_pipeline,
+            custom_telegram_bot = self.telegram_bot,
+            signal_pipeline = self.signal_pipline,
         )
 
         # one more classs: trade_manager -> it will have the FutureMarket SDWK
         self.trade_manager: TradeManager = TradeManager(
-            signal_pipeline=self.signal_pipline,
-            mexc_future_market_sdk=self.mexc_sdk,
-            delta_mapper=self.mapper,
-            telegram_bot=self.telegram_bot,
+            signal_pipeline = self.signal_pipline,
+            mexc_future_market_sdk = self.mexc_sdk,
+            delta_mapper = self.mapper,
+            telegram_bot = self.telegram_bot,
         )
 
         try:
