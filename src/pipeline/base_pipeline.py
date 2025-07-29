@@ -22,5 +22,4 @@ class BasePipeline(ABC):
         **kwagrs,
     ) -> Any:
         return
-
     

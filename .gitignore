@@ -16,6 +16,8 @@ tmp/
 *foo*
 foo/
 
+*test.py*
+
 # ignore market data directory
 market_data/
 
