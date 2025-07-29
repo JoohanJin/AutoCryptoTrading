@@ -68,9 +68,9 @@ class SystemManager:
             sys.exit(0)
         except Exception as e:
             operation_logger.critical(
-                f"Program encounters critical errors.{str(e)}\n Exiting..."
+                f"{__name__} - Program encounters critical errors."
             )
-            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")
+            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...") #! raise the custom Exceptions.
 
         return
 
