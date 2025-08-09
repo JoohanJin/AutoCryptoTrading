@@ -7,11 +7,11 @@ from logger.set_logger import operation_logger
 from .base_pipeline import BasePipeline
 
 
-class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
+class DataPipeline(BasePipeline):  # TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
-        """
+        '''
         func __init__:
             - Creates a Queue object of Dict to store different technical indicators data.
             - Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
@@ -23,7 +23,7 @@ class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
         param self
 
         return None
-        """
+        '''
         # data buffer, can be added in the future.
         self.queues: Dict[
             str,
@@ -62,7 +62,7 @@ class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
         ],
         data: Tuple[Dict[int, float]],
     ) -> bool:
-        """
+        '''
         func push_data:
             - pushes the data to the corresponding queue based on the key.
             - will be used by data fetcher.
@@ -81,7 +81,7 @@ class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
         return bool
             - return True if the operation is successful.
             - return False if the operation is not successful.
-        """
+        '''
         try:
             self.queues[key].put(
                 data,
@@ -110,10 +110,10 @@ class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
         block: bool = True,
         timeout: int | None = None
     ) -> Tuple[Dict[int, float]] | None:
-        """
+        '''
         func pop_data():
             - get the data from the queue with the given key.
-        
+
         param self
             - class object
         param key
@@ -130,7 +130,7 @@ class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
 
         return bool
             - return data if there is a valid data.
-        """
+        '''
         try:
             data: Tuple[Dict[int, float]] = self.queues[key].get(block = block, timeout = timeout)
             return data

@@ -9,7 +9,7 @@ from .base_pipeline import BasePipeline  # TODO: Need to define this class in an
 
 class SignalPipeline(BasePipeline[Signal]):
     def __init__(self):
-        """
+        '''
         func __init__:
             - create a Queue of Dict to store indicator
             - Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
@@ -27,7 +27,7 @@ class SignalPipeline(BasePipeline[Signal]):
                         # Other signals
                 }
             }
-        """
+        '''
         self.signal_queue: Queue[Signal] = Queue()
         return
 
@@ -35,7 +35,7 @@ class SignalPipeline(BasePipeline[Signal]):
         self,
         signal: Signal,
     ) -> bool:
-        """
+        '''
         func push_indicator:
             - push the indicator to the buffer.
         param self
@@ -43,14 +43,13 @@ class SignalPipeline(BasePipeline[Signal]):
         param indicator
             - indicator got as a parameter to push to the buffer.
             - Dict[str, Dict[str, Any]]
-        """
+        '''
         try:
             self.signal_queue.put(
                 signal,
                 block = False,
                 timeout = 1,
             )
-
             return True
         except Full:
             operation_logger.warning(
@@ -69,7 +68,7 @@ class SignalPipeline(BasePipeline[Signal]):
         timeout: int | None = None,
         block: bool = True,  # Default is to be blocked
     ) -> Signal | None:
-        """
+        '''
         func pop_indicator():
             - get the indicator from the buffer.
 
@@ -85,7 +84,7 @@ class SignalPipeline(BasePipeline[Signal]):
 
         return bool
             - return indicator if there is a valid indicator.
-        """
+        '''
         try:
             return self.signal_queue.get(
                 block = block,
