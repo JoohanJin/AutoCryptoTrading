@@ -8,18 +8,18 @@ class BasePipeline(ABC):
         return
 
     @abstractmethod
-    def push_data(
+    def push(
         self,
         *args,
         **kwargs,
-    ) -> Any:
+    ):
         return False
     
     @abstractmethod
-    def pop_data(
+    def pop(
         self,
         *args,
         **kwagrs,
-    ) -> Any:
+    ):
         return
     
