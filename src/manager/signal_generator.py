@@ -113,7 +113,7 @@ class SignalGenerator:
             type="test",
             block=True,  # if there is no data, then stop the process until the data is available.
             timeout=None,
-        ) # type: ignore
+        )
 
     def get_smas(self) -> Optional[Dict[int, float]]:
         """
@@ -129,7 +129,7 @@ class SignalGenerator:
             type="sma",
             block=True,  # if there is no data, then stop the process until the data is available.
             timeout=None,
-        ) # type: ignore
+        )
 
     def get_emas(self) -> Optional[Dict[int, float]]:
         """
@@ -145,7 +145,7 @@ class SignalGenerator:
             type="ema",
             block=True,  # if there is no data, then stop the process until the data is available.
             timeout=None,
-        ) # type: ignore
+        )
 
     def get_price_data(self) -> Optional[Dict[int, float]]:
         """
@@ -162,7 +162,7 @@ class SignalGenerator:
             type="price",
             block=True,  # if there is no data, then stop the process until the data is available.
             timeout=None,
-        ) # type: ignore
+        )
 
     """
     ######################################################################################################################
@@ -374,7 +374,7 @@ class SignalGenerator:
             if data:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
-                    self.indicators["sma"] = data # type: ignore
+                    self.indicators["sma"] = data
         return
 
     def get_ema(self) -> bool:
@@ -394,7 +394,7 @@ class SignalGenerator:
             if data:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
-                    self.indicators["ema"] = data # type: ignore
+                    self.indicators["ema"] = data
         return
 
     def get_price(self) -> bool:
@@ -414,7 +414,7 @@ class SignalGenerator:
             if data:
                 # update to the shared structure to use them for analysis.
                 with self.indicators_lock:
-                    self.indicators["price"] = data # type: ignore
+                    self.indicators["price"] = data
         return
 
     """
@@ -427,7 +427,7 @@ class SignalGenerator:
     @staticmethod
     def __generate_signal(
         signal: TradeSignal,
-        timestamp: int  | None = None,
+        timestamp: int | None = None,
     ) -> Signal:
         """
         - func __generate_signal():
@@ -504,8 +504,8 @@ class SignalGenerator:
         key: str = "death_cross"
         while True:
             with self.indicators_lock:
-                sma_data: dict = self.indicators.get("sma") # type: ignore
-                ema_data: dict = self.indicators.get("ema") # type: ignore
+                sma_data: dict = self.indicators.get("sma")
+                ema_data: dict = self.indicators.get("ema")
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -553,8 +553,8 @@ class SignalGenerator:
         )
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma") # type: ignore
-                current_price: float = self.indicators.get("price") # type: ignore
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                current_price: float = self.indicators.get("price")
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -608,8 +608,8 @@ class SignalGenerator:
         key: str = "ema_sma_divergence"
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma") # type: ignore
-                ema_data: Dict[int, float] = self.indicators.get("ema") # type: ignore
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                ema_data: Dict[int, float] = self.indicators.get("ema")
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -650,8 +650,8 @@ class SignalGenerator:
         key: str = "price_reversal"
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma") # type: ignore
-                current_price: float = self.indicators.get("price") # type: ignore
+                sma_data: Dict[int, float] = self.indicators.get("sma")
+                current_price: float = self.indicators.get("price")
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -660,7 +660,7 @@ class SignalGenerator:
             if (curr_timestamp - prev_timestamp > self.signal_window) and (
                 sma_data and current_price
             ):
-                sma_60: float = sma_data.get(60)  # type: ignore # data for 1 min SMA
+                sma_60: float = sma_data.get(60)
 
                 if sma_60:
                     if current_price > sma_60:

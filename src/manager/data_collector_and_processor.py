@@ -332,7 +332,7 @@ class DataCollectorAndProcessor:
                 if ema_values:
                     self.__push_ema_data(ema_values)
                 if price:
-                    self.__push_price_data(price) # type: ignore
+                    self.__push_price_data(price)  # type: ignore
 
             time.sleep(2)
         return
@@ -457,16 +457,16 @@ class DataCollectorAndProcessor:
         self,
         data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type = "ema", data = data) # type: ignore
+        return self.pipeline.push_data(type = "ema", data = data)
 
     def __push_sma_data(
         self,
         data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type = "sma", data = data) # type: ignore
+        return self.pipeline.push_data(type = "sma", data = data)
 
     def __push_price_data(
         self,
         data: Dict[str, float],
     ):
-        return self.pipeline.push_data(type = "price", data = data) # type: ignore
+        return self.pipeline.push_data(type = "price", data = data)
