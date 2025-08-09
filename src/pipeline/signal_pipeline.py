@@ -3,7 +3,7 @@ from queue import Queue, Full, Empty
 
 # Custom Library
 from logger.set_logger import operation_logger
-from object.signal import TradeSignal, Signal
+from object.signal import Signal
 from .base_pipeline import BasePipeline  # TODO: Need to define this class in another class
 
 
@@ -36,7 +36,7 @@ class SignalPipeline(BasePipeline[Signal]):
         signal: Signal,
     ) -> bool:
         """
-        func push_indicator():
+        func push_indicator:
             - push the indicator to the buffer.
         param self
             - class object
@@ -47,9 +47,11 @@ class SignalPipeline(BasePipeline[Signal]):
         try:
             self.signal_queue.put(
                 signal,
-                block=False,
-                timeout=1,
+                block = False,
+                timeout = 1,
             )
+
+            return True
         except Full:
             operation_logger.warning(
                 f"{__name__} - Indicator Queue is full. Data cannot be added."
