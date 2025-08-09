@@ -7,27 +7,35 @@ from logger.set_logger import operation_logger
 from .base_pipeline import BasePipeline
 
 
-class DataPipeline(BasePipeline):
+class DataPipeline(BasePipeline): #TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
         """
-        # func __init__:
-            # Creates a Queue object of Dict to store different technical indicators data.
-            # Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
-        
-        # queues:
-            # test: general testing data.
-            # sma: Simple Moving Average Values.
-            # ema: Exponential Moving Average Values.
-            # "?" : Purpose to be defined.
-        
-        # param self
+        func __init__:
+            - Creates a Queue object of Dict to store different technical indicators data.
+            - Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
+        queues:
+            - test: general testing data.
+            - sma: Simple Moving Average Values.
+            - ema: Exponential Moving Average Values.
+            - "?" : Purpose to be defined.
+        param self
 
-        # return None
+        return None
         """
         # data buffer, can be added in the future.
-        self.queues: Dict[str, Queue[Tuple[Dict[int, float]]]] = {
+        self.queues: Dict[
+            str,
+            Queue[
+                Tuple[
+                    Dict[
+                        int,
+                        float
+                    ]
+                ]
+            ]
+        ] = {
             "price": Queue(
                 maxsize=100,
             ),
@@ -47,7 +55,7 @@ class DataPipeline(BasePipeline):
     def push(
         self,
         key: Union[
-            Literal["test"], # only this one is used for the test phase.
+            Literal["test"],  # only this one is used for the test phase.
             Literal["sma"],
             Literal["ema"],
             Literal["?"],
@@ -55,25 +63,24 @@ class DataPipeline(BasePipeline):
         data: Tuple[Dict[int, float]],
     ) -> bool:
         """
-        # func push_data:
-            # pushes the data to the corresponding queue based on the key.
-            # will be used by data fetcher.
-        
-        # param self
-        # param key
-            # will get the key value for self.queues to seletively push the data into the respective queue.
-            # Enum:
-                # "test"
-                # "sma"
-                # "ema"
-                # "?"
+        func push_data:
+            - pushes the data to the corresponding queue based on the key.
+            - will be used by data fetcher.
+        param self
+        param key
+            - will get the key value for self.queues to seletively push the data into the respective queue.
+            - Enum:
+                - "test"
+                - "sma"
+                - "ema"
+                - "?"
 
-        # param data
-            # Tuple[float]
+        param data
+            - Tuple[float]
 
-        # return bool
-            # return True if the operation is successful.
-            # return False if the operation is not successful.
+        return bool
+            - return True if the operation is successful.
+            - return False if the operation is not successful.
         """
         try:
             self.queues[key].put(
@@ -104,25 +111,25 @@ class DataPipeline(BasePipeline):
         timeout: int | None = None
     ) -> Tuple[Dict[int, float]] | None:
         """
-        # func pop_data():
-            # get the data from the queue with the given key.
+        func pop_data():
+            - get the data from the queue with the given key.
         
-        # param self
-            # class object
-        # param key
-            # will get the key value for self.queues to seletively push the data into the respective queue.
-            # Enum:
-                # "test"
-                # "sma"
-                # "ema"
-                # "?"
-                # More queue with keywords will be added.
+        param self
+            - class object
+        param key
+            - will get the key value for self.queues to seletively push the data into the respective queue.
+            - Enum:
+                - "test"
+                - "sma"
+                - "ema"
+                - "?"
+                - More queue with keywords will be added.
 
-        # param data
-            # Tuple[float]
+        param data
+            - Tuple[float]
 
-        # return bool
-            # return data if there is a valid data.
+        return bool
+            - return data if there is a valid data.
         """
         try:
             data: Tuple[Dict[int, float]] = self.queues[key].get(block = block, timeout = timeout)

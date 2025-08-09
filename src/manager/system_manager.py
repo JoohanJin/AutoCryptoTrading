@@ -30,7 +30,7 @@ class SystemManager:
         return None
         """
         # prepare the necessary parts for injection.
-        self.ws: FutureWebSocket = FutureWebSocket() # type: ignore
+        self.ws: FutureWebSocket = FutureWebSocket()  # type: ignore
         self.data_pipeline: DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()
         self.mapper: ScoreMapper = ScoreMapper()
@@ -70,7 +70,7 @@ class SystemManager:
             operation_logger.critical(
                 f"{__name__} - Program encounters critical errors."
             )
-            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...") #! raise the custom Exceptions.
+            raise Exception(f"Program encounters critical errors.{str(e)}\n Exiting...")  # ! raise the custom Exceptions.
 
         return
 
@@ -124,6 +124,7 @@ class SystemManager:
 
     @staticmethod
     def __get_telegram_credentials():
+        # TODO: Fetch credentials from Environment Variable
         f = open("./credentials/telegram_key.json")
         credentials = json.load(f)
 
@@ -134,6 +135,7 @@ class SystemManager:
 
     @staticmethod
     def __get_mexc_crendentials():
+        # TODO: Fetch credentials from Environment Variable
         f = open("./credentials/mexc_keys.json")
         credentials = json.load(f)
 

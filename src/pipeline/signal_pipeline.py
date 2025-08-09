@@ -38,7 +38,6 @@ class SignalPipeline(BasePipeline[Signal]):
         """
         func push_indicator():
             - push the indicator to the buffer.
-
         param self
             - class object
         param indicator
