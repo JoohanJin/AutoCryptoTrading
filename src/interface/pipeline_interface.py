@@ -1,7 +1,6 @@
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 from pipeline.base_pipeline import BasePipeline
 from logger.set_logger import operation_logger
-
 
 T = TypeVar('T')
 

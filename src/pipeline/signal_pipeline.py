@@ -1,6 +1,5 @@
 # Standard Library
 from queue import Queue, Full, Empty
-from typing import Literal, Optional, Dict, Any
 
 # Custom Library
 from logger.set_logger import operation_logger
@@ -25,6 +24,7 @@ class SignalPipeline(BasePipeline[Signal]):
                         # 001: for buy
                         # 010: for sell
                         # 100: for hold -> do nothing
+                        # Other signals
                 }
             }
         """
