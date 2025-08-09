@@ -1,25 +1,25 @@
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 from pipeline.base_pipeline import BasePipeline
 from logger.set_logger import operation_logger
 
+T = TypeVar('T')
 
-Data = TypeVar('Data')
 
-class PipelineController(Generic[Data]):
+class PipelineController(Generic[T]):
     '''
-    # this interface provides the interface for data pipeline push and pull method.
-    # based on the principle of Depeency Inversion Principle.
+    - this class provides the interface for data pipeline push and pull method.
+    - based on the principle of Depeency Inversion Principle.
+    - Therefore, even when there are some changes on the data pipeline, we do not need to change the code for each class.
     '''
     def __init__(
         self,
-        pipeline: BasePipeline, # Upcasting!
-        push_only: bool = True,
+        pipeline: BasePipeline,  # Upcasting!
+        push_only: bool,
     ) -> None:
         '''
-        function __init__:
-            - Get the pipeline with the generic type for the object.
+        - func __init__():
+            - Get the actual pipeline.
             - Get the push_only variable so that we can add control of the side. (uni-directional)
-            - 
         '''
         # Let the programmer decides which operation to be used.
         self.push_only = push_only
@@ -32,11 +32,10 @@ class PipelineController(Generic[Data]):
 
     def push(
         self,
-        object: Data, # object
+        object: T,  # object
         key : str,
     ) -> bool:
         '''
-        
         '''
         if (self.push_only):
             # actual pipeline operation.
@@ -48,35 +47,37 @@ class PipelineController(Generic[Data]):
                     f"{__name__} - Unknown Error has been occured. Unsuccessful Push."
                 )
                 return False
-        
+
         operation_logger.critical(
             f"{__name__} - Not Authorized Behavior. You cannot push the data from this side."
         )
-        raise PermissionError #! raise the custom exception
-    
+        raise PermissionError  # ! raise the custom exception
+
     def pop(
         self,
-        key : str,    
-    ) -> Data | None:
+        key : str,
+    ) -> T | None:
         '''
-        
         '''
         if not self.push_only:
+            # ! use the key to get the data from the corresponding queue from the dictionary.
             try:
-                data: Data | None = self.pipeline.pop()
+                data: T | None = self.pipeline.pop()
                 if data:
                     return data
             except Exception as e:
-                #! raise CustomException
+                # ! raise CustomException
                 operation_logger.warning(
                     f"{__name__} - Unknown Error has been occured. Unsuccessful Pop."
                 )
-                raise #! raise the custom exception
-        
+                raise  # ! raise the custom exception
+
         operation_logger.critical(
             f"{__name__} - Not Authorized Behavior. You cannot pop the data from this side."
         )
-        raise PermissionError #! raise the custom exception
+        raise PermissionError  # ! raise the custom exception
 
 
 # Testing Code
+if __name__ == "__main__":
+    print("Done!")

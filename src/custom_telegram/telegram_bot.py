@@ -6,12 +6,12 @@ import os
 
 
 def get_credential() -> Tuple[str, ...]:
-    """
+    '''
     get the telegram bot credential stored locally.
-    """
+    '''
     api_key = os.getenv("TELEGRAM_API_KEY")
     channel_id = os.getenv("TELEGRAM_CHANNEL_ID")
-    if not api_key or not channel_id:
+    if (not api_key) or (not channel_id):  # if there is no environment variable
         f = open("key.json")
         data = json.load(f)
         return data["api_key"], data["channel_id"]
@@ -36,10 +36,7 @@ async def main() -> None:
     return
 
 '''
-###############################################################
-#                          Test Run                           #
-###############################################################
+# Testing code
 '''
-
 if __name__ == "__main__":
     asyncio.run(main())

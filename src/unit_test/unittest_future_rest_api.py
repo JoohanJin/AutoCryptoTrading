@@ -32,12 +32,11 @@ future_market = future.FutureMarket(
 
 
 class unittest_FutureMarket(unittest.TestCase):
-    """
+    '''
     #################################################################################
     #                               PUBLIC ENDPOINT                                 #
     #################################################################################
-    """
-
+    '''
     def test_ping(self):
         response = future_market.ping()
         self.assertTrue(response["success"])

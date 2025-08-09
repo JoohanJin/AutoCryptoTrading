@@ -1,8 +1,11 @@
-from queue import Queue
-from typing import Dict, Any
+# from queue import Queue
+from typing import Generic, TypeVar
 from abc import ABC, abstractmethod
 
-class BasePipeline(ABC):
+T = TypeVar('T')
+
+
+class BasePipeline(ABC, Generic[T]):
     @abstractmethod
     def __init__(self) -> None:
         return
@@ -12,14 +15,13 @@ class BasePipeline(ABC):
         self,
         *args,
         **kwargs,
-    ):
+    ) -> bool:
         return False
-    
+
     @abstractmethod
     def pop(
         self,
         *args,
         **kwagrs,
-    ):
+    ) -> T | None:
         return
-    
