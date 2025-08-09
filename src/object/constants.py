@@ -12,6 +12,7 @@ MA_WRITE_PERIODS: Tuple[int, ...] = (
     900,  # 1800 sec, 30 min
 )
 
+
 # this is the Signal Generator side
 MA_READ_PERIODS: Tuple[int, ...] = (
     10,  # 10 sec

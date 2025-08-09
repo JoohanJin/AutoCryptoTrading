@@ -20,7 +20,7 @@ class SignalPipeline(BasePipeline[Signal]):
             indicator = {
                 "indicator": {
                     "timestamp": <int>, int(time.time() * 1000),
-                    "signal": <object.TradeSignal
+                    "signal": object.TradeSignal
                         # 001: for buy
                         # 010: for sell
                         # 100: for hold -> do nothing

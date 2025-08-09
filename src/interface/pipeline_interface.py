@@ -7,13 +7,14 @@ T = TypeVar('T')
 
 class PipelineController(Generic[T]):
     '''
-    # this interface provides the interface for data pipeline push and pull method.
-    # based on the principle of Depeency Inversion Principle.
+    - this class provides the interface for data pipeline push and pull method.
+    - based on the principle of Depeency Inversion Principle.
+    - Therefore, even when there are some changes on the data pipeline, we do not need to change the code for each class.
     '''
     def __init__(
         self,
         pipeline: BasePipeline,  # Upcasting!
-        push_only: bool = True,
+        push_only: bool,
     ) -> None:
         '''
         - func __init__():
@@ -59,6 +60,7 @@ class PipelineController(Generic[T]):
         '''
         '''
         if not self.push_only:
+            # ! use the key to get the data from the corresponding queue from the dictionary.
             try:
                 data: T | None = self.pipeline.pop()
                 if data:
