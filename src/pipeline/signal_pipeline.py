@@ -17,7 +17,7 @@ class SignalPipeline(BasePipeline[Signal]):
         queue:
             - indicator_queue: indicator buffer
 
-            indicator = {
+            data_struct = {
                 "indicator": {
                     "timestamp": <int>, int(time.time() * 1000),
                     "signal": object.TradeSignal

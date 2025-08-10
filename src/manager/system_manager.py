@@ -9,10 +9,12 @@ from manager.data_collector_and_processor import DataCollectorAndProcessor
 from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
-from object.score_mapping import ScoreMapper
+import object
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import operation_logger, log_decorator
 from pipeline.signal_pipeline import SignalPipeline
+from src.interface.pipeline_interface import PipelineController
+from src.object.constants import IndexType
 
 
 class SystemManager:
@@ -30,18 +32,21 @@ class SystemManager:
         return None
         """
         # prepare the necessary parts for injection.
-        self.ws: FutureWebSocket = FutureWebSocket()  # type: ignore
-        self.data_pipeline: DataPipeline = DataPipeline()
+        self.ws:            FutureWebSocket = FutureWebSocket()  # type: ignore
+        self.data_pipeline:    DataPipeline = DataPipeline()
         self.signal_pipline: SignalPipeline = SignalPipeline()
-        self.mapper: ScoreMapper = ScoreMapper()
+        self.mapper:     object.ScoreMapper = object.ScoreMapper()
+
+        self.data_pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]] = PipelineController(pipeline = self.data_pipeline)
+        self.signal_pipeline_controller:        PipelineController[dict[str, int | object.TradeSignal]] = PipelineController(pipeline = self.signal_pipline)
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
-        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
+        self.mexc_sdk:          FutureMarket = self.__set_up_mexc_sdk()
 
         self.data_collector_processor: DataCollectorAndProcessor = (
             DataCollectorAndProcessor(
-                data_pipeline = self.data_pipeline,
+                pipeline_controller = self.data_pipeline_controller,
                 websocket = self.ws,
             )
         )

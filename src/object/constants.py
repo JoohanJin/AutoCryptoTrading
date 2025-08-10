@@ -1,3 +1,4 @@
+from enum import IntFlag
 from typing import Tuple
 
 # EMA and SMA PERIODS
@@ -29,3 +30,9 @@ MA_READ_PERIODS: Tuple[int, ...] = (
     1200,  # 1200 sec, 20 min
     1800,  # 1800 sec, 30 min
 )
+
+
+class IndexType(IntFlag):
+    EMA = 1
+    SMA = 2
+    PRICE = 4

@@ -1,13 +1,15 @@
 # Standard Library
-from queue import Full, Queue, Empty
-from typing import Dict, Union, Optional, Literal, Tuple
+import queue
+from typing import Dict, Tuple, Queue
 
 # CUSTOM LIBRARY
 from logger.set_logger import operation_logger
+from src.object.constants import IndexType
+from src.object.indexes import Index
 from .base_pipeline import BasePipeline
 
 
-class DataPipeline(BasePipeline):  # TODO: Make the object for th Data object.
+class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
@@ -23,44 +25,59 @@ class DataPipeline(BasePipeline):  # TODO: Make the object for th Data object.
         param self
 
         return None
-        '''
-        # data buffer, can be added in the future.
-        self.queues: Dict[
-            str,
-            Queue[
-                Tuple[
-                    Dict[
-                        int,
-                        float
-                    ]
-                ]
-            ]
-        ] = {
-            "price": Queue(
-                maxsize=100,
-            ),
-            "sma": Queue(
-                maxsize = 100,
-            ),
-            "ema": Queue(
-                maxsize = 100,
-            ),
-            "?": Queue(
-                maxsize = 100,
-            ),
+
+        Exi
+
+        data_struct = {
+            "price":{
+                "price": <float>
+            }
+            "ema": {
+                0: <float>
+            }
+            "sma":{
+                0: <float>
+            }
         }
+
+        OR
+
+        so each of them is just a data object pushed to the queue, not a group of data.
+
+        data_struct = {
+            "timestamp" = <int>, # int(time.time() * 1_000)
+            "type" = "ema" || "sma",
+            "data" = {
+                10: <float>,
+                30: <float>,
+                60: <float>,
+                300: <float>,
+                600: <float>,
+                1_200: <float>,
+                1_800: <float>,
+            }
+        }
+
+        AND
+
+        data_struct = {
+            "timestamp" = <int>, # int(time.time() * 1_000)
+            "type" = "price",
+            "data" = {
+                "0" = <float>,
+            }
+        }
+        '''
+        self.queue: Queue[Dict[str, int | IndexType | Dict[int, float]]] = Queue.queue()
+        # data buffer, can be added in the future.
 
         return
 
     def push(
         self,
-        key: Union[
-            Literal["test"],  # only this one is used for the test phase.
-            Literal["sma"],
-            Literal["ema"],
-            Literal["?"],
-        ],
-        data: Tuple[Dict[int, float]],
+        data: Dict[str, int | str | Dict[int, float]],
+        block:  bool = False,
+        timeout: int | None = 1,
     ) -> bool:
         '''
         func push_data:
@@ -83,33 +100,24 @@ class DataPipeline(BasePipeline):  # TODO: Make the object for th Data object.
             - return False if the operation is not successful.
         '''
         try:
-            self.queues[key].put(
+            self.queue.push(
                 data,
-                block = False,
-                timeout = 1,
+                block = block,
+                timeout = timeout,
             )
             return True
-        except Full:
-            operation_logger.warning(f"{__name__} - {key} Queue is full. Data cannot be added.")
-            return False
-        except KeyError:
-            operation_logger.warning(f"{__name__} - push_data(): Invalid Queue Type {key}.")
+        except queue.Full:
+            operation_logger.warning(f"{__name__} - Queue is full. Data cannot be added.")
             return False
         except Exception as e:
-            operation_logger.warning(f"{__name__} - {key} Queue: Unknown exception has occurred: {str(e)}")
+            operation_logger.warning(f"{__name__} - self.queue: Unknown exception has occurred: {str(e)}")
             return False
 
     def pop(
         self,
-        key: Union[
-            Literal["test"],
-            Literal["sma"],
-            Literal["ema"],
-            Literal["price"],
-        ],
         block: bool = True,
         timeout: int | None = None
-    ) -> Tuple[Dict[int, float]] | None:
+    ) -> Dict[str, int | IndexType | Dict[int, float]]:
         '''
         func pop_data():
             - get the data from the queue with the given key.
@@ -132,14 +140,10 @@ class DataPipeline(BasePipeline):  # TODO: Make the object for th Data object.
             - return data if there is a valid data.
         '''
         try:
-            data: Tuple[Dict[int, float]] = self.queues[key].get(block = block, timeout = timeout)
-            return data
-        except Empty:
-            operation_logger.warning(f"{__name__} - {key} Queue is empty. Data cannot be retrieved.")
-            return None
-        except KeyError:
-            operation_logger.warning(f"{__name__} - pop_data(): Invalid Queue Type - type_input: {key}")
+            return self.queue.pop(block = block, timeout = timeout)
+        except queue.Empty:
+            operation_logger.warning(f"{__name__} - self.queue is empty: Data cannot be retrieved.")
             return None
         except Exception as e:
-            operation_logger.warning(f"{__name__} - {key} Queue: Unknown exception has occurred: {str(e)}.")
+            operation_logger.warning(f"{__name__} - self.queue: Unknown exception has occurred: {str(e)}.")
             return None

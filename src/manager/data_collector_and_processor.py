@@ -1,6 +1,6 @@
 # Standard Module
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 import pandas as pd
 import numpy as np
 import threading
@@ -10,14 +10,38 @@ from queue import Queue
 from mexc.future import FutureWebSocket
 from logger.set_logger import operation_logger
 from manager.data_saver import DataSaver
-from object.constants import MA_WRITE_PERIODS
+from object.constants import MA_WRITE_PERIODS, IndexType
 from pipeline.data_pipeline import DataPipeline
+from src.interface.pipeline_interface import PipelineController
 
 
 class DataCollectorAndProcessor:
+    '''
+    ######################################################################################################################
+    #                                               Static Method                                                        #
+    ######################################################################################################################
+    '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        """
+        static func generate_timestamp():
+            - Generate the timestamp using the current time, in the form of epoch in ms.
+
+        param None
+
+        return int
+            - the timestam in the form of epoch in ms.
+        """
+        return int(time.time() * 1000)
+
+    '''
+    ######################################################################################################################
+    #                                               Instance Method                                                      #
+    ######################################################################################################################
+    '''
     def __init__(
-        self,
-        data_pipeline: DataPipeline,
+        self: 'DataCollectorAndProcessor',
+        pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
         websocket: FutureWebSocket,  # assume that only fetches the price data.
     ) -> None:
         """
@@ -46,7 +70,7 @@ class DataCollectorAndProcessor:
         self._memory_saver: DataSaver = DataSaver()  # can be here.
         self._df_size_limit: int = 1_000
         self.threads: list[threading.Thread] = list()
-        self.pipeline: DataPipeline = data_pipeline
+        self.pipeline_controller: PipelineController[Dict[str, float]] = pipeline_controller
 
         # wait till WebSocket set up is done
         time.sleep(1)
@@ -97,7 +121,9 @@ class DataCollectorAndProcessor:
     #                                               Threading Management                                                 #
     ######################################################################################################################
     """
-    def _init_threads(self) -> None:
+    def _init_threads(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _init_threads():
             - set the threads for the necessary operations and append them into the list of thread pool
@@ -144,7 +170,9 @@ class DataCollectorAndProcessor:
         )
         return
 
-    def _start_threads(self) -> None:
+    def _start_threads(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _start_threads():
             - start the threads in the thread pool of the class.
@@ -180,7 +208,7 @@ class DataCollectorAndProcessor:
     """
 
     def _put_ticker_data(
-        self,
+        self: 'DataCollectorAndProcessor',
         msg: dict,
     ) -> None:
         """
@@ -212,7 +240,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _price_data_fetch(self) -> None:
+    def _price_data_fetch(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _price_data_fetch():
             - It continuously fetches data from the queue, processes it and appends it to the DataFrame.
@@ -249,7 +279,9 @@ class DataCollectorAndProcessor:
                 )
         return
 
-    def _get_data_buffer(self) -> dict | None:
+    def _get_data_buffer(
+        self: 'DataCollectorAndProcessor',
+    ) -> dict | None:
         """
         func _get_data_buffer():
             - Get the data from the buffer and return it.
@@ -271,7 +303,7 @@ class DataCollectorAndProcessor:
 
     # for batch processing of the data.
     def __append_df(
-        self,
+        self: 'DataCollectorAndProcessor',
         data_buffer: list,
         timestamp_buffer: list,
     ) -> bool:
@@ -303,7 +335,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _push_moving_averages(self) -> None:
+    def _push_moving_averages(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _push_moving_averages():
             - call the function __calculate_ema_sma_price() to calculate the EMA and SMA
@@ -324,7 +358,7 @@ class DataCollectorAndProcessor:
             if data:
                 sma_values: Dict[int, float] = data[0]
                 ema_values: Dict[int, float] = data[1]
-                price: Dict[int, float] = data[2]
+                price:      Dict[str, float] = data[2]
 
                 # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
                 if sma_values:
@@ -338,7 +372,7 @@ class DataCollectorAndProcessor:
         return
 
     def __calculate_ema_sma_price(
-        self,
+        self: 'DataCollectorAndProcessor',
         periods: Tuple[int, ...] = MA_WRITE_PERIODS,
     ) -> Tuple[Any, ...] | None:
         """
@@ -361,8 +395,8 @@ class DataCollectorAndProcessor:
 
                 tmpDataframe = self.priceData[-periods[-1] :]["lastPrice"].copy()
 
-            smas: Dict[int, float | Any] = dict()
-            emas: Dict[int, float | Any] = dict()
+            smas:   Dict[int, float | Any] = dict()
+            emas:   Dict[int, float | Any] = dict()
             prices: Dict[str, float | Any] = dict()
 
             # TODO: this should be fast enough, but can be optimized further.
@@ -379,7 +413,7 @@ class DataCollectorAndProcessor:
                     break
 
             price: float = tmpDataframe.iloc[-1]
-            prices["price"] = price
+            prices[0] = price
 
             return smas, emas, price
 
@@ -409,7 +443,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _resize_df(self) -> None:
+    def _resize_df(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func __resize_df():
             - using _data_saver to move the dataframe storing the price movement to the csv file in data
@@ -457,16 +493,34 @@ class DataCollectorAndProcessor:
         self,
         data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type = "ema", data = data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.EMA,
+                "data": data,
+            }
+        )
 
     def __push_sma_data(
         self,
         data: Dict[int, float],
     ) -> bool:
-        return self.pipeline.push_data(type = "sma", data = data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.SMA,
+                "data": data,
+            }
+        )
 
     def __push_price_data(
         self,
         data: Dict[str, float],
     ):
-        return self.pipeline.push_data(type = "price", data = data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.PRICE,
+                "data": data,
+            }
+        )
