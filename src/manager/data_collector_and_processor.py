@@ -150,30 +150,45 @@ class DataCollectorAndProcessor:
 
         return None
         """
-        # start the thread for the data fetch from the API
-        thread_price_fetch: threading.Thread = threading.Thread(
-            name="price_data_fetch", target=self._price_data_fetch, daemon=True
-        )
-        operation_logger.info(f"{__name__}: Thread for price fetch has been set up!")
+        try:
+            # start the thread for the data fetch from the API
+            thread_price_fetch: threading.Thread = threading.Thread(
+                name = "price_data_fetch",
+                target = self._price_data_fetch,
+                daemon = True
+            )
+            operation_logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
-        thread_calculate_sma: threading.Thread = threading.Thread(
-            name="provide_moving_average_thread",
-            target=self._push_moving_averages,
-            daemon=True,
-        )
-        operation_logger.info(
-            f"{__name__}: Thread for calculating sma has been set up!"
-        )
+            thread_calculate_sma: threading.Thread = threading.Thread(
+                name = "provide_moving_average_thread",
+                target = self._push_moving_averages,
+                daemon = True,
+            )
+            operation_logger.info(
+                f"{__name__}: Thread for calculating sma has been set up!"
+            )
 
-        thread_memory_save: threading.Thread = threading.Thread(
-            name="resize_df", target=self._resize_df, daemon=True
-        )
-        operation_logger.info(
-            f"{__name__}: Thread for DataFrame size limit has been set up!"
-        )
+            thread_memory_save: threading.Thread = threading.Thread(
+                name = "resize_df",
+                target = self._resize_df,
+                daemon = True
+            )
+            operation_logger.info(
+                f"{__name__}: Thread for DataFrame size limit has been set up!"
+            )
+
+        except (RuntimeError, TypeError, AttributeError, MemoryError) as e:
+            operation_logger.critical(f"{__name__}: fail to make instances for the thread - {str(e)}")
+
+        except Exception as e:
+            operation_logger.critical(f"{__name__}: Unexpected error constructing thread pool - {str(e)}")
 
         self.threads.extend(
-            [thread_price_fetch, thread_calculate_sma, thread_memory_save]
+            [
+                thread_price_fetch,
+                thread_calculate_sma,
+                thread_memory_save,
+            ]
         )
         return
 
