@@ -117,8 +117,8 @@ class SystemManager:
         """
         api_key, secret_key = SystemManager.__get_mexc_crendentials()
         return FutureMarket(
-            api_key=api_key,
-            secret_key=secret_key,
+            api_key = api_key,
+            secret_key = secret_key,
         )
 
     """
@@ -151,6 +151,7 @@ class SystemManager:
 
 
 def main():  # to test run the system manager.
+    # ! Once instantiate the SystemManager, the operation will start automatically.
     main_system_manager: SystemManager = SystemManager()
 
 

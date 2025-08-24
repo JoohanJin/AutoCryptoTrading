@@ -107,12 +107,12 @@ class DataCollectorAndProcessor:
                 "riseFallRates",
                 "riseFallRatesOfTimezone",
             ],
-            index=[int(time.time() * 1000)],
+            index = [DataCollectorAndProcessor.generate_timestamp()], # ! use the static method for timestamp generation
         )
         self.priceData.index.name = "timestamp"  # force the index name
 
-        self._init_threads()  # initialize the thread pool
-        self._start_threads()  # start the thread after all the thread pool is there.
+        # ! start the operation in the initialization process.
+        self.start()
 
         return
 
@@ -121,6 +121,13 @@ class DataCollectorAndProcessor:
     #                                               Threading Management                                                 #
     ######################################################################################################################
     """
+    def start(
+        self: "DataCollectorAndProcessor",
+    ) -> None:
+        self._init_threads()  # initialize the thread pool
+        self._start_threads()  # start the thread after all the thread pool is there.
+        return
+
     def _init_threads(
         self: 'DataCollectorAndProcessor',
     ) -> None:
@@ -261,7 +268,7 @@ class DataCollectorAndProcessor:
                     # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
                     # timestamp = response["timestamp"]
 
-                    # make the data, dictionary, into the pandas dataframe.
+                    # make `the data, dictionary, into the pandas dataframe.
                     tmp = pd.DataFrame(
                         data=[response],
                     )
@@ -315,10 +322,16 @@ class DataCollectorAndProcessor:
         try:
             tmp = pd.DataFrame(
                 data_buffer,
-                index=[timestamp_buffer],
+                index = [timestamp_buffer],
             )
+
             with self.df_lock:
-                self.priceData = pd.concat([self.priceData, tmp], axis=0)
+                self.priceData = pd.concat(
+                    [self.priceData, tmp],
+                    axis = 0,
+                )
+
+            # ! need to make it to raise a custom exception.
             return True
         except Exception as e:
             operation_logger.critical(
@@ -490,7 +503,7 @@ class DataCollectorAndProcessor:
     """
 
     def __push_ema_data(
-        self,
+        self: 'DataCollectorAndProcessor',
         data: Dict[int, float],
     ) -> bool:
         return self.pipeline_controllers.push(
@@ -502,7 +515,7 @@ class DataCollectorAndProcessor:
         )
 
     def __push_sma_data(
-        self,
+        self: 'DataCollectorAndProcessor',
         data: Dict[int, float],
     ) -> bool:
         return self.pipeline_controllers.push(
@@ -514,7 +527,7 @@ class DataCollectorAndProcessor:
         )
 
     def __push_price_data(
-        self,
+        self: 'DataCollectorAndProcessor',
         data: Dict[str, float],
     ):
         return self.pipeline_controllers.push(

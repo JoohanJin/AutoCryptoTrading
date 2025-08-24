@@ -1,3 +1,4 @@
+import time
 from typing import Dict
 
 from src.object.constants import IndexType
@@ -114,6 +115,10 @@ class Index:
         }
     }
     '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        return int(time.time() * 1_000)
+
     def __init__(
         self: 'Index',
         data: Dict[str, int | IndexType | Dict[int, float]],

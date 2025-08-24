@@ -8,7 +8,7 @@ from .base_pipeline import BasePipeline  # TODO: Need to define this class in an
 
 
 class SignalPipeline(BasePipeline[Signal]):
-    def __init__(self):
+    def __init__(self: "SignalPipeline"):
         '''
         func __init__:
             - create a Queue of Dict to store indicator
@@ -32,7 +32,7 @@ class SignalPipeline(BasePipeline[Signal]):
         return
 
     def push(
-        self,
+        self: "SignalPipeline",
         signal: Signal,
     ) -> bool:
         '''
@@ -64,7 +64,7 @@ class SignalPipeline(BasePipeline[Signal]):
         return False
 
     def pop(
-        self,
+        self: "SignalPipeline",
         timeout: int | None = None,
         block: bool = True,  # Default is to be blocked
     ) -> Signal | None:
