@@ -3,7 +3,7 @@ from pipeline.base_pipeline import BasePipeline
 from logger.set_logger import operation_logger
 import time
 
-T = TypeVar('T')
+T = TypeVar('T')  # User Defined template
 
 
 class PipelineController(Generic[T]):
@@ -21,7 +21,7 @@ class PipelineController(Generic[T]):
         pipeline: BasePipeline,  # Upcasting!
     ) -> None:
         '''
-        - func __init__():
+        func __init__():
             - Get the actual pipeline.
             - Get the push_only variable so that we can add control of the side. (uni-directional)
         '''
@@ -53,20 +53,31 @@ class PipelineController(Generic[T]):
         block: bool,
     ) -> T | None:
         '''
+        func pop():
+            - pop the data from the queue and return it, if it is not None.
         '''
         try:
-            data: T | None = self.pipeline.pop(block = block)
+            data: T | None = self.pipeline.pop(
+                block = block,
+            )
             if data:
-                # data timing check is conducted as well.
-                if PipelineController.generate_timestamp() - data.get("timestamp") > 5_000:
-                    return None
-                return data
+                if self.check_data_validity(data.get("timestamp", 0)):
+                    return data
+
+            return None
         except Exception as e:
             # ! raise CustomException
             operation_logger.warning(
-                f"{__name__} - Unknown Error has been occured. Unsuccessful Pop."
+                f"{__name__} - Unknown Error has been occured. Unsuccessful Pop.: {str(e)}"
             )
             raise  # ! raise the custom exception
+
+    def check_data_validity(
+        self: "PipelineController",
+        timestamp: int,
+        time_window: int = 5_000,
+    ) -> bool:
+        return ((PipelineController.generate_timestamp() - timestamp) < time_window)
 
 
 # Testing Code
