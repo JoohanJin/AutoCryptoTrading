@@ -1,11 +1,11 @@
 # Standard Library
 import queue
-from typing import Dict, Tuple, Queue
+from typing import Dict, Tuple
 
 # CUSTOM LIBRARY
 from logger.set_logger import operation_logger
-from src.object.constants import IndexType
-from src.object.indexes import Index
+from object.constants import IndexType
+from object.indexes import Index
 from .base_pipeline import BasePipeline
 
 
@@ -14,34 +14,6 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
         self,
     ) -> None:
         '''
-        func __init__:
-            - Creates a Queue object of Dict to store different technical indicators data.
-            - Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
-        queues:
-            - test: general testing data.
-            - sma: Simple Moving Average Values.
-            - ema: Exponential Moving Average Values.
-            - "?" : Purpose to be defined.
-        param self
-
-        return None
-
-        Exi
-
-        data_struct = {
-            "price":{
-                "price": <float>
-            }
-            "ema": {
-                0: <float>
-            }
-            "sma":{
-                0: <float>
-            }
-        }
-
-        OR
-
         so each of them is just a data object pushed to the queue, not a group of data.
 
         data_struct = {
@@ -64,11 +36,20 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             "timestamp" = <int>, # int(time.time() * 1_000)
             "type" = "price",
             "data" = {
-                "0" = <float>,
+                0 = <float>,
             }
         }
         '''
-        self.queue: Queue[Dict[str, int | IndexType | Dict[int, float]]] = Queue.queue()
+        self.queue: queue[
+            Dict[
+                str, int
+                | IndexType
+                | Dict[
+                    int,
+                    float
+                ]
+            ]
+        ] = queue()
         # data buffer, can be added in the future.
 
         return
@@ -76,8 +57,8 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
     def push(
         self,
         data: Dict[str, int | str | Dict[int, float]],
-        block:  bool = False,
-        timeout: int | None = 1,
+        block: bool = False,
+        timeout: int = 1,  # 1 second
     ) -> bool:
         '''
         func push_data:
@@ -122,19 +103,15 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
         func pop_data():
             - get the data from the queue with the given key.
 
-        param self
+        param self:
             - class object
-        param key
-            - will get the key value for self.queues to seletively push the data into the respective queue.
-            - Enum:
-                - "test"
-                - "sma"
-                - "ema"
-                - "?"
-                - More queue with keywords will be added.
-
-        param data
+        param data:
             - Tuple[float]
+        param block:
+            - if the thread will be spinning-wait for the data or not.
+        param timeout:
+            - give the timeout for the data pop.
+            - default is None, for non-Time out.
 
         return bool
             - return data if there is a valid data.
