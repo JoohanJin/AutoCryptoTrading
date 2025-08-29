@@ -61,7 +61,6 @@ class SignalPipeline(BasePipeline[Signal]):
                 f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
             )
             return False
-        return False
 
     def pop(
         self: "SignalPipeline",
