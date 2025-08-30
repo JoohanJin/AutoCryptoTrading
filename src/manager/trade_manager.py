@@ -250,7 +250,7 @@ class TradeManager:
             try:
                 signal: TradeSignal = self.__get_signal(
                     timestamp_window=timestamp_window,
-                ) # type: ignore
+                )
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(
@@ -282,7 +282,7 @@ class TradeManager:
         """
         return self.delta_mapper.map(
             signal = signal_data
-        ) # type: ignore
+        )
 
     def __get_signal(
         self,
@@ -301,7 +301,7 @@ class TradeManager:
         return None
             - if the signal is not valid, then it will return None.
         """
-        signal_data: Signal = self.signal_pipeline.pop_signal() # type: ignore
+        signal_data: Signal = self.signal_pipeline.pop_signal()
         return (
             signal_data.signal
             if TradeManager.verify_signal(
@@ -394,7 +394,7 @@ class TradeManager:
         """
         price_response: Dict = self.mexc_future_market_sdk.index_price()
         if price_response.get("success"):
-            return price_response.get("data").get("indexPrice") # type: ignore
+            return price_response.get("data").get("indexPrice")
         else:
             raise Exception(
                 f"{__name__} - Error while getting the current price: {price_response}"
@@ -440,11 +440,11 @@ class TradeManager:
     ) -> float:
         open_amount_response: dict = self.mexc_future_market_sdk.asset(
             currency="USDT",
-        ) # type: ignore
+        )
 
         if open_amount_response.get("success"):
             return (
-                open_amount_response.get("data").get("availableOpen") # type: ignore
+                open_amount_response.get("data").get("availableOpen")
                 * self.trade_amount
             )
         else:
@@ -475,8 +475,8 @@ class TradeManager:
         try:
             currently_holing_order: Dict = (
                 self.mexc_future_market_sdk.current_position()
-            ) # type: ignore
-            if not len(currently_holing_order.get("data")): # type: ignore
+            )
+            if not len(currently_holing_order.get("data")):
                 return False
             else:
                 return True
@@ -505,7 +505,7 @@ class TradeManager:
                 tp_price, sl_price = self.__get_target_prices(
                     buy_or_sell=buy_or_sell,
                     current_price=current_price,
-                ) # type: ignore
+                )
                 trade_amount: float = self.__get_trade_amount()
                 order_type: int = 0
 

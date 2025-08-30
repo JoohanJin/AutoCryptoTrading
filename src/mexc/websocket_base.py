@@ -204,7 +204,7 @@ class __BasicWebSocketManager:
         """
         if not timestamp:
             timestamp = str(int(time.time() * 1000))
-        
+
         if (self.api_key and self.secret_key):
             _query_str = self.api_key + timestamp
 
@@ -280,7 +280,7 @@ class __BasicWebSocketManager:
             # check if the socket is connected to the endpoint or not
         """
         try:
-            if self.ws.sock or not self.ws.sock.is_connected: # type: ignore
+            if self.ws.sock or not self.ws.sock.is_connected:
                 return True
             else:
                 return False
@@ -500,7 +500,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         callback_function = self._get_callback(topic)
 
-        if (callback_function): # if callback_function is not None.
+        if (callback_function):
             callback_function(msg)
 
         return
@@ -547,8 +547,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
                 self.ws_name,
                 api_key = self.api_key,
                 secret_key = self.secret_key,
-            ) # type: ignore
-            self.ws._connect(self.endpoint) # type: ignore
+            )
+            self.ws._connect(self.endpoint)
         except Exception as e:
             operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
             print(f"{__name__} - func initialize_websocket(): {e}")
@@ -566,7 +566,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
             # if there is no websocket object that has been established.
             self.__initialize_websocket()
 
-        self.ws.subscribe( # type: ignore
+        self.ws.subscribe(
             method=method,
             callback_function=callback,
             param=param,

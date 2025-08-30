@@ -107,7 +107,7 @@ class DataCollectorAndProcessor:
                 "riseFallRates",
                 "riseFallRatesOfTimezone",
             ],
-            index = [DataCollectorAndProcessor.generate_timestamp()], # ! use the static method for timestamp generation
+            index = [DataCollectorAndProcessor.generate_timestamp()],  # ! use the static method for timestamp generation
         )
         self.priceData.index.name = "timestamp"  # force the index name
 
