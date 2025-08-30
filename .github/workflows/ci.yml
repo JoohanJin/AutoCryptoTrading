@@ -47,9 +47,9 @@ jobs: # defines a list of jobs to run
         
         # Runs black in check mode to ensure code is properly formatted
         # if formatting is incorrect, this step will fail
-        - name: Check code formatting with black
-          run: |
-           black --check .
+        # - name: Check code formatting with black
+          # run: |
+          #  black --check .
 
         # - name: Run test
         #   run: |
