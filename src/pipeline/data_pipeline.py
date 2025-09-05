@@ -40,16 +40,7 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             }
         }
         '''
-        self.queue: queue[
-            Dict[
-                str, int
-                | IndexType
-                | Dict[
-                    int,
-                    float
-                ]
-            ]
-        ] = queue()
+        self.queue: queue[Dict[str, int | IndexType| Dict[int, float]]] = queue()
         # data buffer, can be added in the future.
 
         return
