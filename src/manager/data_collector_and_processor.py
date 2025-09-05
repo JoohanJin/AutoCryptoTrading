@@ -11,8 +11,54 @@ from mexc.future import FutureWebSocket
 from logger.set_logger import operation_logger
 from manager.data_saver import DataSaver
 from object.constants import MA_WRITE_PERIODS, IndexType
+from object.indexes import Index
 from pipeline.data_pipeline import DataPipeline
 from src.interface.pipeline_interface import PipelineController
+
+
+'''
+# Index Structure
+# Dict[str, int | IndexType | Dict]
+
+{
+    "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+    "type": IndexType.SMA,
+    "data": data,
+}
+'''
+class IndexFactory:
+    '''
+    # factory which generates the Index data type.
+    # what does it do?
+        # check the validity of index Dict?
+        # generate the timestamp?
+    '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        return int(time.time() * 1_000)
+
+    def __init__(
+        self: "IndexFactory",
+        # index: Dict[str, int | IndexType | Dict[int, float]],
+    ) -> None:
+        return None
+    
+    def generate_index(
+        self: "IndexFactory",
+        index: Dict[str, int | IndexType | Dict[int, float]],
+    ) -> Index:
+        timestamp: int = index.get("timestamp", IndexFactory.generate_timestamp())
+        index_type: IndexType | None = index.get("type", None)
+        data: Dict[int, float] | None = index.get("data", None)
+
+        if (index_type and data):
+            return Index(
+                timestamp = timestamp,
+                index_type = index_type,
+                data = data,
+            )
+        else:
+            return None
 
 
 class DataCollectorAndProcessor:
@@ -32,7 +78,7 @@ class DataCollectorAndProcessor:
         return int
             - the timestam in the form of epoch in ms.
         """
-        return int(time.time() * 1000)
+        return int(time.time() * 1_000)
 
     '''
     ######################################################################################################################
@@ -40,7 +86,8 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     '''
     def __init__(
-        self: 'DataCollectorAndProcessor',
+        self: "DataCollectorAndProcessor",
+        index_factory: IndexFactory, # dependency injection would work.
         pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
         websocket: FutureWebSocket,  # assume that only fetches the price data.
     ) -> None:
@@ -293,7 +340,7 @@ class DataCollectorAndProcessor:
 
                     # merge the new dataframe to the existing dataframe.
                     with self.df_lock:
-                        self.priceData = pd.concat([self.priceData, tmp], axis=0)
+                        self.priceData = pd.concat([self.priceData, tmp], axis = 0)
 
             except Exception as e:
                 operation_logger.critical(
@@ -374,6 +421,7 @@ class DataCollectorAndProcessor:
                 - data[1] = EMA values
             - when the data is available, push the data to the data pipeline.
         """
+        # TODO: Need to change this.
         while True:
             data: (
                 Tuple[
@@ -401,7 +449,7 @@ class DataCollectorAndProcessor:
 
     def __calculate_ema_sma_price(
         self: 'DataCollectorAndProcessor',
-        periods: Tuple[int, ...] = MA_WRITE_PERIODS,
+        periods: Tuple[int, ...] = MA_WRITE_PERIODS, # this will be just used. -> just default input.
     ) -> Tuple[Any, ...] | None:
         """
         func __calculate_ema_sma_price():
@@ -415,15 +463,14 @@ class DataCollectorAndProcessor:
         return (smas, emas): Tuple[Tuple[float], Tuple[float]] | None
             - Tuple of SMA and EMA values
         """
-
         try:
             with self.df_lock:
                 if self.priceData.shape[0] == 0:
                     return None
 
-                tmpDataframe = self.priceData[-periods[-1] :]["lastPrice"].copy()
+                tmpDataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
 
-            smas:   Dict[int, float | Any] = dict()
+            smas:   Dict[int, float | Any] = dict() # oh.. make the dictionary object and put it.
             emas:   Dict[int, float | Any] = dict()
             prices: Dict[str, float | Any] = dict()
 
@@ -440,7 +487,7 @@ class DataCollectorAndProcessor:
                 else:
                     break
 
-            price: float = tmpDataframe.iloc[-1]
+            price: float = tmpDataframe.iloc[-1] # just last price data.
             prices[0] = price
 
             return smas, emas, price

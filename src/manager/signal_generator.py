@@ -329,9 +329,14 @@ class SignalGenerator:
     ) -> bool:
         while True:
             try:
-                data = self.data_pipeline_controller.pop(block = True,)
+                data = self.data_pipeline_controller.pop(
+                    block = True,
+                )
+                
+                # if the data is not None
                 if (data):
-                    with self.indicators_lock:
+                    with self.indicators_lock: # it is shared data structure.
+                        # type?
                         self.indicators[data.get["type"]] = data.get("data")
             except Exception as e:
                 operation_logger.critical(f"{__name__} -  Unexpected Exeption occured - {str(e)}")
