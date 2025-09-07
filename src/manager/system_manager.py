@@ -9,16 +9,16 @@ from manager.data_collector_and_processor import DataCollectorAndProcessor
 from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
-import object
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import operation_logger, log_decorator
 from pipeline.signal_pipeline import SignalPipeline
-from src.interface.pipeline_interface import PipelineController
-from src.object.constants import IndexType
+from interface.pipeline_interface import PipelineController
+from object.constants import IndexType
+from object.score_mapping import ScoreMapper
 
 
 class SystemManager:
-    @log_decorator
+    # @log_decorator
     def __init__(
         self,
     ):
@@ -33,9 +33,22 @@ class SystemManager:
         """
         # prepare the necessary parts for injection.
         self.ws:            FutureWebSocket = FutureWebSocket()  # type: ignore
+        operation_logger.info(
+            f"{self.ws} has been started."
+        )
+
         self.data_pipeline:    DataPipeline = DataPipeline()
+        operation_logger.info(
+            f"{self.data_pipeline} has been started."
+        )
         self.signal_pipline: SignalPipeline = SignalPipeline()
-        self.mapper:     object.ScoreMapper = object.ScoreMapper()
+        operation_logger.info(
+            f"{self.signal_pipline} has been started."
+        )
+        self.mapper:     ScoreMapper = ScoreMapper()
+        operation_logger.info(
+            f"{self.mapper} has been started."
+        )
 
         self.data_pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]] = PipelineController(pipeline = self.data_pipeline)
         self.signal_pipeline_controller:        PipelineController[dict[str, int | object.TradeSignal]] = PipelineController(pipeline = self.signal_pipline)

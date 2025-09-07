@@ -13,7 +13,7 @@ from manager.data_saver import DataSaver
 from object.constants import MA_WRITE_PERIODS, IndexType
 from object.indexes import Index
 from pipeline.data_pipeline import DataPipeline
-from src.interface.pipeline_interface import PipelineController
+from interface.pipeline_interface import PipelineController
 
 
 '''

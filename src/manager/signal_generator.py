@@ -8,8 +8,8 @@ import time
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import operation_logger, trading_logger
 from object.signal import TradeSignal, Signal
-from src.interface.pipeline_interface import PipelineController
-from src.object.constants import IndexType
+from interface.pipeline_interface import PipelineController
+from object.constants import IndexType
 
 
 class SignalGenerator:
@@ -62,7 +62,7 @@ class SignalGenerator:
     def __init__(
         self: 'SignalGenerator',
         data_pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
-        signal_pipeline_controller: PipelineController[dict[str, int | object.TradeSignal]],
+        signal_pipeline_controller: PipelineController[dict[str, int | TradeSignal]],
         custom_telegram_bot: CustomTelegramBot,
         signal_window: int = 5_000,
     ) -> None:
@@ -82,7 +82,7 @@ class SignalGenerator:
         """
         # data pipeline to get the indicators
         self.data_pipeline_controller:   PipelineController[dict[str, int | IndexType, dict[int, float]]] = data_pipeline_controller
-        self.signal_pipeline_controller:          PipelineController[dict[str, int | object.TradeSignal]] = signal_pipeline_controller
+        self.signal_pipeline_controller:          PipelineController[dict[str, int | TradeSignal]] = signal_pipeline_controller
 
         # telegram bot manager to send the notification.
         self.__telegram_bot: CustomTelegramBot = custom_telegram_bot
@@ -329,15 +329,16 @@ class SignalGenerator:
     ) -> bool:
         while True:
             try:
-                data = self.data_pipeline_controller.pop(
+                index = self.data_pipeline_controller.pop(
                     block = True,
                 )
                 
                 # if the data is not None
-                if (data):
-                    with self.indicators_lock: # it is shared data structure.
-                        # type?
-                        self.indicators[data.get["type"]] = data.get("data")
+                if (index):
+                    if (SignalGenerator.generate_timestamp() - index.timestamp < 5_000):
+                        with self.indicators_lock: # it is shared data structure.
+                            # type?
+                            self.indicators[index.index_Type] = index.data
             except Exception as e:
                 operation_logger.critical(f"{__name__} -  Unexpected Exeption occured - {str(e)}")
 

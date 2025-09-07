@@ -9,7 +9,7 @@ from object.indexes import Index
 from .base_pipeline import BasePipeline
 
 
-class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data object.
+class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
@@ -40,7 +40,8 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             }
         }
         '''
-        self.queue: queue[Dict[str, int | IndexType| Dict[int, float]]] = queue()
+        # inherit the queue and data type in the queue from the base class.
+        super().__init__()
         # data buffer, can be added in the future.
 
         return
