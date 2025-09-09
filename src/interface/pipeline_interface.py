@@ -50,7 +50,7 @@ class PipelineController(Generic[T]):
 
     def pop(
         self: 'PipelineController',
-        block: bool,
+        block: bool = True,
     ) -> T | None:
         '''
         func pop():
@@ -61,7 +61,7 @@ class PipelineController(Generic[T]):
                 block = block,
             )
             if data:
-                if self.check_data_validity(data.get("timestamp", 0)):
+                if self.check_data_validity(data.timestamp):
                     return data
 
             return None

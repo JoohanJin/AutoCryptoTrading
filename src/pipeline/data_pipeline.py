@@ -73,7 +73,7 @@ class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data ob
             - return False if the operation is not successful.
         '''
         try:
-            self.queue.push(
+            self.queue.put(
                 data,
                 block = block,
                 timeout = timeout,
@@ -90,7 +90,7 @@ class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data ob
         self,
         block: bool = True,
         timeout: int | None = None
-    ) -> Dict[str, int | IndexType | Dict[int, float]]:
+    ) -> Index:
         '''
         func pop_data():
             - get the data from the queue with the given key.
@@ -109,7 +109,7 @@ class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data ob
             - return data if there is a valid data.
         '''
         try:
-            return self.queue.pop(block = block, timeout = timeout)
+            return self.queue.get(block = block, timeout = timeout)
         except queue.Empty:
             operation_logger.warning(f"{__name__} - self.queue is empty: Data cannot be retrieved.")
             return None

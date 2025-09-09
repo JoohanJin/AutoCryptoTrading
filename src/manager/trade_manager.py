@@ -11,6 +11,7 @@ from mexc.future import FutureMarket
 from object.score_mapping import ScoreMapper
 from object.signal import Signal, TradeSignal
 from pipeline.signal_pipeline import SignalPipeline
+from interface.pipeline_interface import PipelineController
 
 
 class TradeManager:
@@ -61,7 +62,7 @@ class TradeManager:
 
     def __init__(
         self,
-        signal_pipeline: SignalPipeline,
+        signal_pipeline_controller: PipelineController[Signal],
         mexc_future_market_sdk: FutureMarket,
         delta_mapper: ScoreMapper,
         telegram_bot: CustomTelegramBot,
@@ -77,7 +78,7 @@ class TradeManager:
             - initialize the necessary member variables and start the TradeManager.
         """
         # Set the signal piepline as a member variable
-        self.signal_pipeline: SignalPipeline = signal_pipeline
+        self.signal_pipeline_controller: PipelineController[Signal] = signal_pipeline_controller
 
         # Set the MexC Future Market SDK as a member variable
         # to send the REST API to the MexC API Gateway.
@@ -249,8 +250,8 @@ class TradeManager:
         while True:
             try:
                 signal: TradeSignal = self.__get_signal(
-                    timestamp_window=timestamp_window,
-                ) # type: ignore
+                    timestamp_window = timestamp_window,
+                )
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(
@@ -282,7 +283,7 @@ class TradeManager:
         """
         return self.delta_mapper.map(
             signal = signal_data
-        ) # type: ignore
+        )
 
     def __get_signal(
         self,
@@ -301,11 +302,11 @@ class TradeManager:
         return None
             - if the signal is not valid, then it will return None.
         """
-        signal_data: Signal = self.signal_pipeline.pop_signal() # type: ignore
+        signal_data: Signal = self.signal_pipeline_controller.pop()
         return (
             signal_data.signal
             if TradeManager.verify_signal(
-                signal_data=signal_data, timestamp_window=timestamp_window
+                signal_data = signal_data, timestamp_window = timestamp_window
             )
             else None
         )
@@ -334,7 +335,8 @@ class TradeManager:
             return 1
         elif score < (-1 * self.score_threshold):
             return -1
-        return 0  # default is do nothing
+        # by default it is not doing anything.
+        return 0
 
     async def __thread_decide_trade(
         self,
@@ -366,10 +368,11 @@ class TradeManager:
                 if decision != 0:  # can be further improved in the future.
                     # reset the score, but based on the trend
                     #
+                    # TODO: need to implement more sophisticated one.
                     with self.trade_score_lock:
                         self.trade_score = 200 if decision == 1 else -200
 
-                time.sleep(0.25)
+                await asyncio.sleep(0.25)
 
             except Exception as e:
                 operation_logger.error(
@@ -394,7 +397,7 @@ class TradeManager:
         """
         price_response: Dict = self.mexc_future_market_sdk.index_price()
         if price_response.get("success"):
-            return price_response.get("data").get("indexPrice") # type: ignore
+            return price_response.get("data").get("indexPrice")
         else:
             raise Exception(
                 f"{__name__} - Error while getting the current price: {price_response}"
@@ -440,12 +443,11 @@ class TradeManager:
     ) -> float:
         open_amount_response: dict = self.mexc_future_market_sdk.asset(
             currency="USDT",
-        ) # type: ignore
+        )
 
         if open_amount_response.get("success"):
             return (
-                open_amount_response.get("data").get("availableOpen") # type: ignore
-                * self.trade_amount
+                open_amount_response.get("data").get("availableOpen") * self.trade_amount
             )
         else:
             raise Exception(
@@ -473,13 +475,15 @@ class TradeManager:
                 - return False
         """
         try:
-            currently_holing_order: Dict = (
+            currently_holding_order: Dict = (
                 self.mexc_future_market_sdk.current_position()
-            ) # type: ignore
-            if not len(currently_holing_order.get("data")): # type: ignore
-                return False
-            else:
+            )
+            if not len(currently_holding_order.get("data")):
+                # No positions are currently held, so it's okay to make a trade.
                 return True
+            else:
+                # A position is already open, so do not make another trade.
+                return False
         except Exception as e:
             operation_logger.error(
                 f"{__name__} - Error while deciding to make trade: {e}"
@@ -505,7 +509,7 @@ class TradeManager:
                 tp_price, sl_price = self.__get_target_prices(
                     buy_or_sell=buy_or_sell,
                     current_price=current_price,
-                ) # type: ignore
+                )
                 trade_amount: float = self.__get_trade_amount()
                 order_type: int = 0
 
@@ -515,6 +519,7 @@ class TradeManager:
                     order_Type = 3  # Short
 
                 # TODO: trigger the order
+                # TODO: need to implement order trigger to the mexc api.
                 # order trigger to the telgram bot
                 if self.__decide_to_make_trade():  # make the trade
                     await self.telegram_bot.send_text(

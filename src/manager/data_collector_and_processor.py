@@ -26,6 +26,8 @@ from interface.pipeline_interface import PipelineController
     "data": data,
 }
 '''
+
+
 class IndexFactory:
     '''
     # factory which generates the Index data type.
@@ -41,8 +43,8 @@ class IndexFactory:
         self: "IndexFactory",
         # index: Dict[str, int | IndexType | Dict[int, float]],
     ) -> None:
-        return None
-    
+        return
+
     def generate_index(
         self: "IndexFactory",
         index: Dict[str, int | IndexType | Dict[int, float]],
@@ -87,9 +89,10 @@ class DataCollectorAndProcessor:
     '''
     def __init__(
         self: "DataCollectorAndProcessor",
-        index_factory: IndexFactory, # dependency injection would work.
         pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
         websocket: FutureWebSocket,  # assume that only fetches the price data.
+        index_factory: IndexFactory = IndexFactory(),  # dependency injection would work.
+        memory_count_limit: int = 2_000,
     ) -> None:
         """
         func __init__() for StrategyManager
@@ -115,9 +118,10 @@ class DataCollectorAndProcessor:
         self.ws: FutureWebSocket = websocket
         self._ma_period: int = 20  # ! No need to be here I think.
         self._memory_saver: DataSaver = DataSaver()  # can be here.
-        self._df_size_limit: int = 1_000
+        self._df_size_limit: int = memory_count_limit
         self.threads: list[threading.Thread] = list()
-        self.pipeline_controller: PipelineController[Dict[str, float]] = pipeline_controller
+        self.pipeline_controller: PipelineController[Index] = pipeline_controller
+        self.__index_factory: IndexFactory = index_factory
 
         # wait till WebSocket set up is done
         time.sleep(1)
@@ -154,7 +158,7 @@ class DataCollectorAndProcessor:
                 "riseFallRates",
                 "riseFallRatesOfTimezone",
             ],
-            index = [DataCollectorAndProcessor.generate_timestamp()], # ! use the static method for timestamp generation
+            index = [DataCollectorAndProcessor.generate_timestamp()],
         )
         self.priceData.index.name = "timestamp"  # force the index name
 
@@ -332,11 +336,11 @@ class DataCollectorAndProcessor:
 
                     # make `the data, dictionary, into the pandas dataframe.
                     tmp = pd.DataFrame(
-                        data=[response],
+                        data = [response],
                     )
 
                     # set the timestamp as the index of the dataframe.
-                    tmp.set_index("timestamp", inplace=True)
+                    tmp.set_index("timestamp", inplace = True)
 
                     # merge the new dataframe to the existing dataframe.
                     with self.df_lock:
@@ -432,24 +436,25 @@ class DataCollectorAndProcessor:
             ) = self.__calculate_ema_sma_price()
 
             if data:
-                sma_values: Dict[int, float] = data[0]
-                ema_values: Dict[int, float] = data[1]
-                price:      Dict[str, float] = data[2]
+                sma_values: Index = self.__index_factory.generate_index(data[0])
+                ema_values: Index = self.__index_factory.generate_index(data[1])
+                price: Index = self.__index_factory.generate_index(data[2])
+
+                indexes: list[Index, ] = [
+                    sma_values,
+                    ema_values,
+                    price
+                ]
 
                 # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
-                if sma_values:
-                    self.__push_sma_data(sma_values)
-                if ema_values:
-                    self.__push_ema_data(ema_values)
-                if price:
-                    self.__push_price_data(price)  # type: ignore
+                self.__push_indexes(indexes)
 
             time.sleep(2)
         return
 
     def __calculate_ema_sma_price(
         self: 'DataCollectorAndProcessor',
-        periods: Tuple[int, ...] = MA_WRITE_PERIODS, # this will be just used. -> just default input.
+        periods: Tuple[int, ...] = MA_WRITE_PERIODS,  # this will be just used. -> just default input.
     ) -> Tuple[Any, ...] | None:
         """
         func __calculate_ema_sma_price():
@@ -470,25 +475,44 @@ class DataCollectorAndProcessor:
 
                 tmpDataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
 
-            smas:   Dict[int, float | Any] = dict() # oh.. make the dictionary object and put it.
-            emas:   Dict[int, float | Any] = dict()
-            prices: Dict[str, float | Any] = dict()
+            sma:   Dict[int, float] = dict()  # oh.. make the dictionary object and put it.
+            ema:   Dict[int, float] = dict()
+            price: Dict[str, float] = dict()
 
-            # TODO: this should be fast enough, but can be optimized further.
+            # ! TODO: this should be fast enough, but can be optimized further.
             for period in periods:
                 if tmpDataframe.shape[0] >= period:
-                    smas[period * 2] = np.mean(tmpDataframe[-period:])
-                    emas[period * 2] = (
+                    sma[period * 2] = np.mean(tmpDataframe[-period:])
+                    ema[period * 2] = (
                         pd.Series(tmpDataframe)
-                        .ewm(span=period, adjust=False)
+                        .ewm(span = period, adjust = False,)
                         .mean()
                         .iloc[-1]
                     )
                 else:
                     break
 
-            price: float = tmpDataframe.iloc[-1] # just last price data.
-            prices[0] = price
+            price[0] = tmpDataframe.iloc[-1]  # just last price data.
+
+            timestamp: int = DataCollectorAndProcessor.generate_timestamp()
+
+            smas: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": sma,
+                "timestamp": timestamp,
+                "type": IndexType.SMA,
+            }
+
+            emas: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": ema,
+                "timestamp": timestamp,
+                "type": IndexType.EMA,
+            }
+
+            prices: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": price,
+                "timestamp": timestamp,
+                "type": IndexType.EMA,
+            }
 
             return smas, emas, price
 
@@ -553,7 +577,7 @@ class DataCollectorAndProcessor:
                 time.sleep(300)  # let the cpu to sleep for 5 minutes
             except Exception as e:
                 operation_logger.warning(
-                    f"{__name__} - func _resize_df(): Exception caused: {e}"
+                    f"{__name__} - func _resize_df(): Exception caused: {str(e)}"
                 )
 
         return None
@@ -566,7 +590,7 @@ class DataCollectorAndProcessor:
 
     def __push_ema_data(
         self: 'DataCollectorAndProcessor',
-        data: Dict[int, float],
+        data: Index,
     ) -> bool:
         return self.pipeline_controllers.push(
             {
@@ -578,7 +602,7 @@ class DataCollectorAndProcessor:
 
     def __push_sma_data(
         self: 'DataCollectorAndProcessor',
-        data: Dict[int, float],
+        data: Index,
     ) -> bool:
         return self.pipeline_controllers.push(
             {
@@ -590,7 +614,7 @@ class DataCollectorAndProcessor:
 
     def __push_price_data(
         self: 'DataCollectorAndProcessor',
-        data: Dict[str, float],
+        data: Index,
     ):
         return self.pipeline_controllers.push(
             {
@@ -599,3 +623,17 @@ class DataCollectorAndProcessor:
                 "data": data,
             }
         )
+
+    def __push_indexes(
+        self: 'DataCollectorAndProcessor',
+        indexes: list[Index]
+    ) -> bool:
+        try:
+            for index in indexes:
+                if (index):
+                    self.pipeline_controllers.push(
+                        index
+                    )
+            return True
+        except Exception as e:
+            operation_logger.warning(f"{__name__} - Unexpected Exception Orccured: {str(e)}")

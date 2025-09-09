@@ -1,6 +1,7 @@
 from manager.system_manager import SystemManager
 from logger.set_logger import operation_logger
 
+
 def main():
     try:
         # ? Since __init__() for every class will activate them, no need to do anything here.

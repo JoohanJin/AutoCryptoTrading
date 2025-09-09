@@ -42,7 +42,7 @@ class Index:
         data: Dict[str, Dict[int, float]],
     ) -> None:
         self.__timestamp: int = timestamp
-        self.__index_type: IndexType  = index_type
+        self.__index_type: IndexType = index_type
         self.__data: Dict[str, Dict[int, float]] = data
         return
 
