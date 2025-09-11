@@ -1,9 +1,9 @@
 from enum import IntFlag
 from typing import Tuple
 
-# EMA and SMA PERIODS
-# this is the DataCollectorProcessor side.
 '''
+# this is the DataCollectorProcessor side.
+# EMA and SMA PERIODS
 #
 '''
 MA_WRITE_PERIODS: Tuple[int, ...] = (
@@ -17,8 +17,8 @@ MA_WRITE_PERIODS: Tuple[int, ...] = (
 )
 
 
-# this is the Signal Generator side
 '''
+# this is the SignalGenerator side
 #
 '''
 MA_READ_PERIODS: Tuple[int, ...] = (
@@ -33,6 +33,6 @@ MA_READ_PERIODS: Tuple[int, ...] = (
 
 
 class IndexType(IntFlag):
-    EMA = 1
-    SMA = 2
-    PRICE = 4
+    EMA = 1    # 0001
+    SMA = 2    # 0010
+    PRICE = 4  # 0100

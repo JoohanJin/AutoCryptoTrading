@@ -99,3 +99,7 @@ class SignalPipeline(BasePipeline[Signal]):
                 f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
             )
             return None
+
+
+if __name__ == "__main__":
+    print(f"{__name__} - test running.")

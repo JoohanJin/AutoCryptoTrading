@@ -9,7 +9,7 @@ from object.indexes import Index
 from .base_pipeline import BasePipeline
 
 
-class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data object.
+class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
@@ -40,16 +40,8 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             }
         }
         '''
-        self.queue: queue[
-            Dict[
-                str, int
-                | IndexType
-                | Dict[
-                    int,
-                    float
-                ]
-            ]
-        ] = queue()
+        # inherit the queue and data type in the queue from the base class.
+        super().__init__()
         # data buffer, can be added in the future.
 
         return
@@ -81,7 +73,7 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             - return False if the operation is not successful.
         '''
         try:
-            self.queue.push(
+            self.queue.put(
                 data,
                 block = block,
                 timeout = timeout,
@@ -98,7 +90,7 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
         self,
         block: bool = True,
         timeout: int | None = None
-    ) -> Dict[str, int | IndexType | Dict[int, float]]:
+    ) -> Index:
         '''
         func pop_data():
             - get the data from the queue with the given key.
@@ -117,7 +109,7 @@ class DataPipeline(BasePipeline[Dict]):  # TODO: Make the object for th Data obj
             - return data if there is a valid data.
         '''
         try:
-            return self.queue.pop(block = block, timeout = timeout)
+            return self.queue.get(block = block, timeout = timeout)
         except queue.Empty:
             operation_logger.warning(f"{__name__} - self.queue is empty: Data cannot be retrieved.")
             return None

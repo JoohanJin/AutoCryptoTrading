@@ -8,8 +8,8 @@ import time
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import operation_logger, trading_logger
 from object.signal import TradeSignal, Signal
-from src.interface.pipeline_interface import PipelineController
-from src.object.constants import IndexType
+from interface.pipeline_interface import PipelineController
+from object.constants import IndexType
 
 
 class SignalGenerator:
@@ -62,7 +62,7 @@ class SignalGenerator:
     def __init__(
         self: 'SignalGenerator',
         data_pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
-        signal_pipeline_controller: PipelineController[dict[str, int | object.TradeSignal]],
+        signal_pipeline_controller: PipelineController[dict[str, int | TradeSignal]],
         custom_telegram_bot: CustomTelegramBot,
         signal_window: int = 5_000,
     ) -> None:
@@ -144,7 +144,7 @@ class SignalGenerator:
     # TODO: This is not used currently.
     def generate_telegram_msg(
         self: 'SignalGenerator',
-        data,
+        data: str,
     ) -> str:
         """
         - func generate_telegram_msg:
@@ -209,7 +209,7 @@ class SignalGenerator:
         index_thread: threading.Thread = threading.Thread(
             name = 'index_data_getter',
             target = self.get_data,
-            deamon = True,
+            daemon = True,
         )
         operation_logger.info(
             f"{__name__}: Thread for index data getter has been set up!"
@@ -332,7 +332,7 @@ class SignalGenerator:
                 data = self.data_pipeline_controller.pop(block = True,)
                 if (data):
                     with self.indicators_lock:
-                        self.indicators[data.get["type"]] = data.get("data")
+                        self.indicators[data.type] = data.data
             except Exception as e:
                 operation_logger.critical(f"{__name__} -  Unexpected Exeption occured - {str(e)}")
 
@@ -428,17 +428,15 @@ class SignalGenerator:
         key: str = "golden_cross"
         while True:
             with self.indicators_lock:
-                sma_data: dict | None = self.indicators.get()
-                ema_data: dict | None = self.indicators.get("ema")
+                sma_data: dict | None = self.indicators.get(IndexType.SMA)
+                ema_data: dict | None = self.indicators.get(IndexType.EMA)
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
 
             curr_timestamp: int = SignalGenerator.generate_timestamp()
 
-            if (curr_timestamp - prev_timestamp > self.signal_window) and (
-                sma_data and ema_data
-            ):  # only need to check if the sma and ema data are available.
+            if (curr_timestamp - prev_timestamp > self.signal_window) and (sma_data and ema_data):  # only need to check if the sma and ema data are available.
                 # generate the signal based on the data and passit to the signal pipeline.
                 ten_sec_sma: float | None = sma_data.get(10)
                 five_min_ema: float | None = ema_data.get(300)
@@ -475,8 +473,8 @@ class SignalGenerator:
         key: str = "death_cross"
         while True:
             with self.indicators_lock:
-                sma_data: dict = self.indicators.get("sma")
-                ema_data: dict = self.indicators.get("ema")
+                sma_data: dict = self.indicators.get(IndexType.SMA)
+                ema_data: dict = self.indicators.get(IndexType.EMA)
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -526,8 +524,8 @@ class SignalGenerator:
         key: str = "price_moving_average"  # TODO: Check if we need to have the direction -> maybe separate this as well?
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma")
-                current_price:       float = self.indicators.get("price")
+                sma_data: Dict[int, float] = self.indicators.get(IndexType.SMA)
+                current_price:       float = self.indicators.get(IndexType.PRICE)
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -584,8 +582,8 @@ class SignalGenerator:
         key: str = "ema_sma_divergence"
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma")
-                ema_data: Dict[int, float] = self.indicators.get("ema")
+                sma_data: Dict[int, float] = self.indicators.get(IndexType.SMA)
+                ema_data: Dict[int, float] = self.indicators.get(IndexType.EMA)
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)
@@ -628,8 +626,8 @@ class SignalGenerator:
         key: str = "price_reversal"
         while True:
             with self.indicators_lock:
-                sma_data: Dict[int, float] = self.indicators.get("sma")
-                current_price: float = self.indicators.get("price")
+                sma_data: Dict[int, float] = self.indicators.get(IndexType.SMA)
+                current_price: float = self.indicators.get(IndexType.PRICE)
 
             with self.signal_timestamps_lock:
                 prev_timestamp: int = self.signal_timestamps.get(key, 0)

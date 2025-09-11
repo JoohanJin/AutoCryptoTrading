@@ -44,7 +44,7 @@ class Signal:
         func __init__:
             - Create an indicator instance with the given signal and timestamp.
         """
-        self._timestamp: int = signal.get("timestamp", Signal.generate_timestamp())
+        self._timestamp: int = Signal.generate_timestamp()
         self._signal: TradeSignal = signal
 
         return None

@@ -38,3 +38,6 @@ src/pipeline/__pycache__/
 # Credentials
 *.json*
 credentials/
+
+# MacOS Specfiic
+.DS_Store*

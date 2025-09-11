@@ -5,20 +5,22 @@ import sys
 
 # CUSTOM LIBRARY
 from custom_telegram.telegram_bot_class import CustomTelegramBot
-from manager.data_collector_and_processor import DataCollectorAndProcessor
+from manager.data_collector_and_processor import DataCollectorAndProcessor, IndexFactory
 from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
-import object
 from pipeline.data_pipeline import DataPipeline
 from logger.set_logger import operation_logger, log_decorator
 from pipeline.signal_pipeline import SignalPipeline
-from src.interface.pipeline_interface import PipelineController
-from src.object.constants import IndexType
+from interface.pipeline_interface import PipelineController
+from object.constants import IndexType
+from object.score_mapping import ScoreMapper
+from object.indexes import Index
+from object.signal import Signal
 
 
 class SystemManager:
-    @log_decorator
+    # @log_decorator
     def __init__(
         self,
     ):
@@ -32,17 +34,30 @@ class SystemManager:
         return None
         """
         # prepare the necessary parts for injection.
-        self.ws:            FutureWebSocket = FutureWebSocket()  # type: ignore
-        self.data_pipeline:    DataPipeline = DataPipeline()
-        self.signal_pipline: SignalPipeline = SignalPipeline()
-        self.mapper:     object.ScoreMapper = object.ScoreMapper()
+        self.ws: FutureWebSocket = FutureWebSocket()  # type: ignore
+        operation_logger.info(
+            f"{self.ws} has been started."
+        )
 
-        self.data_pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]] = PipelineController(pipeline = self.data_pipeline)
-        self.signal_pipeline_controller:        PipelineController[dict[str, int | object.TradeSignal]] = PipelineController(pipeline = self.signal_pipline)
+        self.data_pipeline: DataPipeline = DataPipeline()
+        operation_logger.info(
+            f"{self.data_pipeline} has been started."
+        )
+        self.signal_pipline: SignalPipeline = SignalPipeline()
+        operation_logger.info(
+            f"{self.signal_pipline} has been started."
+        )
+        self.mapper: ScoreMapper = ScoreMapper()
+        operation_logger.info(
+            f"{self.mapper} has been started."
+        )
+
+        self.data_pipeline_controller: PipelineController[Index] = PipelineController(pipeline = self.data_pipeline)
+        self.signal_pipeline_controller: PipelineController[Signal] = PipelineController(pipeline = self.signal_pipline)
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
-        self.mexc_sdk:          FutureMarket = self.__set_up_mexc_sdk()
+        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
 
         self.data_collector_processor: DataCollectorAndProcessor = (
             DataCollectorAndProcessor(
@@ -52,14 +67,14 @@ class SystemManager:
         )
 
         self.signal_generator: SignalGenerator = SignalGenerator(
-            data_pipeline = self.data_pipeline,
+            data_pipeline_controller = self.data_pipeline_controller,
             custom_telegram_bot = self.telegram_bot,
-            signal_pipeline = self.signal_pipline,
+            signal_pipeline_controller = self.signal_pipeline_controller,
         )
 
         # one more classs: trade_manager -> it will have the FutureMarket SDWK
         self.trade_manager: TradeManager = TradeManager(
-            signal_pipeline = self.signal_pipline,
+            signal_pipeline_controller = self.signal_pipeline_controller,
             mexc_future_market_sdk = self.mexc_sdk,
             delta_mapper = self.mapper,
             telegram_bot = self.telegram_bot,
@@ -129,7 +144,7 @@ class SystemManager:
 
     @staticmethod
     def __get_telegram_credentials():
-        # TODO: Fetch credentials from Environment Variable
+        # ! TODO: Fetch credentials from Environment Variable -> Move to Docker for this.
         f = open("./credentials/telegram_key.json")
         credentials = json.load(f)
 
@@ -140,7 +155,7 @@ class SystemManager:
 
     @staticmethod
     def __get_mexc_crendentials():
-        # TODO: Fetch credentials from Environment Variable
+        # ! TODO: Fetch credentials from Environment Variable -> Move to Docker Container for this.
         f = open("./credentials/mexc_keys.json")
         credentials = json.load(f)
 

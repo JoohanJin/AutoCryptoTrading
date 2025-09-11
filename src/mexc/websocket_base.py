@@ -500,7 +500,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         callback_function = self._get_callback(topic)
 
-        if (callback_function):
+        if (callback_function):  # if callback_function is not None.
             callback_function(msg)
 
         return
@@ -567,8 +567,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
             self.__initialize_websocket()
 
         self.ws.subscribe(
-            method=method,
-            callback_function=callback,
-            param=param,
+            method = method,
+            callback_function = callback,
+            param = param,
         )
         return

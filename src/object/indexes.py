@@ -1,6 +1,5 @@
 import time
 from typing import Dict
-
 from object.constants import IndexType
 
 
@@ -38,21 +37,23 @@ class Index:
 
     def __init__(
         self: 'Index',
-        index: Dict[str, IndexType | Dict[int, float]],
+        timestamp: int,
+        index_type: IndexType,
+        data: Dict[str, Dict[int, float]],
     ) -> None:
-        self._timestamp: int = index.get("timestamp", Index.generate_timestamp())
-        self._index_type: IndexType = index.get("type", None)  # if there is no data, type
-        self._index: Dict[str, Dict[int, float]] = index.get("data", None)
+        self.__timestamp: int = timestamp
+        self.__index_type: IndexType = index_type
+        self.__data: Dict[str, Dict[int, float]] = data
         return
 
     @property
     def timestamp(self):
-        return self._timestamp
+        return self.__timestamp
 
     @property
-    def index(self):
-        return self._index
+    def data(self):
+        return self.__data
 
     @property
     def index_type(self):
-        return self._index_type
+        return self.__index_type
