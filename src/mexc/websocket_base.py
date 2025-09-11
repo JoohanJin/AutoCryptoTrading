@@ -547,7 +547,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
                 self.ws_name,
                 api_key = self.api_key,
                 secret_key = self.secret_key,
-            )  # type: ignore
+            )
             self.ws._connect(self.endpoint)
         except Exception as e:
             operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
