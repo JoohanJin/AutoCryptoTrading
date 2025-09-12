@@ -8,6 +8,6 @@ import manager.trade_manager
 
 
 class DataCollectorTest(unittest.TestCase):
-    """
-    # unittest for each part
-    """
+    '''
+    - unittest for each part
+    '''

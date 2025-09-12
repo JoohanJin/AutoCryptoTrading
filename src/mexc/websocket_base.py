@@ -16,14 +16,14 @@ from logger.set_logger import operation_logger
 class __BasicWebSocketManager:
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        ws_name: Optional[str] = "BaseWebSocketManager",
-        ping_interval: Optional[int] = 5,
-        connection_interval: Optional[int] = 10,
-        ping_timeout: Optional[int] = 10,
-        conn_timeout: Optional[int] = 30,
-        default_callback: Optional[Callable] = None,
+        api_key: str | None = None,
+        secret_key: str | None = None,
+        ws_name: str = "BaseWebSocketManager",
+        ping_interval: int = 5,
+        connection_interval: int = 10,
+        ping_timeout: int = 10,
+        conn_timeout: int = 30,
+        default_callback: Callable | None = None,
     ) -> None:
         """
         func __init__():
@@ -60,13 +60,13 @@ class __BasicWebSocketManager:
             self.ping_timeout: int = ping_timeout
 
             # default callback
-            self.callback_function: Callable = default_callback
+            self.callback_function: Callable | None = default_callback
 
             # Connection interval
-            self.conn_interval: Callable = connection_interval
+            self.conn_interval: int = connection_interval
 
             # connection timeout interval
-            self.conn_timeout: Callable = conn_timeout
+            self.conn_timeout: int = conn_timeout
 
             # to save the list of subcriptions and the function for each subcription
             self.callback_dictionary: dict = {}
@@ -109,30 +109,30 @@ class __BasicWebSocketManager:
 
         # will make the WebSocketApp and will try to connect to the host
         self.ws: websocket.WebSocketApp = websocket.WebSocketApp(
-            url=url,
-            on_message=self.__on_message,
-            on_open=self.__on_open,
-            on_close=self.__on_close,  # TODO:
-            on_error=self.__on_error,  # TODO:
+            url = url,
+            on_message = self.__on_message,
+            on_open = self.__on_open,
+            on_close = self.__on_close,  # TODO:
+            on_error = self.__on_error,  # TODO:
         )
 
         # thread for connection
         self.wst: threading.Thread = threading.Thread(
-            name="Connection thread",
-            target=lambda: self.ws.run_forever(
-                ping_interval=self.conn_interval,  # default 10 sec
+            name = "Connection thread",
+            target = lambda: self.ws.run_forever(
+                ping_interval = self.conn_interval,  # default 10 sec
             ),
-            daemon=True,  # set this as the background program where it tries to connect
+            daemon = True,  # set this as the background program where it tries to connect
         )
         self.wst.start()  # start the thread for making a connection
 
         # thread for ping
         self.wsp: threading.Thread = threading.Thread(
-            name="Ping thread",
-            target=lambda: self._ping_loop(
-                ping_interval=self.ping_interval,  # default 10 sec
+            name = "Ping thread",
+            target = lambda: self._ping_loop(
+                ping_interval = self.ping_interval,  # default 10 sec
             ),
-            daemon=True,  # set this as the background program where it sends the ping to the host every 10 sec.
+            daemon = True,  # set this as the background program where it sends the ping to the host every 10 sec.
         )
         self.wsp.start()  # start the thread for ping
 
@@ -197,7 +197,7 @@ class __BasicWebSocketManager:
     def _generate_signature(
         self,
         timestamp: str | None = None,
-    ) -> str:
+    ) -> str | None:
         """
         func generate_signature():
             - generate the signature for the private API endpoint
@@ -205,12 +205,16 @@ class __BasicWebSocketManager:
         if not timestamp:
             timestamp = str(int(time.time() * 1000))
 
-        _query_str = self.api_key + timestamp
-        return hmac.new(
-            self.secret_key.encode("utf-8"),
-            _query_str.encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
+        if (self.api_key and self.secret_key):
+            _query_str = self.api_key + timestamp
+
+            return hmac.new(
+                self.secret_key.encode("utf-8"),
+                _query_str.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+
+        return
 
     def _are_connections_connected(self, connections: list) -> bool:
         """
@@ -299,7 +303,10 @@ class __BasicWebSocketManager:
         response = json.loads(message)
 
         # now response is parsed as a dictionary so that we can do something with it.
-        return self.callback_function(response)
+        if (self.callback_function):
+            return self.callback_function(response)
+
+        return
 
     def __on_error(self, wsa, exception):
         """
@@ -374,8 +381,8 @@ class __BasicWebSocketManager:
 
 # MexC Future Websocket Manager
 class _FutureWebSocketManager(__BasicWebSocketManager):
-    def __init__(self, ws_name="FutureWebSocketV1", **kwargs):
-        super().__init__(ws_name=ws_name, **kwargs)
+    def __init__(self, ws_name = "FutureWebSocketV1", **kwargs):
+        super().__init__(ws_name = ws_name, **kwargs)
 
         # if there is no default function.
         self.callback_function = self._deal_with_response
@@ -402,7 +409,8 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         # set the callback function for specific topic
         # if there is no given callback function, we just put _print_normal_msg as a callback function
-        self._set_callback(method.replace("sub.", ""), callback_function)
+        if method:  # just in case
+            self._set_callback(method.replace("sub.", ""), callback_function)
 
         # operation_logger.info(f"new sub has been established: {self.subscriptions}")
 
@@ -492,7 +500,8 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         callback_function = self._get_callback(topic)
 
-        callback_function(msg)
+        if (callback_function):  # if callback_function is not None.
+            callback_function(msg)
 
         return
 
@@ -536,8 +545,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
         try:
             self.ws = _FutureWebSocketManager(
                 self.ws_name,
-                api_key=self.api_key,
-                secret_key=self.secret_key,
+                api_key = self.api_key,
+                secret_key = self.secret_key,
             )
             self.ws._connect(self.endpoint)
         except Exception as e:
@@ -558,8 +567,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
             self.__initialize_websocket()
 
         self.ws.subscribe(
-            method=method,
-            callback_function=callback,
-            param=param,
+            method = method,
+            callback_function = callback,
+            param = param,
         )
         return

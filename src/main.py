@@ -4,11 +4,11 @@ from logger.set_logger import operation_logger
 
 def main():
     try:
-        # Since __init__() for every class will activate them, no need to do anything here.
+        # ? Since __init__() for every class will activate them, no need to do anything here.
         # TODO: but expliciti activation should be better. In the near future.
         main_system_manager: SystemManager = SystemManager()
         operation_logger.info(
-            f"{main_system_manager} has been started without any problem."
+            f"{main_system_manager} has been started."
         )
     except Exception as e:
         operation_logger.critical(

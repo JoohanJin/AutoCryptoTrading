@@ -44,19 +44,19 @@ class DataSaver:
             if os.path.isfile(self._output_path):
                 data.to_csv(
                     self._output_path,
-                    index=True,
-                    header=False,  # Append without writing header
-                    index_label="timestamp",
-                    mode="a",  # Append mode
-                    encoding="utf-8",
+                    index = True,
+                    header = False,  # Append without writing header
+                    index_label = "timestamp",
+                    mode = "a",  # Append mode
+                    encoding = "utf-8",
                 )
             else:
                 # Write a new file with the header
                 data.to_csv(
                     self._output_path,
-                    index=True,
-                    index_label="timestamp",
-                    encoding="utf-8",
+                    index = True,
+                    index_label = "timestamp",
+                    encoding = "utf-8",
                 )
 
         except FileNotFoundError as e:

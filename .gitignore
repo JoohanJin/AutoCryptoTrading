@@ -16,6 +16,8 @@ tmp/
 *foo*
 foo/
 
+*test.py
+
 # ignore market data directory
 market_data/
 
@@ -36,3 +38,6 @@ src/pipeline/__pycache__/
 # Credentials
 *.json*
 credentials/
+
+# MacOS Specfiic
+.DS_Store*

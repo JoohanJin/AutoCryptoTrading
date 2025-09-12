@@ -16,17 +16,17 @@ operation_logger.setLevel(logging.INFO)  # Set the logging level to INFO
 
 # Operation logger - Formatter for log messages
 operation_logger_formatter: logging.Formatter = logging.Formatter(
-    "System - %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    "%(name)s - %(asctime)s - %(levelname)s - %(message)s"
 )
 
 # Operation logger - File Handler
 operation_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
     "log/system-logging.log",
-    when="midnight",  # rotate at midnight
-    interval=1,  # Rotate every day
-    backupCount=14,  # keep 14 days of logs
-    encoding="utf-8",  # Set the encoding to utf-8
-    delay=False,  # Do not delay the creation of the log file
+    when = "midnight",  # rotate at midnight
+    interval = 1,  # Rotate every day
+    backupCount = 14,  # keep 14 days of logs
+    encoding = "utf-8",  # Set the encoding to utf-8
+    delay = False,  # Do not delay the creation of the log file
 )  # Log file handler
 operation_logger_file_handler.setFormatter(
     operation_logger_formatter
@@ -59,17 +59,17 @@ trading_logger.setLevel(logging.INFO)  # Set the logging level to INFO
 
 # Trading Logger - Formatter for log messages
 trading_logger_formatter: logging.Formatter = logging.Formatter(
-    "Trading - %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    "%(name)s - %(asctime)s -  %(levelname)s - %(message)s"
 )
 
 # Trading Logger - File Handler
 trading_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
-    filename="log/trading-logging.log",
-    when="midnight",  # rotate at midnight
-    interval=1,  # Rotate every day
-    backupCount=14,  # keep 14 days of logs
-    encoding="utf-8",  # Set the encoding to utf-8
-    delay=False,  # Do not delay the creation of the log file
+    filename = "log/trading-logging.log",
+    when = "midnight",  # rotate at midnight
+    interval = 1,  # Rotate every day
+    backupCount = 14,  # keep 14 days of logs
+    encoding = "utf-8",  # Set the encoding to utf-8
+    delay = False,  # Do not delay the creation of the log file
 )  # Log file handler
 trading_logger_file_handler.setFormatter(
     trading_logger_formatter
@@ -86,24 +86,6 @@ operation_logger.info(
 trading_logger.info(
     f"{__name__} - {trading_logger.name} - Trading Logger generation completed."
 )
-
-
-# define log_decorator for the function, future usage consideration
-# def log_decorator(func):
-#     @wraps(func)
-#     def wrapper(*args, **kwargs):
-#         operation_logger.info(f"Executing {func.__name__} with args: {args}, kwargas: {kwargs}")
-#         try:
-#             result = func(*args, **kwargs)
-#             if (result is not None and type(result) is not bool):
-#                 operation_logger.info(f"{func.__name__} returned {result}")
-#             else:
-#                 operation_logger.info(f"{func.__name__} executed and returned {result}")
-#             return result
-#         except Exception as e:
-#             operation_logger.error(f"Error in {func.__name__}: {e}")
-#             raise
-#     return wrapper
 
 
 def log_decorator(func):

@@ -1,149 +1,118 @@
 # Standard Library
-from queue import Full, Queue, Empty
-from typing import Dict, Union, Optional, Literal, Tuple
+import queue
+from typing import Dict, Tuple
 
 # CUSTOM LIBRARY
 from logger.set_logger import operation_logger
+from object.constants import IndexType
+from object.indexes import Index
+from .base_pipeline import BasePipeline
 
 
-class DataPipeline:
+class DataPipeline(BasePipeline[Index]):  # TODO: Make the object for th Data object.
     def __init__(
         self,
     ) -> None:
-        """
-        # func __init__:
-            # Creates a Queue object of Dict to store different technical indicators data.
-            # Each queue has a maximum size of 100 elements to maintain a rolling window of historical values.
+        '''
+        so each of them is just a data object pushed to the queue, not a group of data.
 
-        # queues:
-            # test: general testing data.
-            # sma: Simple Moving Average Values.
-            # ema: Exponential Moving Average Values.
-            # "?" : Purpose to be defined.
-
-        # param self
-
-        # return None
-        """
-        # data buffer, can be added in the future.
-        self.queues: Dict[str, Queue[Tuple[Dict[int, float]]]] = {
-            "price": Queue(
-                maxsize=100,
-            ),
-            "sma": Queue(
-                maxsize=100,
-            ),
-            "ema": Queue(
-                maxsize=100,
-            ),
-            "?": Queue(
-                maxsize=100,
-            ),
+        data_struct = {
+            "timestamp" = <int>, # int(time.time() * 1_000)
+            "type" = "ema" || "sma",
+            "data" = {
+                10: <float>,
+                30: <float>,
+                60: <float>,
+                300: <float>,
+                600: <float>,
+                1_200: <float>,
+                1_800: <float>,
+            }
         }
+
+        AND
+
+        data_struct = {
+            "timestamp" = <int>, # int(time.time() * 1_000)
+            "type" = "price",
+            "data" = {
+                0 = <float>,
+            }
+        }
+        '''
+        # inherit the queue and data type in the queue from the base class.
+        super().__init__()
+        # data buffer, can be added in the future.
 
         return
 
-    def push_data(
+    def push(
         self,
-        type: Union[
-            Literal["test"],  # only this one is used for the test phase.
-            Literal["sma"],
-            Literal["ema"],
-            Literal["?"],
-        ],
-        data: Tuple[Dict[int, float]],
+        data: Dict[str, int | str | Dict[int, float]],
+        block: bool = False,
+        timeout: int = 1,  # 1 second
     ) -> bool:
-        """
-        # func push_data:
-            # pushes the data to the corresponding queue based on the type.
-            # will be used by data fetcher.
+        '''
+        func push_data:
+            - pushes the data to the corresponding queue based on the key.
+            - will be used by data fetcher.
+        param self
+        param key
+            - will get the key value for self.queues to seletively push the data into the respective queue.
+            - Enum:
+                - "test"
+                - "sma"
+                - "ema"
+                - "?"
 
-        # param self
-        # param type
-            # will get the key value for self.queues to seletively push the data into the respective queue.
-            # Enum:
-                # "test"
-                # "sma"
-                # "ema"
-                # "?"
+        param data
+            - Tuple[float]
 
-        # param data
-            # Tuple[float]
-
-        # return bool
-            # return True if the operation is successful.
-            # return False if the operation is not successful.
-        """
+        return bool
+            - return True if the operation is successful.
+            - return False if the operation is not successful.
+        '''
         try:
-            self.queues[type].put(
+            self.queue.put(
                 data,
-                block=False,
-                timeout=1,
+                block = block,
+                timeout = timeout,
             )
             return True
-        except Full:
-            operation_logger.warning(
-                f"{__name__} - {type} Queue is full. Data cannot be added."
-            )
-            return False
-        except KeyError:
-            operation_logger.warning(f"{__name__} - push_data(): Invalid Queue Type.")
+        except queue.Full:
+            operation_logger.warning(f"{__name__} - Queue is full. Data cannot be added.")
             return False
         except Exception as e:
-            operation_logger.warning(
-                f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}"
-            )
+            operation_logger.warning(f"{__name__} - self.queue: Unknown exception has occurred: {str(e)}")
             return False
 
-    def pop_data(
+    def pop(
         self,
-        type: Union[
-            Literal["test"],
-            Literal["sma"],
-            Literal["ema"],
-            Literal["price"],
-        ],
         block: bool = True,
-        timeout: int | None = None,
-    ) -> Tuple[Dict[int, float]] | None:
-        """
-        # func pop_data():
-            # get the data from the queue with the given type.
+        timeout: int | None = None
+    ) -> Index:
+        '''
+        func pop_data():
+            - get the data from the queue with the given key.
 
-        # param self
-            # class object
-        # param type
-            # will get the key value for self.queues to seletively push the data into the respective queue.
-            # Enum:
-                # "test"
-                # "sma"
-                # "ema"
-                # "?"
-                # More queue with keywords will be added.
+        param self:
+            - class object
+        param data:
+            - Tuple[float]
+        param block:
+            - if the thread will be spinning-wait for the data or not.
+        param timeout:
+            - give the timeout for the data pop.
+            - default is None, for non-Time out.
 
-        # param data
-            # Tuple[float]
-
-        # return bool
-            # return data if there is a valid data.
-        """
+        return bool
+            - return data if there is a valid data.
+        '''
         try:
-            data: Tuple[Dict[int, float]] = self.queues[type].get(
-                block=block, timeout=timeout
-            )
-            return data
-        except Empty:
-            operation_logger.warning(
-                f"{__name__} - {type} Queue is empty. Data cannot be retrieved."
-            )
-            return None
-        except KeyError:
-            operation_logger.warning(
-                f"{__name__} - pop_data(): Invalid Queue Type - type_input: {type}"
-            )
+            return self.queue.get(block = block, timeout = timeout)
+        except queue.Empty:
+            operation_logger.warning(f"{__name__} - self.queue is empty: Data cannot be retrieved.")
             return None
         except Exception as e:
-            operation_logger.warning(
-                f"{__name__} - {type} Queue: Unknown exception has occurred: {str(e)}."
-            )
+            operation_logger.warning(f"{__name__} - self.queue: Unknown exception has occurred: {str(e)}.")
             return None

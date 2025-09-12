@@ -1,6 +1,6 @@
 # Standard Module
 import time
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 import pandas as pd
 import numpy as np
 import threading
@@ -10,15 +10,89 @@ from queue import Queue
 from mexc.future import FutureWebSocket
 from logger.set_logger import operation_logger
 from manager.data_saver import DataSaver
-from object.constants import MA_WRITE_PERIODS
+from object.constants import MA_WRITE_PERIODS, IndexType
+from object.indexes import Index
 from pipeline.data_pipeline import DataPipeline
+from interface.pipeline_interface import PipelineController
+
+
+'''
+# Index Structure
+# Dict[str, int | IndexType | Dict]
+
+{
+    "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+    "type": IndexType.SMA,
+    "data": data,
+}
+'''
+
+
+class IndexFactory:
+    '''
+    # factory which generates the Index data type.
+    # what does it do?
+        # check the validity of index Dict?
+        # generate the timestamp?
+    '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        return int(time.time() * 1_000)
+
+    def __init__(
+        self: "IndexFactory",
+        # index: Dict[str, int | IndexType | Dict[int, float]],
+    ) -> None:
+        return
+
+    def generate_index(
+        self: "IndexFactory",
+        index: Dict[str, int | IndexType | Dict[int, float]],
+    ) -> Index:
+        timestamp: int = index.get("timestamp", IndexFactory.generate_timestamp())
+        index_type: IndexType | None = index.get("type", None)
+        data: Dict[int, float] | None = index.get("data", None)
+
+        if (index_type and data):
+            return Index(
+                timestamp = timestamp,
+                index_type = index_type,
+                data = data,
+            )
+        else:
+            return None
 
 
 class DataCollectorAndProcessor:
+    '''
+    ######################################################################################################################
+    #                                               Static Method                                                        #
+    ######################################################################################################################
+    '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        """
+        static func generate_timestamp():
+            - Generate the timestamp using the current time, in the form of epoch in ms.
+
+        param None
+
+        return int
+            - the timestam in the form of epoch in ms.
+        """
+        return int(time.time() * 1_000)
+
+    '''
+    ######################################################################################################################
+    #                                               Instance Method                                                      #
+    ######################################################################################################################
+    '''
     def __init__(
-        self,
-        data_pipeline: DataPipeline,
+        self: "DataCollectorAndProcessor",
+        pipeline_controller: PipelineController[dict[str, int | IndexType, dict[int, float]]],
         websocket: FutureWebSocket,  # assume that only fetches the price data.
+        index_factory: IndexFactory = IndexFactory(),  # dependency injection would work.
+        memory_count_limit: int = 2_000,
     ) -> None:
         """
         func __init__() for StrategyManager
@@ -42,20 +116,21 @@ class DataCollectorAndProcessor:
         - no need to provide api_key and secret_key, i.e., no authentication on API side for data fetching.
         """
         self.ws: FutureWebSocket = websocket
-        self._ma_period: int = 20  # set the period of moving average
+        self._ma_period: int = 20  # ! No need to be here I think.
         self._memory_saver: DataSaver = DataSaver()  # can be here.
-        self._df_size_limit: int = 1_000
+        self._df_size_limit: int = memory_count_limit
         self.threads: list[threading.Thread] = list()
-        self.pipeline: DataPipeline = data_pipeline
+        self.pipeline_controller: PipelineController[Index] = pipeline_controller
+        self.__index_factory: IndexFactory = index_factory
 
         # wait till WebSocket set up is done
         time.sleep(1)
 
-        # used as  buffer for data fetching from the MEXC Endpoint
+        # used as buffer for data fetching from the MEXC Endpoint
         self.price_fetch_buffer = Queue()
 
         # subsribe to the ticker data from the MexC data
-        self.ws.ticker(callback=self._put_ticker_data)
+        self.ws.ticker(callback = self._put_ticker_data)
 
         # lock for accessing Price DataFrame.
         self.df_lock = threading.Lock()
@@ -83,12 +158,12 @@ class DataCollectorAndProcessor:
                 "riseFallRates",
                 "riseFallRatesOfTimezone",
             ],
-            index=[int(time.time() * 1000)],
+            index = [DataCollectorAndProcessor.generate_timestamp()],  # ! use the static method for timestamp generation
         )
         self.priceData.index.name = "timestamp"  # force the index name
 
-        self._init_threads()  # initialize the thread pool
-        self._start_threads()  # start the thread after all the thread pool is there.
+        # ! start the operation in the initialization process.
+        self.start()
 
         return
 
@@ -97,8 +172,16 @@ class DataCollectorAndProcessor:
     #                                               Threading Management                                                 #
     ######################################################################################################################
     """
+    def start(
+        self: "DataCollectorAndProcessor",
+    ) -> None:
+        self._init_threads()  # initialize the thread pool
+        self._start_threads()  # start the thread after all the thread pool is there.
+        return
 
-    def _init_threads(self) -> None:
+    def _init_threads(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _init_threads():
             - set the threads for the necessary operations and append them into the list of thread pool
@@ -118,34 +201,51 @@ class DataCollectorAndProcessor:
 
         return None
         """
-        # start the thread for the data fetch from the API
-        thread_price_fetch: threading.Thread = threading.Thread(
-            name="price_data_fetch", target=self._price_data_fetch, daemon=True
-        )
-        operation_logger.info(f"{__name__}: Thread for price fetch has been set up!")
+        try:
+            # start the thread for the data fetch from the API
+            thread_price_fetch: threading.Thread = threading.Thread(
+                name = "price_data_fetch",
+                target = self._price_data_fetch,
+                daemon = True
+            )
+            operation_logger.info(f"{__name__}: Thread for price fetch has been set up!")
 
-        thread_calculate_sma: threading.Thread = threading.Thread(
-            name="provide_moving_average_thread",
-            target=self._push_moving_averages,
-            daemon=True,
-        )
-        operation_logger.info(
-            f"{__name__}: Thread for calculating sma has been set up!"
-        )
+            thread_calculate_sma: threading.Thread = threading.Thread(
+                name = "provide_moving_average_thread",
+                target = self._push_moving_averages,
+                daemon = True,
+            )
+            operation_logger.info(
+                f"{__name__}: Thread for calculating sma has been set up!"
+            )
 
-        thread_memory_save: threading.Thread = threading.Thread(
-            name="resize_df", target=self._resize_df, daemon=True
-        )
-        operation_logger.info(
-            f"{__name__}: Thread for DataFrame size limit has been set up!"
-        )
+            thread_memory_save: threading.Thread = threading.Thread(
+                name = "resize_df",
+                target = self._resize_df,
+                daemon = True
+            )
+            operation_logger.info(
+                f"{__name__}: Thread for DataFrame size limit has been set up!"
+            )
+
+        except (RuntimeError, TypeError, AttributeError, MemoryError) as e:
+            operation_logger.critical(f"{__name__}: fail to make instances for the thread - {str(e)}")
+
+        except Exception as e:
+            operation_logger.critical(f"{__name__}: Unexpected error constructing thread pool - {str(e)}")
 
         self.threads.extend(
-            [thread_price_fetch, thread_calculate_sma, thread_memory_save]
+            [
+                thread_price_fetch,
+                thread_calculate_sma,
+                thread_memory_save,
+            ]
         )
         return
 
-    def _start_threads(self) -> None:
+    def _start_threads(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _start_threads():
             - start the threads in the thread pool of the class.
@@ -181,7 +281,7 @@ class DataCollectorAndProcessor:
     """
 
     def _put_ticker_data(
-        self,
+        self: 'DataCollectorAndProcessor',
         msg: dict,
     ) -> None:
         """
@@ -198,8 +298,8 @@ class DataCollectorAndProcessor:
         try:
             self.price_fetch_buffer.put(
                 msg.get("data"),
-                block=False,
-                timeout=None,
+                block = False,
+                timeout = None,
             )
         except Exception as e:
             operation_logger.critical(
@@ -213,7 +313,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _price_data_fetch(self) -> None:
+    def _price_data_fetch(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _price_data_fetch():
             - It continuously fetches data from the queue, processes it and appends it to the DataFrame.
@@ -232,17 +334,17 @@ class DataCollectorAndProcessor:
                     # TODO: store 'riseFallRates' and 'riseFallRatesTimezone'
                     # timestamp = response["timestamp"]
 
-                    # make the data, dictionary, into the pandas dataframe.
+                    # make `the data, dictionary, into the pandas dataframe.
                     tmp = pd.DataFrame(
-                        data=[response],
+                        data = [response],
                     )
 
                     # set the timestamp as the index of the dataframe.
-                    tmp.set_index("timestamp", inplace=True)
+                    tmp.set_index("timestamp", inplace = True)
 
                     # merge the new dataframe to the existing dataframe.
                     with self.df_lock:
-                        self.priceData = pd.concat([self.priceData, tmp], axis=0)
+                        self.priceData = pd.concat([self.priceData, tmp], axis = 0)
 
             except Exception as e:
                 operation_logger.critical(
@@ -250,7 +352,9 @@ class DataCollectorAndProcessor:
                 )
         return
 
-    def _get_data_buffer(self) -> dict | None:
+    def _get_data_buffer(
+        self: 'DataCollectorAndProcessor',
+    ) -> dict | None:
         """
         func _get_data_buffer():
             - Get the data from the buffer and return it.
@@ -259,7 +363,7 @@ class DataCollectorAndProcessor:
         """
         try:
             # price_fetch_buffer is a queue.
-            result = self.price_fetch_buffer.get(block=True)
+            result = self.price_fetch_buffer.get(block = True)
 
             self.price_fetch_buffer.task_done()
 
@@ -272,7 +376,7 @@ class DataCollectorAndProcessor:
 
     # for batch processing of the data.
     def __append_df(
-        self,
+        self: 'DataCollectorAndProcessor',
         data_buffer: list,
         timestamp_buffer: list,
     ) -> bool:
@@ -284,10 +388,16 @@ class DataCollectorAndProcessor:
         try:
             tmp = pd.DataFrame(
                 data_buffer,
-                index=[timestamp_buffer],
+                index = [timestamp_buffer],
             )
+
             with self.df_lock:
-                self.priceData = pd.concat([self.priceData, tmp], axis=0)
+                self.priceData = pd.concat(
+                    [self.priceData, tmp],
+                    axis = 0,
+                )
+
+            # ! need to make it to raise a custom exception.
             return True
         except Exception as e:
             operation_logger.critical(
@@ -304,7 +414,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _push_moving_averages(self) -> None:
+    def _push_moving_averages(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func _push_moving_averages():
             - call the function __calculate_ema_sma_price() to calculate the EMA and SMA
@@ -313,35 +425,37 @@ class DataCollectorAndProcessor:
                 - data[1] = EMA values
             - when the data is available, push the data to the data pipeline.
         """
+        # TODO: Need to change this.
         while True:
             data: (
                 Tuple[
                     Dict[int, float],
                     Dict[int, float],
-                ]
-                | None
+                    Dict[int, float],
+                ] | None
             ) = self.__calculate_ema_sma_price()
 
             if data:
-                sma_values: Dict[int, float] = data[0]
-                ema_values: Dict[int, float] = data[1]
-                price: Dict[str, float] = data[2]
+                sma_values: Index = self.__index_factory.generate_index(data[0])
+                ema_values: Index = self.__index_factory.generate_index(data[1])
+                price: Index = self.__index_factory.generate_index(data[2])
+
+                indexes: list[Index, ] = [
+                    sma_values,
+                    ema_values,
+                    price
+                ]
 
                 # TODO: need to change -> other wrapper which can get the result and push to the data pipeline.
-                if sma_values:
-                    self.__push_sma_data(sma_values)
-                if ema_values:
-                    self.__push_ema_data(ema_values)
-                if price:
-                    self.__push_price_data(price)
+                self.__push_indexes(indexes)
 
             time.sleep(2)
         return
 
     def __calculate_ema_sma_price(
-        self,
-        periods: Tuple[int] = MA_WRITE_PERIODS,
-    ) -> Optional[Tuple[Dict[int, float], Dict[int, float]]]:
+        self: 'DataCollectorAndProcessor',
+        periods: Tuple[int, ...] = MA_WRITE_PERIODS,  # this will be just used. -> just default input.
+    ) -> Tuple[Any, ...] | None:
         """
         func __calculate_ema_sma_price():
             - It calculate the simple moving average (SMA) of the lastPrice
@@ -354,33 +468,51 @@ class DataCollectorAndProcessor:
         return (smas, emas): Tuple[Tuple[float], Tuple[float]] | None
             - Tuple of SMA and EMA values
         """
-
         try:
             with self.df_lock:
                 if self.priceData.shape[0] == 0:
                     return None
 
-                tmpDataframe = self.priceData[-periods[-1] :]["lastPrice"].copy()
+                tmpDataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
 
-            smas: Dict[int, float] = dict()
-            emas: Dict[int, float] = dict()
-            prices: Dict[str, float] = dict()
+            sma:   Dict[int, float] = dict()  # oh.. make the dictionary object and put it.
+            ema:   Dict[int, float] = dict()
+            price: Dict[str, float] = dict()
 
-            # TODO: this should be fast enough, but can be optimized further.
+            # ! TODO: this should be fast enough, but can be optimized further.
             for period in periods:
                 if tmpDataframe.shape[0] >= period:
-                    smas[period * 2] = np.mean(tmpDataframe[-period:])
-                    emas[period * 2] = (
+                    sma[period * 2] = np.mean(tmpDataframe[-period:])
+                    ema[period * 2] = (
                         pd.Series(tmpDataframe)
-                        .ewm(span=period, adjust=False)
+                        .ewm(span = period, adjust = False,)
                         .mean()
                         .iloc[-1]
                     )
                 else:
                     break
 
-            price: float = tmpDataframe.iloc[-1]
-            prices["price"] = price
+            price[0] = tmpDataframe.iloc[-1]  # just last price data.
+
+            timestamp: int = DataCollectorAndProcessor.generate_timestamp()
+
+            smas: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": sma,
+                "timestamp": timestamp,
+                "type": IndexType.SMA,
+            }
+
+            emas: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": ema,
+                "timestamp": timestamp,
+                "type": IndexType.EMA,
+            }
+
+            prices: Dict[str, float | IndexType | Dict[int, float]] = {
+                "data": price,
+                "timestamp": timestamp,
+                "type": IndexType.EMA,
+            }
 
             return smas, emas, price
 
@@ -410,7 +542,9 @@ class DataCollectorAndProcessor:
     ######################################################################################################################
     """
 
-    def _resize_df(self) -> None:
+    def _resize_df(
+        self: 'DataCollectorAndProcessor',
+    ) -> None:
         """
         func __resize_df():
             - using _data_saver to move the dataframe storing the price movement to the csv file in data
@@ -443,7 +577,7 @@ class DataCollectorAndProcessor:
                 time.sleep(300)  # let the cpu to sleep for 5 minutes
             except Exception as e:
                 operation_logger.warning(
-                    f"{__name__} - func _resize_df(): Exception caused: {e}"
+                    f"{__name__} - func _resize_df(): Exception caused: {str(e)}"
                 )
 
         return None
@@ -455,19 +589,51 @@ class DataCollectorAndProcessor:
     """
 
     def __push_ema_data(
-        self,
-        data: Dict[int, float],
+        self: 'DataCollectorAndProcessor',
+        data: Index,
     ) -> bool:
-        return self.pipeline.push_data(type="ema", data=data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.EMA,
+                "data": data,
+            }
+        )
 
     def __push_sma_data(
-        self,
-        data: Tuple[Dict[int, float]],
+        self: 'DataCollectorAndProcessor',
+        data: Index,
     ) -> bool:
-        return self.pipeline.push_data(type="sma", data=data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.SMA,
+                "data": data,
+            }
+        )
 
     def __push_price_data(
-        self,
-        data: Dict[str, float],
+        self: 'DataCollectorAndProcessor',
+        data: Index,
     ):
-        return self.pipeline.push_data(type="price", data=data)
+        return self.pipeline_controllers.push(
+            {
+                "timestamp": DataCollectorAndProcessor.generate_timestamp(),
+                "type": IndexType.PRICE,
+                "data": data,
+            }
+        )
+
+    def __push_indexes(
+        self: 'DataCollectorAndProcessor',
+        indexes: list[Index]
+    ) -> bool:
+        try:
+            for index in indexes:
+                if (index):
+                    self.pipeline_controllers.push(
+                        index
+                    )
+            return True
+        except Exception as e:
+            operation_logger.warning(f"{__name__} - Unexpected Exception Orccured: {str(e)}")

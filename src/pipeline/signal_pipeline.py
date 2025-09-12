@@ -1,18 +1,15 @@
 # Standard Library
 from queue import Queue, Full, Empty
-from typing import Literal, Optional, Dict, Any
 
 # Custom Library
 from logger.set_logger import operation_logger
-from object.signal import (
-    TradeSignal,
-    Signal,
-)  # TODO: Need to define this class in another class
+from object.signal import Signal
+from .base_pipeline import BasePipeline  # TODO: Need to define this class in another class
 
 
-class SignalPipeline:
-    def __init__(self):
-        """
+class SignalPipeline(BasePipeline[Signal]):
+    def __init__(self: "SignalPipeline"):
+        '''
         func __init__:
             - create a Queue of Dict to store indicator
             - Queue has a maximum size of 100 elements to maintain a rolling window of historical indicators.
@@ -20,39 +17,40 @@ class SignalPipeline:
         queue:
             - indicator_queue: indicator buffer
 
-            indicator = {
+            data_struct = {
                 "indicator": {
                     "timestamp": <int>, int(time.time() * 1000),
-                    "signal": <object.TradeSignal
+                    "signal": object.TradeSignal
                         # 001: for buy
                         # 010: for sell
                         # 100: for hold -> do nothing
+                        # Other signals
                 }
             }
-        """
+        '''
         self.signal_queue: Queue[Signal] = Queue()
         return
 
-    def push_signal(
-        self,
+    def push(
+        self: "SignalPipeline",
         signal: Signal,
-    ) -> bool | None:
-        """
-        func push_indicator():
+    ) -> bool:
+        '''
+        func push_indicator:
             - push the indicator to the buffer.
-
         param self
             - class object
         param indicator
             - indicator got as a parameter to push to the buffer.
             - Dict[str, Dict[str, Any]]
-        """
+        '''
         try:
             self.signal_queue.put(
                 signal,
-                block=False,
-                timeout=1,
+                block = False,
+                timeout = 1,
             )
+            return True
         except Full:
             operation_logger.warning(
                 f"{__name__} - Indicator Queue is full. Data cannot be added."
@@ -63,14 +61,13 @@ class SignalPipeline:
                 f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
             )
             return False
-        return
 
-    def pop_signal(
-        self,
+    def pop(
+        self: "SignalPipeline",
         timeout: int | None = None,
         block: bool = True,  # Default is to be blocked
     ) -> Signal | None:
-        """
+        '''
         func pop_indicator():
             - get the indicator from the buffer.
 
@@ -86,11 +83,11 @@ class SignalPipeline:
 
         return bool
             - return indicator if there is a valid indicator.
-        """
+        '''
         try:
             return self.signal_queue.get(
-                block=block,
-                timeout=timeout,
+                block = block,
+                timeout = timeout,
             )
         except Empty:
             operation_logger.warning(
@@ -102,3 +99,7 @@ class SignalPipeline:
                 f"{__name__} - Indicator Queue: Unknown exception has occurred: {str(e)}"
             )
             return None
+
+
+if __name__ == "__main__":
+    print(f"{__name__} - test running.")
