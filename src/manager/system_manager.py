@@ -1,9 +1,10 @@
 # STANDARD LIBRARY
-import json
+import os
 import time
 import sys
 
 # CUSTOM LIBRARY
+from dotenv import load_dotenv
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor, IndexFactory
 from manager.signal_generator import SignalGenerator
@@ -33,8 +34,13 @@ class SystemManager:
 
         return None
         """
+        api_key, secret_key = SystemManager.__get_mexc_crendentials()
+
         # prepare the necessary parts for injection.
-        self.ws: FutureWebSocket = FutureWebSocket()  # type: ignore
+        self.ws: FutureWebSocket = FutureWebSocket(
+            api_key=api_key,
+            secret_key=secret_key,
+        )
         operation_logger.info(
             f"{self.ws} has been started."
         )
@@ -57,7 +63,7 @@ class SystemManager:
 
         # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
-        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk()
+        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk(api_key, secret_key)
 
         self.data_collector_processor: DataCollectorAndProcessor = (
             DataCollectorAndProcessor(
@@ -100,14 +106,13 @@ class SystemManager:
     ) -> CustomTelegramBot:
         """
         func __set_up_telegram_bot():
-            - Set up the telegram bot with the given credentials.
+            - Set up the telegram bot with credentials from environment variables.
 
         param self: SystemManager
             - class object
 
         return CustomTelegramBot
             - CustomTelegramBot object
-            - has been registered with the custom channel id.
         """
         api_key, channel_id = SystemManager.__get_telegram_credentials()
         return CustomTelegramBot(
@@ -121,14 +126,13 @@ class SystemManager:
     ) -> FutureMarket:
         """
         func __set_up_mexc_sdk():
-            - Set up the MexC SDK with the given credentials.
+            - Set up the MexC SDK with credentials from environment variables.
 
         param self: SystemManager
             - class object
 
         return FutureWebSocket
             - FutureWebSocket object
-            - has been registered with the given api_key and secret_key.
         """
         api_key, secret_key = SystemManager.__get_mexc_crendentials()
         return FutureMarket(
@@ -144,29 +148,28 @@ class SystemManager:
 
     @staticmethod
     def __get_telegram_credentials():
-        # ! TODO: Fetch credentials from Environment Variable -> Move to Docker for this.
-        f = open("./credentials/telegram_key.json")
-        credentials = json.load(f)
-
-        api_key = credentials["api_key"]
-        channel_id = credentials["channel_id"]
-
+        api_key = os.getenv("TELEGRAM_API_KEY")
+        channel_id = os.getenv("TELEGRAM_CHANNEL_ID")
+        if not api_key or not channel_id:
+            raise ValueError(
+                "TELEGRAM_API_KEY and TELEGRAM_CHANNEL_ID must be set in environment variables."
+            )
         return api_key, channel_id
 
     @staticmethod
     def __get_mexc_crendentials():
-        # ! TODO: Fetch credentials from Environment Variable -> Move to Docker Container for this.
-        f = open("./credentials/mexc_keys.json")
-        credentials = json.load(f)
-
-        api_key = credentials["api_key"]
-        secret_key = credentials["secret_key"]
-
+        api_key = os.getenv("MEXC_API_KEY")
+        secret_key = os.getenv("MEXC_SECRET_KEY")
+        if not api_key or not secret_key:
+            raise ValueError(
+                "MEXC_API_KEY and MEXC_SECRET_KEY must be set in environment variables."
+            )
         return api_key, secret_key
 
 
 def main():  # to test run the system manager.
     # ! Once instantiate the SystemManager, the operation will start automatically.
+    load_dotenv()
     main_system_manager: SystemManager = SystemManager()
 
 
