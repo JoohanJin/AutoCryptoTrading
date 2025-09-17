@@ -23,7 +23,7 @@ from object.signal import Signal
 class SystemManager:
     # @log_decorator
     def __init__(
-        self,
+        self: "SystemManager",
     ):
         """
         func __init__():
@@ -102,7 +102,7 @@ class SystemManager:
 
     @log_decorator
     def __set_up_telegram_bot(
-        self,
+        self: "SystemManager",
     ) -> CustomTelegramBot:
         """
         func __set_up_telegram_bot():
@@ -122,7 +122,7 @@ class SystemManager:
 
     @log_decorator
     def __set_up_mexc_sdk(
-        self,
+        self: "SystemManager",
     ) -> FutureMarket:
         """
         func __set_up_mexc_sdk():
