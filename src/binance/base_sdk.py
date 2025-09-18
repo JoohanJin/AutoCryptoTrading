@@ -5,7 +5,7 @@ from typing import Optional
 from sdk.base_sdk import CommonBaseSDK
 
 
-class BinanceFutureSDK(CommonBaseSDK):
+class FutureBase(CommonBaseSDK):
     """
     SDK for Binance Futures API, inheriting from CommonBaseAPI.
     """
@@ -15,11 +15,14 @@ class BinanceFutureSDK(CommonBaseSDK):
         api_key: Optional[str] = None,
         secret_key: Optional[str] = None,
         base_url: str = "https://fapi.binance.com",
-    ):
+    ) -> None:
+        # Please comment the following line if you want to turn off the testNet.
+        # base_url = "https://testnet.binancefuture.com"  # this is the testNet
+
         super().__init__(
-            api_key=api_key,
-            secret_key=secret_key,
-            base_url=base_url,
+            api_key = api_key,
+            secret_key = secret_key,
+            base_url = base_url,
         )
         # Set the specific content type for Binance
         self.set_content_type("application/x-www-form-urlencoded")
@@ -31,4 +34,4 @@ class BinanceFutureSDK(CommonBaseSDK):
         """
         Generate the signature for Binance API.
         """
-        return super().generate_signature(query_string=query_string)
+        return super().generate_signature(query_string = query_string)
