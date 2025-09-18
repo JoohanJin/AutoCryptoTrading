@@ -12,6 +12,9 @@ class CommonBaseSDK:
     A common base class for handling API requests, signature generation, and session management
     for different exchange SDKs (e.g., MEXC and Binance).
     """
+    @staticmethod
+    def generate_timestmap() -> int:
+        return int(time.time() * 1_000)
 
     def __init__(
         self,
@@ -93,7 +96,7 @@ class CommonBaseSDK:
             url = f"/{url}"
 
         # Generate timestamp
-        timestamp: str = str(int(time.time() * 1000))
+        timestamp: str = str(CommonBaseSDK.generate_timestmap())
 
         # Prepare query string for signature
         query_string: str = ""
@@ -111,7 +114,7 @@ class CommonBaseSDK:
             headers.update(
                 {
                     "Request-Time": timestamp,
-                    "Signature": self.generate_signature(query_string=query_string),
+                    "Signature": self.generate_signature(query_string = query_string),
                 },
             )
 
@@ -121,11 +124,11 @@ class CommonBaseSDK:
 
         # Perform the request
         response = self.session.request(
-            method=method,
-            url=f"{self.base_url}{url}",
-            params=params,
-            json=data,
-            headers=headers,
+            method = method,
+            url = f"{self.base_url}{url}",
+            params = params,
+            json = data,
+            headers = headers,
         )
 
         # Ensure a JSON response is returned
