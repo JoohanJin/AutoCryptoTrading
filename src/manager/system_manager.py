@@ -2,9 +2,9 @@
 import os
 import time
 import sys
+from dotenv import load_dotenv
 
 # CUSTOM LIBRARY
-from dotenv import load_dotenv
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from manager.data_collector_and_processor import DataCollectorAndProcessor, IndexFactory
 from manager.signal_generator import SignalGenerator
