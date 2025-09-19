@@ -18,9 +18,9 @@ class CommonBaseSDK:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        base_url: str = "",
+        base_url: str,
+        api_key: str | None = None,
+        secret_key: str | None = None,
     ):
         self.api_key = api_key
         self.secret_key = secret_key
@@ -73,9 +73,10 @@ class CommonBaseSDK:
             Literal["DELETE"],
         ],
         url: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        api_key_title: str,
+        params: dict | None = None,
+        data: dict | None = None,
+        headers: dict | None = None,
     ) -> dict | None:
         """
         func call:
@@ -118,9 +119,9 @@ class CommonBaseSDK:
                 },
             )
 
-        # Add API key to headers if needed
+        # # Add API key to headers if needed
         if self.api_key:
-            headers["ApiKey"] = self.api_key
+            headers[api_key_title] = self.api_key
 
         # Perform the request
         response = self.session.request(
