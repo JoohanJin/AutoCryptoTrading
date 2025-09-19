@@ -18,7 +18,9 @@ class FutureMarket(FutureBase):
     ######################################################################################################################
     """
 
-    def ping(self) -> dict:
+    def ping(
+        self: "FutureMarket",
+    ) -> dict:
         """
         - func ping():
             - Get The Server Time
@@ -33,13 +35,28 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-server-time
         """
         url: str = "api/v1/contract/ping"
+
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
+        )
+
+    def server_time(
+        self: "FutureMarket",
+    ) -> dict:
+        """
+        - func server_time():
+            - Get The Server Time from the mexc api endpoint.
+        """
+        url: str = "api/v1/contract/ping"
+
+        return self.call(
+            method = "GET",
+            url = url,
         )
 
     def detail(
-        self,
+        self: "FutureMarket",
         symbol: Optional[str] = "BTC_USDT",
     ) -> dict:
         """
@@ -57,13 +74,16 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-information
         """
         url: str = "api/v1/contract/detail"
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(symbol=symbol),
+            method = "GET",
+            url = url,
+            params = dict(symbol = symbol),
         )
 
-    def support_currencies(self):
+    def support_currencies(
+        self: "FutureMarket",
+    ) -> dict:
         """
         - func support_currencies():
             - Get the transferable currencies
@@ -78,13 +98,14 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-transferable-currencies
         """
         url: str = "/api/v1/contract/support_currencies"
+
         return self.call(
             method="GET",
             url=url,
         )
 
     def depth(
-        self,
+        self: "FutureMarket",
         symbol: str = "BTC_USDT",
         limit: Optional[int] = None,
     ) -> dict:
@@ -103,13 +124,22 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-the-contract-s-depth-information
         """
         url: str = f"api/v1/contract/depth/{symbol}"
+
+        params: dict[str, int] = dict()
+        if limit is not None:
+            params["limit"] = limit
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(limit=limit),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
-    def depth_commits(self, limit: int = 5, symbol: str = "BTC_USDT") -> dict:
+    def depth_commits(
+        self: "FutureMarket",
+        symbol: str = "BTC_USDT",
+        limit: int = 5,
+    ) -> dict:
         """
         - func depth_commits():
             - Get a snapshot of the lastest N depth information of the contract
@@ -125,13 +155,21 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-a-snapshot-of-the-latest-n-depth-information-of-the-contract
         """
         url: str = f"api/v1/contract/depth_commits/{symbol}/{limit}"
+
+        params: dict[str, int] = dict()
+        if limit is not None:
+            params["limit"] = limit
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(limit=limit),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
-    def index_price(self, symbol: str = "BTC_USDT") -> dict:
+    def index_price(
+        self: "FutureMarket",
+        symbol: str = "BTC_USDT",
+    ) -> dict:
         """
         - func index_price()
             - Get contract index price
@@ -146,13 +184,14 @@ class FutureMarket(FutureBase):
             - https://mexcdevelop.github.io/apidocs/contract_v1_en/?python#get-contract-index-price
         """
         url: str = f"api/v1/contract/index_price/{symbol}"
+
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
         )
 
     def fair_price(
-        self,
+        self: "FutureMarket",
         symbol: str = "BTC_USDT",
     ) -> dict:
         """
@@ -170,12 +209,12 @@ class FutureMarket(FutureBase):
         """
         url: str = f"api/v1/contract/fair_price/{symbol}"
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
         )
 
     def funding_rate(
-        self,
+        self: "FutureMarket",
         symbol: str = "BTC_USDT",
     ) -> dict:
         """
@@ -190,8 +229,8 @@ class FutureMarket(FutureBase):
         """
         url: str = f"api/v1/contract/funding_rate/{symbol}"
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
         )
 
     def kline(
@@ -210,9 +249,9 @@ class FutureMarket(FutureBase):
                 Literal["Month1"],
             ]
         ] = "Min1",  # default value is one minute.
-        start: Optional[int] = None,
-        end: Optional[int] = None,
         symbol: str = "BTC_USDT",
+        start_time: int | None = None,
+        end_time: int | None = None,
     ):
         """
         - func kline():
@@ -238,10 +277,21 @@ class FutureMarket(FutureBase):
             - if neither start time nor end time is provided, the 2000 pieces of data closest to the current time in the system are queried.
         """
         url: str = f"api/v1/contract/kline/{symbol}"
+
+        params: dict[str, int | str] = dict(
+            symbol = symbol,
+            interval = interval,
+        )
+
+        if start_time is not None:
+            params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(symbol=symbol, interval=interval, start=start, end=end),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
     def kline_index_price(
@@ -260,9 +310,9 @@ class FutureMarket(FutureBase):
                 Literal["Month1"],
             ]
         ] = "Min1",
-        start: Optional[int] = None,
-        end: Optional[int] = None,
         symbol: str = "BTC_USDT",
+        start_time: int | None = None,
+        end_time: int | None = None,
     ):
         """
         - func kline_index_price():
@@ -281,15 +331,21 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/kline/index_price/{symbol}"
+
+        params: dict[str, int | str] = dict(
+            symbol=symbol,
+            interval=interval,
+        )
+
+        if start_time is not None:
+            params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
+
         return self.call(
-            "GET",
-            url,
-            params=dict(
-                symbol=symbol,
-                interval=interval,
-                start=start,
-                end=end,
-            ),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
     def kline_fair_price(
@@ -308,9 +364,9 @@ class FutureMarket(FutureBase):
                 Literal["Month1"],
             ]
         ] = "Min1",
-        start: Optional[int] = None,
-        end: Optional[int] = None,
         symbol: str = "BTC_USDT",
+        start_time: int | None = None,
+        end_time: int | None = None,
     ):
         """
         - func kline_fair_price():
@@ -329,19 +385,25 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/kline/fair_price/{symbol}"
+
+        params: dict[str | int] = dict(
+            symbol = symbol,
+            interval = interval,
+        )
+
+        if start_time is not None:
+            params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(
-                symbol=symbol,
-                interval=interval,
-                start=start,
-                end=end,
-            ),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
     def deals(
-        self,
+        self: "FutureMarket",
         limit: Optional[int] = 100,
         symbol: str = "BTC_USDT",
     ) -> dict:
@@ -357,17 +419,20 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = f"api/v1/contract/deals/{symbol}"
+
+        params: dict[str, int] = dict(
+            symbol = symbol,
+            limit = limit,
+        )
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(
-                symbol=symbol,
-                limit=limit,
-            ),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
     def ticker(
-        self,
+        self: "FutureMarket",
         symbol: Optional[str] = "BTC_USDT",
     ):
         """
@@ -381,15 +446,20 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = "api/v1/contract/ticker"
-        return self.call(
-            method="GET",
-            url=url,
-            params=dict(
-                symbol=symbol,
-            ),
+
+        params: dict[str, str] = dict(
+            symbol = symbol,
         )
 
-    def risk_reverse(self):
+        return self.call(
+            method = "GET",
+            url = url,
+            params = params,
+        )
+
+    def risk_reverse(
+        self: "FutureMarket",
+    ):
         """
         - func risk_reverse():
             - get all contract risk fund balance
@@ -402,12 +472,12 @@ class FutureMarket(FutureBase):
         """
         url: str = "api/v1/contract/risk_reverse"
         return self.call(
-            method="GET",
-            url=url,
+            method = "GET",
+            url = url,
         )
 
     def risk_reverse_history(
-        self,
+        self: "FutureMarket",
         symbol: str = "BTC_USDT",
         page_num: int = 1,
         page_size: int = 100,
@@ -425,10 +495,17 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = "api/v1/contract/risk_reverse/history"
+
+        params: dict[str, str | int] = dict(
+            symbol = symbol,
+            page_num = page_num,
+            page_size = page_size,
+        )
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(symbol=symbol, page_num=page_num, page_size=page_size),
+            method = "GET",
+            url = url,
+            params = params,
         )
 
     def funding_rate_history(
@@ -450,14 +527,17 @@ class FutureMarket(FutureBase):
             - 20 times / 2 seconds
         """
         url: str = "api/v1/contract/funding_rate/history"
+
+        params: dict[int, str | int] = dict(
+            symbol = symbol,
+            page_num = page_num,
+            page_size = page_size,
+        )
+
         return self.call(
-            method="GET",
-            url=url,
-            params=dict(
-                symbol=symbol,
-                page_num=page_num,
-                page_size=page_size,
-            ),
+            url = url,
+            method = "GET",
+            params = params,
         )
 
     """
@@ -466,7 +546,7 @@ class FutureMarket(FutureBase):
     ######################################################################################################################
     """
 
-    def assets(self):
+    def assets(self: "FutureMarket",):
         """
         - method: assets()
             - Getting all information of user's asset
@@ -477,10 +557,13 @@ class FutureMarket(FutureBase):
         - Request parameters
             - None
         """
-        return self.call("GET", "api/v1/private/account/assets")
+        return self.call(
+            method = "GET",
+            url = "api/v1/private/account/assets",
+        )
 
     def asset(
-        self,
+        self: "FutureMarket",
         currency: str = "USDT",
     ):
         """
@@ -496,11 +579,11 @@ class FutureMarket(FutureBase):
         return self.call("GET", f"api/v1/private/account/asset/{currency}")
 
     def history_position(
-        self,
-        symbol: Optional[str] = "BTC_USDT",
-        type: Optional[int] = None,
-        page_num: Optional[int] = 1,
-        page_size: Optional[int] = 100,
+        self: "FutureMarket",
+        symbol: str = "BTC_USDT",
+        type: int = None,
+        page_num: int | None = 1,
+        page_size: int | None = 100,
     ):
         """
         - method: history_position()
@@ -515,15 +598,20 @@ class FutureMarket(FutureBase):
             - page_num: current page, default is 1
             - page_size
         """
-        return self.call(
-            "GET",
-            "api/v1/private/position/list/history_positions",
-            params=dict(
-                symbol=symbol, type=type, page_num=page_num, page_size=page_size
-            ),
+        params: dict[str, str | int] = dict(
+            symbol = symbol,
+            type = type,
+            page_num = page_num,
+            page_size = page_size,
         )
 
-    def current_position(self, symbol: Optional[str] = "BTC_USDT"):
+        return self.call(
+            method = "GET",
+            url = "api/v1/private/position/list/history_positions",
+            params = params,
+        )
+
+    def current_position(self, symbol: str = "BTC_USDT"):
         """
         - method: current_position()
             - get the user's current holding position
@@ -534,15 +622,21 @@ class FutureMarket(FutureBase):
         - request parameters:
             - symbol: str, optional, the name of the contract
         """
+        params: dict[str, str | int] = dict(
+            symbol = symbol,
+        )
+
         return self.call(
-            "GET", "api/v1/private/position/open_positions", params=dict(symbol=symbol)
+            method = "GET",
+            url = "api/v1/private/position/open_positions",
+            params = params,
         )
 
     def pending_order(
-        self,
-        symbol: Optional[str] = "BTC_USDT",
-        page_num: Optional[int] = 1,
-        page_size: Optional[int] = 100,
+        self: "FutureMarket",
+        symbol: str | None = "BTC_USDT",
+        page_num: int | None = 1,
+        page_size: int | None = 100,
     ):
         """
         - method: pending_order
@@ -556,13 +650,21 @@ class FutureMarket(FutureBase):
             - page_num: int, required,
             - page_size: int, required
         """
-        return self.call(
-            "GET",
-            f"api/v1/private/order/list/open_orders/{symbol}",
-            params=dict(symbol=symbol, page_num=page_num, page_size=page_size),
+        url: str = "api/v1/private/order/list/open_orders"
+
+        params: dict[str, str | int] = dict(
+            symbol = symbol,
+            page_num = page_num,
+            page_size = page_size,
         )
 
-    def risk_limit(self, symbol: Optional[str] = "BTC_USDT"):
+        return self.call(
+            method = "GET",
+            url = url,
+            params = params,
+        )
+
+    def risk_limit(self: "FutureMarket", symbol: str = "BTC_USDT"):
         """
         - method: risk_limit()
             - get the user's current pending order
@@ -573,11 +675,15 @@ class FutureMarket(FutureBase):
         - request parameters:
             - symbol: str, optional, the name of the contract, not uploaded will return all
         """
-        return self.call(
-            "GET", "api/v1/private/account/risk_limit", params=dict(symbol=symbol)
+        params: dict[str, str] = dict(
+            symbol = symbol,
         )
 
-    def fee_rate(self, symbol: Optional[str] = "BTC_USDT"):
+        return self.call(
+            method = "GET", url = "api/v1/private/account/risk_limit", params = params,
+        )
+
+    def fee_rate(self: "FutureMarket", symbol: str = "BTC_USDT"):
         """
         - method: fee_rate()
             - get the user's current rading fee rate
@@ -589,11 +695,13 @@ class FutureMarket(FutureBase):
             - symbol: str, optional, the nmae of the contract
         """
         return self.call(
-            "GET", "api/v1/private/account/tiered_fee_rate", params=dict(symbol=symbol)
+            method = "GET",
+            url = "api/v1/private/account/tiered_fee_rate",
+            params = dict(symbol = symbol),
         )
 
     def place_order(
-        self,
+        self: "FutureMarket",
         price: float,
         vol: float,
         side: int,  # 1 and 3
@@ -688,24 +796,26 @@ class FutureMarket(FutureBase):
                     - one-way positions: if you need to only reduce positions, pass in true
                     - two-way positions: will not accept this parameter.
         """
+        params: dict[str, str | int | float] = dict(
+            symbol = symbol,
+            price = price,
+            vol = vol,
+            leverage = leverage,
+            side = side,
+            type = type,
+            openType = openType,
+            positionId = positionId,
+            externalOid = externalOid,
+            stopLossPrice = stopLossPrice,
+            takeProfitPrice = takeProfitPrice,
+            positionMode = positionMode,
+            reduceOnly = reduceOnly,
+        )
+
         return self.call(
-            "POST",
-            "api/v1/private/order/submit",
-            params=dict(
-                symbol=symbol,
-                price=price,
-                vol=vol,
-                leverage=leverage,
-                side=side,
-                type=type,
-                openType=openType,
-                positionId=positionId,
-                externalOid=externalOid,
-                stopLossPrice=stopLossPrice,
-                takeProfitPrice=takeProfitPrice,
-                positionMode=positionMode,
-                reduceOnly=reduceOnly,
-            ),
+            method = "POST",
+            url = "api/v1/private/order/submit",
+            params = params,
         )
 
 
@@ -721,11 +831,11 @@ class FutureWebSocket(_FutureWebSocket):
 
         # pass the parameters to the FutureWebSocket
         kwargs = dict(
-            api_key=api_key,
-            secret_key=secret_key,
-            ping_interval=ping_interval,
-            ping_timeout=ping_timeout,
-            conn_timeout=conn_timeout,
+            api_key = api_key,
+            secret_key = secret_key,
+            ping_interval = ping_interval,
+            ping_timeout = ping_timeout,
+            conn_timeout = conn_timeout,
         )
 
         super().__init__(**kwargs)

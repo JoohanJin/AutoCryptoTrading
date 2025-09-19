@@ -381,7 +381,11 @@ class __BasicWebSocketManager:
 
 # MexC Future Websocket Manager
 class _FutureWebSocketManager(__BasicWebSocketManager):
-    def __init__(self, ws_name = "FutureWebSocketV1", **kwargs):
+    def __init__(
+        self: "_FutureWebSocketManager",
+        ws_name: str = "FutureWebSocketV1",
+        **kwargs: dict,
+    ):
         super().__init__(ws_name = ws_name, **kwargs)
 
         # if there is no default function.
@@ -390,12 +394,15 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         return
 
     def subscribe(
-        self,
+        self: "_FutureWebSocketManager",
         method: Optional[str] = "sub.ticker",
         callback_function=None,
-        param: dict = {},
+        param: dict | None = None,  # do not modify the param
     ):
-        query = dict(method=method, param=param)
+        if (param is None):
+            param = dict()
+
+        query = dict(method = method, param = param)
 
         self._check_callback(query)
 
@@ -416,7 +423,10 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
         return
 
-    def _deal_with_response(self, msg):
+    def _deal_with_response(
+        self: "_FutureWebSocketManager",
+        msg: str,
+    ):
         # comprehensive callback function which can deal with all of the message
         """
         Types of Response
@@ -446,9 +456,9 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             return False
 
         if is_auth_response():
-            self._deal_with_auth_msg(msg=msg)
+            self._deal_with_auth_msg(msg = msg)
         elif is_sub_response():
-            self._deal_with_sub_msg(msg=msg)
+            self._deal_with_sub_msg(msg = msg)
         elif is_error_msg():
             operation_logger.info(
                 f"{__name__} - func _deal_with_response(): The error has been received from the host: {msg}"
@@ -456,7 +466,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         elif is_pong_msg():
             pass
         else:
-            self._deal_with_normal_msg(msg=msg)
+            self._deal_with_normal_msg(msg = msg)
 
         return
 
