@@ -35,3 +35,29 @@ class FutureBase(CommonBaseSDK):
         return super().generate_signature(
             query_string = query_string,
         )
+
+    def call(
+        self: "FutureBase",
+        method: Union[
+            Literal["GET"],
+            Literal["POST"],
+            Literal["PUT"],
+            Literal["DELETE"],
+        ],
+        url: str,
+        api_key_title: str = "ApiKey",
+        params: dict | None = None,
+        data: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict | None:
+        """
+        Make a call to the MEXC API.
+        """
+        return super().call(
+            method = method,
+            url = url,
+            api_key_title = api_key_title,
+            params = params,
+            data = data,
+            headers = headers,
+        )

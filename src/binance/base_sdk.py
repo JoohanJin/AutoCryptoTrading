@@ -1,5 +1,5 @@
 # Built in libraries
-from typing import Optional
+from typing import Union, Literal
 
 # Custom libraries
 from sdk.base_sdk import CommonBaseSDK
@@ -9,11 +9,10 @@ class FutureBase(CommonBaseSDK):
     """
     SDK for Binance Futures API, inheriting from CommonBaseAPI.
     """
-
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
+        self: "FutureBase",
+        api_key: str | None = None,
+        secret_key: str | None = None,
         base_url: str = "https://fapi.binance.com",
     ) -> None:
         # Please comment the following line if you want to turn off the testNet.
@@ -27,11 +26,39 @@ class FutureBase(CommonBaseSDK):
         # Set the specific content type for Binance
         self.set_content_type("application/x-www-form-urlencoded")
 
+        return
+
     def generate_signature(
-        self,
+        self: "FutureBase",
         query_string: str,
     ) -> str:
         """
         Generate the signature for Binance API.
         """
         return super().generate_signature(query_string = query_string)
+
+    def call(
+        self: "FutureBase",
+        method: Union[
+            Literal["GET"],
+            Literal["POST"],
+            Literal["PUT"],
+            Literal["DELETE"],
+        ],
+        url: str,
+        api_key_title: str = "X-MBX-APIKEY",
+        params: dict | None = None,
+        data: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict | None:
+        """
+        Make a call to the Binance API.
+        """
+        return super().call(
+            method = method,
+            url = url,
+            api_key_title = api_key_title,
+            params = params,
+            data = data,
+            headers = headers,
+        )
