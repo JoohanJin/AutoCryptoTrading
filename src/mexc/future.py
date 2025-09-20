@@ -1061,6 +1061,8 @@ class FutureWebSocket(_FutureWebSocket):
     ) -> None:
         # TODO: Need to implement the position function
         method = "sub.personal.position"
+
+        raise NotImplementedError
         return
 
     def risk_limitation(
@@ -1069,6 +1071,7 @@ class FutureWebSocket(_FutureWebSocket):
         param: dict | None = dict()
     ) -> None:
         # TODO: Need to implement the risk_limitation function
+        raise NotImplementedError
         return
 
     def adl(
@@ -1078,6 +1081,8 @@ class FutureWebSocket(_FutureWebSocket):
     ) -> None:
         # TODO: Need to implement the adl function
         method = "sub.personal.adl.level"
+
+        raise NotImplementedError
         return
 
     def position_mode(
@@ -1087,4 +1092,6 @@ class FutureWebSocket(_FutureWebSocket):
     ) -> None:
         # TODO: Need to implement the position_mode function
         method = "sub.personal.position.mode"
+
+        raise NotImplementedError
         return
