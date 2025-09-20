@@ -2,8 +2,7 @@ import requests
 import hmac
 import hashlib
 import time
-from typing import Union, Literal, Optional
-
+from typing import Union, Literal
 # from logger.set_logger import operation_logger
 
 
@@ -17,7 +16,7 @@ class CommonBaseSDK:
         return int(time.time() * 1_000)
 
     def __init__(
-        self,
+        self: "CommonBaseSDK",
         base_url: str,
         api_key: str | None = None,
         secret_key: str | None = None,
@@ -29,7 +28,7 @@ class CommonBaseSDK:
         # Initialize a session
         self.session = requests.Session()
 
-    def set_content_type(self, content_type: str):
+    def set_content_type(self: "CommonBaseSDK", content_type: str):
         """
         Set the Content-Type header for the session.
         """
@@ -40,7 +39,7 @@ class CommonBaseSDK:
         )
 
     def generate_signature(
-        self,
+        self: "CommonBaseSDK",
         query_string: str,
     ) -> str:
         """
@@ -59,13 +58,13 @@ class CommonBaseSDK:
             raise ValueError("Secret key is required for signature generation.")
 
         return hmac.new(
-            self.secret_key.encode("utf-8"),
-            query_string.encode("utf-8"),
-            hashlib.sha256,
+            key = self.secret_key.encode("utf-8"),
+            msg = query_string.encode("utf-8"),
+            digestmod = hashlib.sha256,
         ).hexdigest()
 
     def call(
-        self,
+        self: "CommonBaseSDK",
         method: Union[
             Literal["GET"],
             Literal["POST"],
