@@ -1,7 +1,7 @@
-# Built in libraries
+# Standard Library
 from typing import Union, Literal
 
-# Custom libraries
+# Custom Library
 from sdk.base_sdk import CommonBaseSDK
 
 
