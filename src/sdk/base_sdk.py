@@ -95,8 +95,11 @@ class CommonBaseSDK:
         if not url.startswith("/"):
             url = f"/{url}"
 
+        if not url.endswith("?"):
+            url = f"{url}?"
+
         # Generate timestamp
-        timestamp: str = str(CommonBaseSDK.generate_timestmap())
+        # timestamp: str = str(CommonBaseSDK.generate_timestmap())
 
         # Prepare query string for signature
         query_string: str = ""
@@ -104,28 +107,28 @@ class CommonBaseSDK:
             params = {k: v for k, v in params.items() if v is not None}
             query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
 
-        query_string = f"{self.api_key}{timestamp}{query_string}"
+        # query_string = f"{self.api_key}{timestamp}{query_string}"
+        query_string = f"{query_string}"
 
         # Add signature if API key and secret key are provided
+        signature: str = " "
         if self.api_key and self.secret_key:
             if headers is None:
                 headers = {}
 
             headers.update(
                 {
-                    "Request-Time": timestamp,
-                    "Signature": self.generate_signature(query_string = query_string),
+                    "Request-Time": str(CommonBaseSDK.generate_timestmap()),
+                    # "Signature": self.generate_signature(query_string = query_string),
                 },
             )
-
-        # # Add API key to headers if needed
-        if self.api_key:
             headers[api_key_title] = self.api_key
 
+        print(f"{self.base_url}{url}{query_string if query_string else ''}")
         # Perform the request
         response = self.session.request(
             method = method,
-            url = f"{self.base_url}{url}",
+            url = f"{self.base_url}{url}{query_string if query_string else ''}",
             params = params,
             json = data,
             headers = headers,

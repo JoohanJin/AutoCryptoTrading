@@ -25,17 +25,7 @@ class FutureBase(CommonBaseSDK):
         )
         # Set the specific content type for Binance
         self.set_content_type("application/x-www-form-urlencoded")
-
         return
-
-    def generate_signature(
-        self: "FutureBase",
-        query_string: str,
-    ) -> str:
-        """
-        Generate the signature for Binance API.
-        """
-        return super().generate_signature(query_string = query_string)
 
     def call(
         self: "FutureBase",

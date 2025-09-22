@@ -1,3 +1,8 @@
+# Standard Library
+from abc import abstractmethod
+import time
+
+# Custom Library
 from binance.base_sdk import FutureBase
 
 
@@ -10,9 +15,12 @@ class FutureMarket(FutureBase):
 
     probably need to change this to "BTCUSDC" in the future.
     """
+    @abstractmethod
+    def generate_timestmap() -> int:
+        return int(time.time() * 1_000)
 
     def __init__(
-        self,
+        self: "FutureMarket",
         api_key: str | None = None,
         secret_key: str | None = None,
         base_url: str | None = "https://fapi.binance.com",
@@ -24,7 +32,7 @@ class FutureMarket(FutureBase):
         )
 
     def ping(
-        self,
+        self: "FutureMarket",
     ) -> dict:
         """
         Test connectivity to the Rest API.
@@ -666,93 +674,194 @@ class FutureMarket(FutureBase):
 
     def new_order(
         self: "FutureMarket",
+        symbol: str = "BTCUSDT",
+        side: str = "BUY",
+        position_side: str | None = None,  # "BOTH", "LONG", "SHORT"
+        type: str = "MARKET",
+        time_in_force: str | None = None,
+        quantity: float | None = None,
+        price: float | None = None,
+        new_client_order_id: str | None = None,
+        stop_price: float | None = None,
+        close_position: str | None = None,
+        activation_price: float | None = None,
+        callback_rate: float | None = None,
+        working_type: str | None = None,
+        price_protect: str | None = None,
+        new_order_resp_type: str | None = None,
+        price_match: str | None = None,
+        self_trade_prevention_mode: str | None = None,
+        good_till_date: int | None = None,
+        recvWindow: int | None = 5_000,  # 5_000 ms is the default value, i.e., 5 sec.
+        timestamp: int | None = None,
     ):
+        raise NotImplementedError
         return
 
     def multiple_orders(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def modify_order(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def modify_multiple_orders(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def get_order_modify_history(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def cancel_order(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def cancel_multiple_orders(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def cancel_all_orders(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def auto_cancel_all_open_orders(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def query_order(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
-    def query_all_orders(self: "FutureMarket",):
-        return
+    def query_all_orders(
+        self: "FutureMarket",
+        symbol: str = "BTCUSDT",
+        order_id: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = 500,  # max 1_000
+        recv_window: int | None = 5_000,
+        timestamp: int | None = None,
+    ):
+        url: str = "/fapi/v1/allOrders"
+
+        params: dict[str, int | str] = {
+            "symbol": symbol,
+            "timestamp": timestamp if timestamp is not None else FutureMarket.generate_timestmap(),
+        }
+
+        if order_id is not None:
+            params["orderId"] = order_id
+        if start_time is not None:
+            params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
+        if limit is not None:
+            params["limit"] = limit
+        if recv_window is not None:
+            params["recvWindow"] = recv_window
+
+        return self.call(
+            method = "GET",
+            url = url,
+            params = params,
+        )
 
     def query_open_order(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def query_all_open_orders(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def query_account_trades(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def query_user_force_orders(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def change_margin_type(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def change_position_mode(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def change_initial_leverage(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def change_multi_assets_mode(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def change_isolated_position_margin(
         self: "FutureMarket",
     ):
+        raise NotImplementedError
         return
 
     def postion_info_v2(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def position_info_v3(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def position_adl_quantile_estimation(self: "FutureMarket",):
+        raise NotImplementedError
         return
 
     def get_position_margin_history(self: "FutureMarket",):
         return
 
     def test_new_order(self: "FutureMarket",):
+        raise NotImplementedError
+        return
+
+    def future_account_balance_v3(
+        self: "FutureMarket",
+        url: str = "/fapi/v3/balance",
+        recv_window: int = 5_000,
+    ):
+        params: dict[str, int] = dict(
+            recvWindow = recv_window,
+            timestamp = FutureMarket.generate_timestmap(),
+        )
+
+        return self.call(
+            method = "GET",
+            params = params,
+            url = url,
+        )
+
+
+class FutureWebSocket:
+    """
+    WebSocket endpoints for Binance Futures API.
+    """
+
+    def __init__(
+        self: "FutureWebSocket",
+    ) -> None:
         return
