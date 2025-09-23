@@ -41,20 +41,6 @@ class FutureMarket(FutureBase):
             url = url,
         )
 
-    def server_time(
-        self: "FutureMarket",
-    ) -> dict:
-        """
-        - func server_time():
-            - Get The Server Time from the mexc api endpoint.
-        """
-        url: str = "api/v1/contract/ping"
-
-        return self.call(
-            method = "GET",
-            url = url,
-        )
-
     def detail(
         self: "FutureMarket",
         symbol: str | None = "BTC_USDT",
