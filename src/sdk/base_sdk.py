@@ -3,10 +3,10 @@ import hmac
 import hashlib
 import time
 from typing import Union, Literal
-# from logger.set_logger import operation_logger
+from abc import ABC, abstractmethod
 
 
-class CommonBaseSDK:
+class CommonBaseSDK(ABC):
     """
     A common base class for handling API requests, signature generation, and session management
     for different exchange SDKs (e.g., MEXC and Binance).
@@ -63,6 +63,7 @@ class CommonBaseSDK:
             digestmod = hashlib.sha256,
         ).hexdigest()
 
+    @abstractmethod
     def call(
         self: "CommonBaseSDK",
         method: Union[
@@ -91,51 +92,4 @@ class CommonBaseSDK:
 
         return: JSON response from the API
         """
-        # Ensure the URL starts with "/"
-        if not url.startswith("/"):
-            url = f"/{url}"
-
-        if not url.endswith("?"):
-            url = f"{url}?"
-
-        # Generate timestamp
-        # timestamp: str = str(CommonBaseSDK.generate_timestmap())
-
-        # Prepare query string for signature
-        query_string: str = ""
-        if params:
-            params = {k: v for k, v in params.items() if v is not None}
-            query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-
-        # query_string = f"{self.api_key}{timestamp}{query_string}"
-        query_string = f"{query_string}"
-
-        # Add signature if API key and secret key are provided
-        signature: str = " "
-        if self.api_key and self.secret_key:
-            if headers is None:
-                headers = {}
-
-            headers.update(
-                {
-                    "Request-Time": str(CommonBaseSDK.generate_timestmap()),
-                    # "Signature": self.generate_signature(query_string = query_string),
-                },
-            )
-            headers[api_key_title] = self.api_key
-
-        print(f"{self.base_url}{url}{query_string if query_string else ''}")
-        # Perform the request
-        response = self.session.request(
-            method = method,
-            url = f"{self.base_url}{url}{query_string if query_string else ''}",
-            params = params,
-            json = data,
-            headers = headers,
-        )
-
-        # Ensure a JSON response is returned
-        try:
-            return response.json()
-        except ValueError:
-            response.raise_for_status()
+        return
