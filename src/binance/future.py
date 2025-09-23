@@ -15,10 +15,6 @@ class FutureMarket(FutureBase):
 
     probably need to change this to "BTCUSDC" in the future.
     """
-    @abstractmethod
-    def generate_timestmap() -> int:
-        return int(time.time() * 1_000)
-
     def __init__(
         self: "FutureMarket",
         api_key: str | None = None,

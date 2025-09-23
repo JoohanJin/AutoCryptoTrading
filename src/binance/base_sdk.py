@@ -2,6 +2,7 @@
 from typing import Union, Literal
 
 # Custom Library
+from logger.set_logger import operation_logger
 from sdk.base_sdk import CommonBaseSDK
 
 
@@ -11,9 +12,9 @@ class FutureBase(CommonBaseSDK):
     """
     def __init__(
         self: "FutureBase",
+        base_url: str = "https://fapi.binance.com",
         api_key: str | None = None,
         secret_key: str | None = None,
-        base_url: str = "https://fapi.binance.com",
     ) -> None:
         # Please comment the following line if you want to turn off the testNet.
         # base_url = "https://testnet.binancefuture.com"  # this is the testNet
@@ -44,11 +45,52 @@ class FutureBase(CommonBaseSDK):
         """
         Make a call to the Binance API.
         """
-        return super().call(
+        # Ensure the URL starts with "/"
+        if not url.startswith("/"):
+            url = f"/{url}"
+
+        if params is not None:
+            params = {key: value for key, value in params.items() if value is not None}
+            query_string = "&".join(f"{key}={value}" for key, value in sorted(params.items()))
+        else:  # if params is None
+            query_string: str = ""
+
+        # apiKey in header
+        if self.api_key and self.secret_key:  # menas it is signed instance.
+            if headers is not None:
+                headers.update(
+                    {
+                        api_key_title: self.api_key,
+                    }
+                )
+            else:
+                headers = {
+                    api_key_title: self.api_key,
+                }
+
+            signature: str = " " + self.generate_signature(query_string)
+            if params is not None:
+                params.update(
+                    {
+                        "signature": signature
+                    }
+                )
+            else:
+                params = dict(
+                    signature = signature
+                )
+
+        request = self.session.request(
+            url = f"{self.base_url}{url}",
+            json = data,
             method = method,
-            url = url,
-            api_key_title = api_key_title,
             params = params,
-            data = data,
             headers = headers,
         )
+
+        try:
+            return request.json()
+        except ValueError:
+            request.raise_for_status()
+        except Exception as e:
+            operation_logger.critical(f"{__name__} - Unknown Exception: {str(e)}")
