@@ -1,4 +1,4 @@
-# Built-in Library
+# Standard Library
 import hmac
 import json
 import threading
@@ -6,9 +6,7 @@ import websocket_base  # as 1.recommended in the API page, https://websocket-cli
 import time
 import hashlib
 
-# import threading
-
-# Customized Library
+# Custom Library
 from logger.set_logger import operation_logger
 
 
@@ -225,21 +223,6 @@ class __BasicWebSocketManager:
             AttributeError
         ):  # exception handling, if there is any error occurred just return False
             return False
-
-    # def _generate_signature(self):
-    #     """
-    #     # make a signature for future private websocket API
-    #     # Do we need this?
-    #     """
-    #     timestamp = str(int(time.time() * 1000))
-    #     _query_str = self.api_key + timestamp
-    #     signature = hmac.new(
-    #         self.secret_key.encode("utf-8"),
-    #         _query_str.encode("utf-8"),
-    #         hashlib.sha256
-    #         ).hexdigest()
-
-    #     return signature
 
     def __on_message(
         self: "__BasicWebSocketManager",
@@ -510,7 +493,9 @@ class _FutureWebSocket(_FutureWebSocketManager):
 
         # initialize the WebSocket for Future End-point
         self.ws = _FutureWebSocketManager(
-            self.ws_name, api_key = self.api_key, secret_key = self.secret_key
+            ws_name = self.ws_name,
+            api_key = self.api_key,
+            secret_key = self.secret_key,
         )
         # connect the WebSocket to the API
         self.ws._connect(self.endpoint)
@@ -533,7 +518,9 @@ class _FutureWebSocket(_FutureWebSocketManager):
 
         if not self.ws:
             self.ws = _FutureWebSocketManager(
-                self.ws_name, api_key = self.api_key, secret_key = self.secret_key
+                ws_name = self.ws_name,
+                api_key = self.api_key,
+                secret_key = self.secret_key,
             )
 
             self.ws._connect(url = self.endpoint)

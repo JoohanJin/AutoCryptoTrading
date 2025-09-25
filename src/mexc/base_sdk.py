@@ -1,6 +1,7 @@
 # Built in libraries
 from urllib.parse import urlencode
 from typing import Optional, Union, Literal
+import json
 
 # Custom libraries
 from sdk.base_sdk import CommonBaseSDK
@@ -79,7 +80,7 @@ class FutureBase(CommonBaseSDK):
             url = f"{self.base_url}{url}",
             params = params,
             headers = headers,
-            json = data,
+            data = data if data is None else json.dumps(data),
         )
 
         try:

@@ -1,5 +1,6 @@
 # Standard Library
 from typing import Union, Literal
+import json
 
 # Custom Library
 from logger.set_logger import operation_logger
@@ -52,8 +53,10 @@ class FutureBase(CommonBaseSDK):
         if params is not None:
             params = {key: value for key, value in params.items() if value is not None}
             query_string = "&".join(f"{key}={value}" for key, value in sorted(params.items()))
-        else:  # if params is None
+        else:
             query_string: str = ""
+
+        query_string = f"{query_string}"
 
         # apiKey in header
         if self.api_key and self.secret_key:  # menas it is signed instance.
@@ -68,24 +71,24 @@ class FutureBase(CommonBaseSDK):
                     api_key_title: self.api_key,
                 }
 
-            signature: str = " " + self.generate_signature(query_string)
+            signature: str = self.generate_signature(query_string)
             if params is not None:
                 params.update(
                     {
-                        "signature": signature
+                        "signature": signature,
                     }
                 )
             else:
                 params = dict(
-                    signature = signature
+                    signature = signature,
                 )
 
         request = self.session.request(
             url = f"{self.base_url}{url}",
-            json = data,
             method = method,
             params = params,
             headers = headers,
+            data = data if data is None else json.dumps(data),
         )
 
         try:
