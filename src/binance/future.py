@@ -674,12 +674,12 @@ class FutureMarket(FutureBase):
         side: str = "BUY",
         position_side: str | None = None,  # "BOTH", "LONG", "SHORT"
         type: str = "MARKET",
-        time_in_force: str | None = None,
+        time_in_force: str | None = "GTC",
         quantity: float | None = None,
         price: float | None = None,
         new_client_order_id: str | None = None,
         stop_price: float | None = None,
-        close_position: str | None = None,
+        close_position: str | None = None,  # bool: true or false
         activation_price: float | None = None,
         callback_rate: float | None = None,
         working_type: str | None = None,
@@ -691,6 +691,10 @@ class FutureMarket(FutureBase):
         recvWindow: int | None = 5_000,  # 5_000 ms is the default value, i.e., 5 sec.
         timestamp: int | None = None,
     ):
+        '''
+        - new_order()
+            - make a new order in the
+        '''
         raise NotImplementedError
         return
 
@@ -839,7 +843,38 @@ class FutureMarket(FutureBase):
         self: "FutureMarket",
         url: str = "/fapi/v3/balance",
         recv_window: int = 5_000,
-    ):
+    ) -> dict | None:
+        params: dict[str, int] = dict(
+            recvWindow = recv_window,
+            timestamp = FutureMarket.generate_timestmap(),
+        )
+
+        return self.call(
+            method = "GET",
+            params = params,
+            url = url,
+        )
+
+    def future_account_balance_v2(
+        self: "FutureMarket",
+        url: str = "/fapi/v2/balance",
+        recv_window: int = 5_000,
+    ) -> dict | None:
+        params: dict[str, int] = dict(
+            recvWindow = recv_window,
+            timestamp = FutureMarket.generate_timestmap(),
+        )
+        return self.call(
+            method = "GET",
+            params = params,
+            url = url,
+        )
+
+    def account_information_v2(
+        self: "FutureMarket",
+        url: str = "/fapi/v2/account",
+        recv_window: int = 5_000,
+    ) -> dict[str, int]:
         params: dict[str, int] = dict(
             recvWindow = recv_window,
             timestamp = FutureMarket.generate_timestmap(),
