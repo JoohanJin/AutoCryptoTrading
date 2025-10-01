@@ -1,5 +1,6 @@
 # Standard Library
 from typing import Union, Literal
+from urllib.parse import urlencode
 import json
 
 # Custom Library
@@ -46,54 +47,39 @@ class FutureBase(CommonBaseSDK):
         """
         Make a call to the Binance API.
         """
-        # Ensure the URL starts with "/"
-        if not url.startswith("/"):
-            url = f"/{url}"
+        url = url if url.startswith("/") else f"/{url}"
 
-        if params is not None:
-            params = {key: value for key, value in params.items() if value is not None}
-            query_string = "&".join(f"{key}={value}" for key, value in sorted(params.items()))
-        else:
-            query_string: str = ""
+        filtered_params: dict[str, str | int] = {
+            key: value
+            for key, value in (params.items() if params else dict)
+            if value is not None
+        }
 
-        query_string = f"{query_string}"
+        request_headers: dict[str, str | int] = headers.copy() if headers else {}
 
-        # apiKey in header
-        if self.api_key and self.secret_key:  # menas it is signed instance.
-            if headers is not None:
-                headers.update(
-                    {
-                        api_key_title: self.api_key,
-                    }
-                )
-            else:
-                headers = {
-                    api_key_title: self.api_key,
-                }
+        if (self.api_key and self.secret_key):
+            request_headers[api_key_title] = self.api_key
+            query_string = urlencode(list(filtered_params.items()))
+            filtered_params["signature"] = self.generate_signature(query_string)
 
-            signature: str = self.generate_signature(query_string)
-            if params is not None:
-                params.update(
-                    {
-                        "signature": signature,
-                    }
-                )
-            else:
-                params = dict(
-                    signature = signature,
-                )
-
-        request = self.session.request(
-            url = f"{self.base_url}{url}",
-            method = method,
-            params = params,
-            headers = headers,
-            data = data if data is None else json.dumps(data),
+        request_params = filtered_params or None
+        request_data = (
+            json.dumps(data)
+            if data is not None and not isinstance(data, (str, bytes))
+            else data
         )
 
         try:
-            return request.json()
+            response = self.session.request(
+                url = f"{self.base_url}{url}",
+                method = method,
+                params = request_params,
+                headers = request_headers,
+                data = request_data,
+            )
+
+            return response.json()
         except ValueError:
-            request.raise_for_status()
+            response.raise_for_status()
         except Exception as e:
             operation_logger.critical(f"{__name__} - Unknown Exception: {str(e)}")

@@ -55,6 +55,7 @@ class CommonBaseSDK(ABC):
             - if we do not disgest using hexdigest, the signature will be a hmac object.
         """
         if not self.secret_key:
+            # !: this api is not sigend.
             raise ValueError("Secret key is required for signature generation.")
 
         return hmac.new(

@@ -1,6 +1,7 @@
 # Standard Library
 from abc import abstractmethod
 import time
+from typing import Literal, Union
 
 # Custom Library
 from binance.base_sdk import FutureBase
@@ -667,19 +668,60 @@ class FutureMarket(FutureBase):
     """
     # ORDER ENDPOINTS
     """
+    def order(
+        self: "FutureMarket",
+        sl_price: float,
+        tp_price: float,
+        symbol_curr_price: float,  # get it from the binance websocket possibly.
+        symbol: str = "BTCUSDT",
+        side: str = Union[Literal["BUY"], Literal["SELL"]],
+    ) -> dict | None:
+        '''
+        - Call two different new_order():
+            - one for the original position
+            - the other for
+
+        - Need to send two/three different new_order requests.
+
+        - calculating the btc quantity:
+            - NUM_OF_BTC = floor((USDT_AMT) / (markPrice) to stepSize)
+        '''
+        # ORDER
+
+        # TODO: decide the following:
+        # Sequential manner or multi-threaded manner?
+
+        # SL
+        self.new_order(
+            symbol = symbol,
+            stop_price = sl_price,
+            type = "STOP_MARKET",
+            side = "BUY" if side == "SELL" else "SELL",  # Opposite
+            close_position = "true",
+        )
+
+        # TP
+        self.new_order(
+            symbol = symbol,
+            stop_price = tp_price,
+            type = "TAKE_PROFIT_MARKET",
+            side = "BUY" if side == "SELL" else "SELL",
+            close_position = "true",
+        )
+        return
 
     def new_order(
         self: "FutureMarket",
+        side: Union[Literal["BUY"], Literal["SELL"]],
         symbol: str = "BTCUSDT",
-        side: str = "BUY",
         position_side: str | None = None,  # "BOTH", "LONG", "SHORT"
-        type: str = "MARKET",
+        type: Union[Literal["MARKET"], Literal["TAKE_PROFIT_MARKET"], Literal["STOP_MARKET"]] = "MARKET",
         time_in_force: str | None = "GTC",
         quantity: float | None = None,
         price: float | None = None,
         new_client_order_id: str | None = None,
         stop_price: float | None = None,
-        close_position: str | None = None,  # bool: true or false
+        close_position: Union[Literal["true"], Literal["false"]] | None = None,  # bool: true or false
         activation_price: float | None = None,
         callback_rate: float | None = None,
         working_type: str | None = None,
@@ -689,13 +731,19 @@ class FutureMarket(FutureBase):
         self_trade_prevention_mode: str | None = None,
         good_till_date: int | None = None,
         recvWindow: int | None = 5_000,  # 5_000 ms is the default value, i.e., 5 sec.
-        timestamp: int | None = None,
-    ):
+    ) -> dict | None:
         '''
         - new_order()
-            - make a new order in the
+            - make a new order in the Binance FUTURE Market
+
+        - basic requirements:
+            - the order should be in market order.
+            - to provide the SL price and TP price.
+            - to provide the USDT Amount to buy or sell. (NOT BTC AMT)
+            - to set the leverage, 20 by default.
         '''
-        raise NotImplementedError
+        # TODO: need to implement this.
+
         return
 
     def multiple_orders(
@@ -806,9 +854,25 @@ class FutureMarket(FutureBase):
         raise NotImplementedError
         return
 
-    def change_initial_leverage(self: "FutureMarket",):
-        raise NotImplementedError
-        return
+    def change_initial_leverage(
+        self: "FutureMarket",
+        url: str = "/fapi/v1/leverage",
+        symbol: str = "BTCUSDT",
+        leverage: int = 20,
+        recvWindow: int = 5000,
+    ):
+        params = {
+            "symbol": symbol,
+            "leverage": leverage,
+            "recvWindow": recvWindow,
+            "timestamp": FutureMarket.generate_timestmap(),
+        }
+
+        return self.call(
+            method = "POST",
+            url = url,
+            params = params,
+        )
 
     def change_multi_assets_mode(self: "FutureMarket",):
         raise NotImplementedError
