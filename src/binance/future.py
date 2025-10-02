@@ -558,8 +558,8 @@ class FutureMarket(FutureBase):
         symbol: str = "BTCUSDT",
         period: str = "5m",  # 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d
         limit: int = 30,  # maximum 500,
-        startTime: int | None = None,
-        endTime: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> dict:
         """
         - Get the taker buy/sell volume for a specific symbol and time period.
@@ -570,10 +570,10 @@ class FutureMarket(FutureBase):
             "period": period,
             "limit": limit,
         }
-        if startTime is not None:
-            params["startTime"] = startTime
-        if endTime is not None:
-            params["endTime"] = endTime
+        if start_time is not None:
+            params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
 
         return self.call(
             method = "GET",
@@ -667,6 +667,8 @@ class FutureMarket(FutureBase):
 
     """
     # ORDER ENDPOINTS
+    # For Post, need to keep the order of items in the params.
+    # we are not using the
     """
     def order(
         self: "FutureMarket",
@@ -675,13 +677,12 @@ class FutureMarket(FutureBase):
         symbol_curr_price: float,  # get it from the binance websocket possibly.
         symbol: str = "BTCUSDT",
         side: str = Union[Literal["BUY"], Literal["SELL"]],
+        recv_window: int = 5_000,
     ) -> dict | None:
         '''
-        - Call two different new_order():
+        - Call three different new_order():
             - one for the original position
-            - the other for
-
-        - Need to send two/three different new_order requests.
+            - Others for TP and SL
 
         - calculating the btc quantity:
             - NUM_OF_BTC = floor((USDT_AMT) / (markPrice) to stepSize)
@@ -691,8 +692,17 @@ class FutureMarket(FutureBase):
         # TODO: decide the following:
         # Sequential manner or multi-threaded manner?
 
-        # SL
-        self.new_order(
+        # MAIN ORDER
+        self.__new_order(
+            symbol = symbol,
+            side = "BUY",
+            type = "MARKET",
+            quantity = symbol_curr_price,
+            recv_window = recv_window,
+        )
+
+        # STOP LOSS
+        self.__new_order(
             symbol = symbol,
             stop_price = sl_price,
             type = "STOP_MARKET",
@@ -700,8 +710,8 @@ class FutureMarket(FutureBase):
             close_position = "true",
         )
 
-        # TP
-        self.new_order(
+        # TAKE PROFIT
+        self.__new_order(
             symbol = symbol,
             stop_price = tp_price,
             type = "TAKE_PROFIT_MARKET",
@@ -710,7 +720,7 @@ class FutureMarket(FutureBase):
         )
         return
 
-    def new_order(
+    def __new_order(
         self: "FutureMarket",
         side: Union[Literal["BUY"], Literal["SELL"]],
         symbol: str = "BTCUSDT",
@@ -718,6 +728,7 @@ class FutureMarket(FutureBase):
         type: Union[Literal["MARKET"], Literal["TAKE_PROFIT_MARKET"], Literal["STOP_MARKET"]] = "MARKET",
         time_in_force: str | None = "GTC",
         quantity: float | None = None,
+        reduce_only: str | None = None,
         price: float | None = None,
         new_client_order_id: str | None = None,
         stop_price: float | None = None,
@@ -730,7 +741,8 @@ class FutureMarket(FutureBase):
         price_match: str | None = None,
         self_trade_prevention_mode: str | None = None,
         good_till_date: int | None = None,
-        recvWindow: int | None = 5_000,  # 5_000 ms is the default value, i.e., 5 sec.
+        recv_window: int | None = 5_000,  # 5_000 ms is the default value, i.e., 5 sec.
+        url: str = "/fapi/v1/order",
     ) -> dict | None:
         '''
         - new_order()
@@ -743,8 +755,35 @@ class FutureMarket(FutureBase):
             - to set the leverage, 20 by default.
         '''
         # TODO: need to implement this.
+        params: dict[str, int | float | str] = dict(
+            symbol = symbol,
+            side = side,
+            position_side = position_side,
+            type = type,
+            time_in_force = time_in_force,
+            quantity = quantity,
+            reduce_only = reduce_only,
+            price = price,
+            new_client_order_id = new_client_order_id,
+            stop_price = stop_price,
+            close_position = close_position,
+            activation_price = activation_price,
+            callback_rate = callback_rate,
+            working_type = working_type,
+            price_protect = price_protect,
+            new_order_resp_type = new_order_resp_type,
+            price_match = price_match,
+            self_trade_prevention_mode = self_trade_prevention_mode,
+            good_till_date = good_till_date,
+            recv_window = recv_window,
+            timestamp = FutureMarket.generate_timestmap(),
+        )
 
-        return
+        return self.call(
+            method = "POST",
+            params = params,
+            url = url,
+        )
 
     def multiple_orders(
         self: "FutureMarket",

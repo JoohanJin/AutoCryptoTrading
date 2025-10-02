@@ -50,7 +50,7 @@ class FutureBase(CommonBaseSDK):
         url = url if url.startswith("/") else f"/{url}"
 
         filtered_params: dict[str, str | int] = {
-            key: value
+            FutureBase.snake_to_camel(key): value
             for key, value in (params.items() if params else dict)
             if value is not None
         }

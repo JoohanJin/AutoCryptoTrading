@@ -12,6 +12,13 @@ class CommonBaseSDK(ABC):
     for different exchange SDKs (e.g., MEXC and Binance).
     """
     @staticmethod
+    def snake_to_camel(
+        s: str,
+    ) -> str:
+        parts = s.split("_")
+        return parts[0].lower() + ''.join(word.capitalize() for word in parts[1:])
+
+    @staticmethod
     def generate_timestmap() -> int:
         return int(time.time() * 1_000)
 
@@ -94,3 +101,7 @@ class CommonBaseSDK(ABC):
         return: JSON response from the API
         """
         return
+
+
+if __name__ == "__main__":
+    print(CommonBaseSDK.snake_to_camel("abc"))
