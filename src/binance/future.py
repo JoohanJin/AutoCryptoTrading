@@ -16,18 +16,8 @@ class FutureMarket(FutureBase):
 
     probably need to change this to "BTCUSDC" in the future.
     """
-    def __init__(
-        self: "FutureMarket",
-        api_key: str | None = None,
-        secret_key: str | None = None,
-        base_url: str | None = "https://fapi.binance.com",
-    ) -> None:
-        super().__init__(
-            api_key = api_key,
-            secret_key = secret_key,
-            base_url = base_url,
-        )
 
+    # PUBLIC ENDPOINT
     def ping(
         self: "FutureMarket",
     ) -> dict:
@@ -669,12 +659,36 @@ class FutureMarket(FutureBase):
     # ORDER ENDPOINTS
     # For Post, need to keep the order of items in the params.
     # we are not using the
+
+    # SL
+    {
+        "symbol": "BTCUSDT",
+        "side": "<OPPOSITE_OF_ORIGINAL_ORDER>",
+        "type": "STOP_MARKET",
+        "stopPrice": "<SL_PRICE>",
+        "workingType": "MARK_PRICE",
+        "closePosition": "true",
+        "timestamp": "<ms>",
+        "recvWindow": 5000
+    }
+
+    # TP
+    {
+        "symbol": "BTCUSDT",
+        "side": "<OPPOSITE_OF_ORIGINAL_ORDER>",
+        "type": "TAKE_PROFIT_MARKET",
+        "stopPrice": "<TP_PRICE>",
+        "workingType": "MARK_PRICE",
+        "closePosition": "true",
+        "timestamp": "<ms>",
+        "recvWindow": 5000
+    }
     """
     def order(
         self: "FutureMarket",
         sl_price: float,
         tp_price: float,
-        symbol_curr_price: float,  # get it from the binance websocket possibly.
+        symbol_curr_quantity: float,  # get it from the binance websocket possibly.
         symbol: str = "BTCUSDT",
         side: str = Union[Literal["BUY"], Literal["SELL"]],
         recv_window: int = 5_000,
@@ -691,13 +705,14 @@ class FutureMarket(FutureBase):
 
         # TODO: decide the following:
         # Sequential manner or multi-threaded manner?
+        self.change_initial_leverage()  # change the leverage to the default, 5 for now.
 
         # MAIN ORDER
-        self.__new_order(
+        res = self.__new_order(
             symbol = symbol,
-            side = "BUY",
+            side = side,
             type = "MARKET",
-            quantity = symbol_curr_price,
+            quantity = symbol_curr_quantity,
             recv_window = recv_window,
         )
 
@@ -706,8 +721,9 @@ class FutureMarket(FutureBase):
             symbol = symbol,
             stop_price = sl_price,
             type = "STOP_MARKET",
-            side = "BUY" if side == "SELL" else "SELL",  # Opposite
+            side = "BUY" if side == "SELL" else "SELL",  # Opposite of the Main Order
             close_position = "true",
+            time_in_force = "GTC",
         )
 
         # TAKE PROFIT
@@ -715,10 +731,11 @@ class FutureMarket(FutureBase):
             symbol = symbol,
             stop_price = tp_price,
             type = "TAKE_PROFIT_MARKET",
-            side = "BUY" if side == "SELL" else "SELL",
+            side = "BUY" if side == "SELL" else "SELL",  # Opposite of the Main Order
             close_position = "true",
+            time_in_force = "GTC",
         )
-        return
+        return res
 
     def __new_order(
         self: "FutureMarket",
@@ -726,9 +743,9 @@ class FutureMarket(FutureBase):
         symbol: str = "BTCUSDT",
         position_side: str | None = None,  # "BOTH", "LONG", "SHORT"
         type: Union[Literal["MARKET"], Literal["TAKE_PROFIT_MARKET"], Literal["STOP_MARKET"]] = "MARKET",
-        time_in_force: str | None = "GTC",
         quantity: float | None = None,
         reduce_only: str | None = None,
+        time_in_force: str | None = None,
         price: float | None = None,
         new_client_order_id: str | None = None,
         stop_price: float | None = None,
@@ -754,7 +771,6 @@ class FutureMarket(FutureBase):
             - to provide the USDT Amount to buy or sell. (NOT BTC AMT)
             - to set the leverage, 20 by default.
         '''
-        # TODO: need to implement this.
         params: dict[str, int | float | str] = dict(
             symbol = symbol,
             side = side,
@@ -897,7 +913,7 @@ class FutureMarket(FutureBase):
         self: "FutureMarket",
         url: str = "/fapi/v1/leverage",
         symbol: str = "BTCUSDT",
-        leverage: int = 20,
+        leverage: int = 10,  # originally 20, but let's keep it safe. 5 or 10.
         recvWindow: int = 5000,
     ):
         params = {
