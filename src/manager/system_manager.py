@@ -166,8 +166,10 @@ class SystemManager:
         return api_key, secret_key
 
     @staticmethod
-    def __get_binance_future_credentials(api_key: str, secret_key):
+    def __get_binance_future_credentials():
         try:
+            api_key: str = os.getenv("BINANCE_API_KEY")
+            secret_key: str = os.getenv("BINANCE_SECRET_KEY")
             if not api_key or not secret_key:
                 operation_logger.critica(f"{__name__} - API_KEY and/or SECRET_KEY is None.")
                 raise ValueError
@@ -196,12 +198,15 @@ class SystemManager:
 
     @staticmethod
     def __construct_binance_future() -> BinanceFutureMarket:
-        api_key, secret_key = SystemManager.__get_binance_future_credentials()
+        try:
+            api_key, secret_key = SystemManager.__get_binance_future_credentials()
 
-        return BinanceFutureMarket(
-            api_key = api_key,
-            secret_key = secret_key,
-        )
+            return BinanceFutureMarket(
+                api_key = api_key,
+                secret_key = secret_key,
+            )
+        except ValueError as e:
+            operation_logger.critical(f"{__name__} - binance_api_key or/and binance_secret_key is/are None.")
 
 
 def main():  # to test run the system manager.
