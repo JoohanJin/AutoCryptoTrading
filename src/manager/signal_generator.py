@@ -34,7 +34,6 @@ class SignalGenerator:
     @staticmethod
     def __generate_signal(
         signal: TradeSignal,
-        timestamp: int | None = None,
     ) -> Signal:
         """
         - func __generate_signal():
@@ -50,9 +49,6 @@ class SignalGenerator:
         """
         return Signal(
             signal = signal,
-            timestamp=(
-                timestamp if (timestamp) else SignalGenerator.generate_timestamp()
-            ),
         )
     '''
     ######################################################################################################################
@@ -332,7 +328,7 @@ class SignalGenerator:
                 data = self.data_pipeline_controller.pop(block = True,)
                 if (data):
                     with self.indicators_lock:
-                        self.indicators[data.type] = data.data
+                        self.indicators[data.index_type] = data.data
             except Exception as e:
                 operation_logger.critical(f"{__name__} -  Unexpected Exeption occured - {str(e)}")
 
@@ -447,7 +443,7 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.LONG_TERM_BUY
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Golden Cross Signal has been generated!: Bullish Trend."
                         )
@@ -495,7 +491,7 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal=TradeSignal.LONG_TERM_SELL
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Death Cross Signal has been generated!: Bearish Trend."
                         )
@@ -544,7 +540,7 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal = TradeSignal.SHORT_TERM_BUY,
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Short Term Buy Signal has been generated!: Bullish Trend."
                         )
@@ -553,7 +549,7 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal=TradeSignal.SHORT_TERM_SELL,
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Short Term Sell Signal has been generated!: Bearish Trend."
                         )
@@ -601,7 +597,7 @@ class SignalGenerator:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal=TradeSignal.HOLD,
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Divergence Signal has been generated!: Potential Trend Change."
                         )
@@ -646,12 +642,12 @@ class SignalGenerator:
                         trading_logger.info(
                             f"{__name__} - Price Reversal Signal has been generated!: Bullish Reveral."
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                     elif current_price < sma_60:
                         signal: Signal = SignalGenerator.__generate_signal(
                             signal=TradeSignal.SHORT_TERM_SELL,
                         )
-                        self.signal_pipeline.push_signal(signal)
+                        self.signal_pipeline.push(signal)
                         trading_logger.info(
                             f"{__name__} - Price Reversal Signal has been generated!: Bearish Reveral."
                         )
