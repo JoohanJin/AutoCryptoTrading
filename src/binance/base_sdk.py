@@ -55,7 +55,7 @@ class FutureBase(CommonBaseSDK):
             if value is not None
         }
 
-        request_headers: dict[str, str | int] = headers.copy() if headers else {}
+        request_headers: dict[str, str | int | float] = headers.copy() if headers else {}
 
         if (self.api_key and self.secret_key):
             request_headers[api_key_title] = self.api_key

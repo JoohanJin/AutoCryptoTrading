@@ -2,6 +2,7 @@
 from abc import abstractmethod
 import time
 from typing import Literal, Union
+from logger.set_logger import operation_logger, trading_logger
 
 # Custom Library
 from binance.base_sdk import FutureBase
@@ -692,7 +693,7 @@ class FutureMarket(FutureBase):
         symbol: str = "BTCUSDT",
         side: str = Union[Literal["BUY"], Literal["SELL"]],
         recv_window: int = 5_000,
-    ) -> dict | None:
+    ) -> None:
         '''
         - Call three different new_order():
             - one for the original position
@@ -715,6 +716,8 @@ class FutureMarket(FutureBase):
             quantity = symbol_curr_quantity,
             recv_window = recv_window,
         )
+        if (res.get("status") == "NEW"):
+            operation_logger.info(f"{__name__} - The new order has been opened.")
 
         # STOP LOSS
         self.__new_order(
@@ -725,6 +728,7 @@ class FutureMarket(FutureBase):
             close_position = "true",
             time_in_force = "GTC",
         )
+        # TODO: Logging
 
         # TAKE PROFIT
         self.__new_order(
@@ -735,13 +739,14 @@ class FutureMarket(FutureBase):
             close_position = "true",
             time_in_force = "GTC",
         )
-        return res
+        # TODO: Logging
+        return
 
     def __new_order(
         self: "FutureMarket",
         side: Union[Literal["BUY"], Literal["SELL"]],
         symbol: str = "BTCUSDT",
-        position_side: str | None = None,  # "BOTH", "LONG", "SHORT"
+        position_side: str | None = None,  # "BOTH", "LONG", "SHORT", None
         type: Union[Literal["MARKET"], Literal["TAKE_PROFIT_MARKET"], Literal["STOP_MARKET"]] = "MARKET",
         quantity: float | None = None,
         reduce_only: str | None = None,

@@ -11,7 +11,7 @@ from manager.signal_generator import SignalGenerator
 from manager.trade_manager import TradeManager
 from mexc.future import FutureMarket, FutureWebSocket
 from pipeline.data_pipeline import DataPipeline
-from logger.set_logger import operation_logger, log_decorator
+from logger.set_logger import operation_logger
 from pipeline.signal_pipeline import SignalPipeline
 from interface.pipeline_interface import PipelineController
 from object.constants import IndexType
@@ -34,15 +34,16 @@ class SystemManager:
 
         return None
         """
-        api_key, secret_key = SystemManager.__get_mexc_crendentials()
+        mexc_api, mexc_secret = SystemManager.__get_mexc_crendentials()
+        binance_api, binance_secret = SystemManager.__get_binance_future_credentials()
 
         # prepare the necessary parts for injection.
-        self.ws: FutureWebSocket = FutureWebSocket(
-            api_key=api_key,
-            secret_key=secret_key,
+        self.mexc_ws: FutureWebSocket = FutureWebSocket(
+            api_key = mexc_api,
+            secret_key = mexc_secret,
         )
         operation_logger.info(
-            f"{self.ws} has been started."
+            f"{__name__} - {self.mexc_ws} has been started."
         )
 
         self.data_pipeline: DataPipeline = DataPipeline()
@@ -61,14 +62,13 @@ class SystemManager:
         self.data_pipeline_controller: PipelineController[Index] = PipelineController(pipeline = self.data_pipeline)
         self.signal_pipeline_controller: PipelineController[Signal] = PipelineController(pipeline = self.signal_pipline)
 
-        # TODO: authentication can be done here.
         self.telegram_bot: CustomTelegramBot = self.__set_up_telegram_bot()
-        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk(api_key, secret_key)
+        self.mexc_sdk: FutureMarket = self.__set_up_mexc_sdk(mexc_api, mexc_secret)
 
         self.data_collector_processor: DataCollectorAndProcessor = (
             DataCollectorAndProcessor(
                 pipeline_controller = self.data_pipeline_controller,
-                websocket = self.ws,
+                websocket = self.mexc_ws,  # use MEXC API Endpoint for Real-Time Data Fetching.
             )
         )
 
@@ -100,7 +100,9 @@ class SystemManager:
 
         return
 
-    @log_decorator
+    def start() -> None:
+        return
+
     def __set_up_telegram_bot(
         self: "SystemManager",
     ) -> CustomTelegramBot:
@@ -116,11 +118,10 @@ class SystemManager:
         """
         api_key, channel_id = SystemManager.__get_telegram_credentials()
         return CustomTelegramBot(
-            api_key=api_key,
-            channel_id=channel_id,
+            api_key = api_key,
+            channel_id = channel_id,
         )
 
-    @log_decorator
     def __set_up_mexc_sdk(
         self: "SystemManager",
     ) -> FutureMarket:
@@ -157,7 +158,7 @@ class SystemManager:
         return api_key, channel_id
 
     @staticmethod
-    def __get_mexc_crendentials():
+    def __get_mexc_future_credentials():
         api_key = os.getenv("MEXC_API_KEY")
         secret_key = os.getenv("MEXC_SECRET_KEY")
         if not api_key or not secret_key:
@@ -166,9 +167,22 @@ class SystemManager:
             )
         return api_key, secret_key
 
+    @staticmethod
+    def __get_binance_future_credentials():
+        try:
+            api_key = os.getenv("BINANCE_API_KEY")
+            secret_key = os.getenv("BINANCE_API_KEY")
+            if not api_key or not secret_key:
+                operation_logger.critica(f"{__name__} - API_KEY and/or SECRET_KEY is None.")
+                raise ValueError
+
+            return api_key, secret_key
+        except Exception as e:
+            operation_logger.critica(f"{__name__} - Getting unexpected error during getting the credentials for Binance Future: {str(e)}")
+
 
 def main():  # to test run the system manager.
-    # ! Once instantiate the SystemManager, the operation will start automatically.
+    # ! make the start, stop and terminate command for the SystemManager
     load_dotenv()
     main_system_manager: SystemManager = SystemManager()
 
