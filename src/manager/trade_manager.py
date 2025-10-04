@@ -475,9 +475,7 @@ class TradeManager:
                 - return False
         """
         try:
-            currently_holding_order: Dict = (
-                self.mexc_future_market_sdk.current_position()
-            )
+            currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
             if not len(currently_holding_order.get("data")):
                 # No positions are currently held, so it's okay to make a trade.
                 return True
@@ -485,10 +483,8 @@ class TradeManager:
                 # A position is already open, so do not make another trade.
                 return False
         except Exception as e:
-            operation_logger.error(
-                f"{__name__} - Error while deciding to make trade: {e}"
-            )
-        return False
+            operation_logger.error(f"{__name__} - Error while deciding to make trade: {e}")
+            return False
 
     async def __execute_trade(
         self,
@@ -535,4 +531,7 @@ class TradeManager:
 
         except Exception as e:
             operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
+        return None
+
+    def calculate_btc_qty(self: "TradeManager",) -> float:
         return None
