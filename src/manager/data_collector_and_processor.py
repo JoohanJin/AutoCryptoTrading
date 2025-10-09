@@ -48,7 +48,7 @@ class IndexFactory:
     def generate_index(
         self: "IndexFactory",
         index: Dict[str, int | IndexType | Dict[int, float]],
-    ) -> Index:
+    ) -> Index | None:
         timestamp: int = index.get("timestamp", IndexFactory.generate_timestamp())
         index_type: IndexType | None = index.get("type", None)
         data: Dict[int, float] | None = index.get("data", None)
@@ -455,7 +455,7 @@ class DataCollectorAndProcessor:
     def __calculate_ema_sma_price(
         self: 'DataCollectorAndProcessor',
         periods: Tuple[int, ...] = MA_WRITE_PERIODS,  # this will be just used. -> just default input.
-    ) -> Tuple[Any, ...] | None:
+    ) -> tuple[dict[str, float | int | IndexType]] | None:
         """
         func __calculate_ema_sma_price():
             - It calculate the simple moving average (SMA) of the lastPrice
@@ -472,27 +472,19 @@ class DataCollectorAndProcessor:
             with self.df_lock:
                 if self.priceData.shape[0] == 0:
                     return None
-
-                tmpDataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
+                tmp_dataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
 
             sma:   Dict[int, float] = dict()  # oh.. make the dictionary object and put it.
             ema:   Dict[int, float] = dict()
-            price: Dict[str, float] = dict()
+            price: float = tmp_dataframe.iloc[-1]  # just last price data.
 
             # ! TODO: this should be fast enough, but can be optimized further.
             for period in periods:
-                if tmpDataframe.shape[0] >= period:
-                    sma[period * 2] = np.mean(tmpDataframe[-period:])
-                    ema[period * 2] = (
-                        pd.Series(tmpDataframe)
-                        .ewm(span = period, adjust = False,)
-                        .mean()
-                        .iloc[-1]
-                    )
-                else:
+                window = tmp_dataframe.tail(period)
+                if len(window) < period:
                     break
-
-            price[0] = tmpDataframe.iloc[-1]  # just last price data.
+                sma[period * 2] = float(window.mean())
+                ema[period * 2] = float(window.ewm(span = period, adjust = False).mean().iloc[-1])
 
             timestamp: int = DataCollectorAndProcessor.generate_timestamp()
 
@@ -508,10 +500,10 @@ class DataCollectorAndProcessor:
                 "type": IndexType.EMA,
             }
 
-            prices: Dict[str, float | IndexType | Dict[int, float]] = {
+            price: Dict[str, float | IndexType | Dict[int, float]] = {
                 "data": price,
                 "timestamp": timestamp,
-                "type": IndexType.EMA,
+                "type": IndexType.PRICE,
             }
 
             return smas, emas, price
@@ -592,7 +584,7 @@ class DataCollectorAndProcessor:
         self: 'DataCollectorAndProcessor',
         data: Index,
     ) -> bool:
-        return self.pipeline_controllers.push(
+        return self.pipeline_controller.push(
             {
                 "timestamp": DataCollectorAndProcessor.generate_timestamp(),
                 "type": IndexType.EMA,
@@ -604,7 +596,7 @@ class DataCollectorAndProcessor:
         self: 'DataCollectorAndProcessor',
         data: Index,
     ) -> bool:
-        return self.pipeline_controllers.push(
+        return self.pipeline_controller.push(
             {
                 "timestamp": DataCollectorAndProcessor.generate_timestamp(),
                 "type": IndexType.SMA,
@@ -616,7 +608,7 @@ class DataCollectorAndProcessor:
         self: 'DataCollectorAndProcessor',
         data: Index,
     ):
-        return self.pipeline_controllers.push(
+        return self.pipeline_controller.push(
             {
                 "timestamp": DataCollectorAndProcessor.generate_timestamp(),
                 "type": IndexType.PRICE,
@@ -631,9 +623,7 @@ class DataCollectorAndProcessor:
         try:
             for index in indexes:
                 if (index):
-                    self.pipeline_controllers.push(
-                        index
-                    )
+                    self.pipeline_controller.push(index)
             return True
         except Exception as e:
             operation_logger.warning(f"{__name__} - Unexpected Exception Orccured: {str(e)}")

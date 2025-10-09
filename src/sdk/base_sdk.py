@@ -2,22 +2,31 @@ import requests
 import hmac
 import hashlib
 import time
-from typing import Union, Literal, Optional
+from typing import Union, Literal
+from abc import ABC, abstractmethod
 
-# from logger.set_logger import operation_logger
 
-
-class CommonBaseSDK:
+class CommonBaseSDK(ABC):
     """
     A common base class for handling API requests, signature generation, and session management
     for different exchange SDKs (e.g., MEXC and Binance).
     """
+    @staticmethod
+    def snake_to_camel(
+        s: str,
+    ) -> str:
+        parts = s.split("_")
+        return parts[0].lower() + ''.join(word.capitalize() for word in parts[1:])
+
+    @staticmethod
+    def generate_timestmap() -> int:
+        return int(time.time() * 1_000)
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        base_url: str = "",
+        self: "CommonBaseSDK",
+        base_url: str,
+        api_key: str | None = None,
+        secret_key: str | None = None,
     ):
         self.api_key = api_key
         self.secret_key = secret_key
@@ -26,7 +35,7 @@ class CommonBaseSDK:
         # Initialize a session
         self.session = requests.Session()
 
-    def set_content_type(self, content_type: str):
+    def set_content_type(self: "CommonBaseSDK", content_type: str):
         """
         Set the Content-Type header for the session.
         """
@@ -37,7 +46,7 @@ class CommonBaseSDK:
         )
 
     def generate_signature(
-        self,
+        self: "CommonBaseSDK",
         query_string: str,
     ) -> str:
         """
@@ -53,16 +62,18 @@ class CommonBaseSDK:
             - if we do not disgest using hexdigest, the signature will be a hmac object.
         """
         if not self.secret_key:
+            # !: this api is not sigend.
             raise ValueError("Secret key is required for signature generation.")
 
         return hmac.new(
-            self.secret_key.encode("utf-8"),
-            query_string.encode("utf-8"),
-            hashlib.sha256,
+            key = self.secret_key.encode("utf-8"),
+            msg = query_string.encode("utf-8"),
+            digestmod = hashlib.sha256,
         ).hexdigest()
 
+    @abstractmethod
     def call(
-        self,
+        self: "CommonBaseSDK",
         method: Union[
             Literal["GET"],
             Literal["POST"],
@@ -70,9 +81,10 @@ class CommonBaseSDK:
             Literal["DELETE"],
         ],
         url: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        api_key_title: str,
+        params: dict | None = None,
+        data: dict | None = None,
+        headers: dict | None = None,
     ) -> dict | None:
         """
         func call:
@@ -88,48 +100,8 @@ class CommonBaseSDK:
 
         return: JSON response from the API
         """
-        # Ensure the URL starts with "/"
-        if not url.startswith("/"):
-            url = f"/{url}"
+        return
 
-        # Generate timestamp
-        timestamp: str = str(int(time.time() * 1000))
 
-        # Prepare query string for signature
-        query_string: str = ""
-        if params:
-            params = {k: v for k, v in params.items() if v is not None}
-            query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-
-        query_string = f"{self.api_key}{timestamp}{query_string}"
-
-        # Add signature if API key and secret key are provided
-        if self.api_key and self.secret_key:
-            if headers is None:
-                headers = {}
-
-            headers.update(
-                {
-                    "Request-Time": timestamp,
-                    "Signature": self.generate_signature(query_string=query_string),
-                },
-            )
-
-        # Add API key to headers if needed
-        if self.api_key:
-            headers["ApiKey"] = self.api_key
-
-        # Perform the request
-        response = self.session.request(
-            method=method,
-            url=f"{self.base_url}{url}",
-            params=params,
-            json=data,
-            headers=headers,
-        )
-
-        # Ensure a JSON response is returned
-        try:
-            return response.json()
-        except ValueError:
-            response.raise_for_status()
+if __name__ == "__main__":
+    print(CommonBaseSDK.snake_to_camel("abc"))

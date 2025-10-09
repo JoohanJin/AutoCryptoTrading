@@ -35,9 +35,8 @@ src/pipeline/__pycache__/
 # logging
 *.log*
 
-# Credentials
-*.json*
-credentials/
+# environment variables
+.env
 
 # MacOS Specfiic
 .DS_Store*

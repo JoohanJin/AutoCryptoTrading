@@ -3,25 +3,24 @@ import os
 
 import unittest
 from typing import Tuple
-import json
+from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import mexc.future as future
 
+load_dotenv()
+
 
 def get_keys() -> Tuple[str, str]:
-    try:
-        with open("/src/mexc/keys.json", "r") as f:
-            data = json.load(f)
-        api_key: str = data.get("api_key")
-        secret_key: str = data.get("secret_key")
+    api_key = os.getenv("MEXC_API_KEY")
+    secret_key = os.getenv("MEXC_SECRET_KEY")
 
-        return api_key, secret_key
-
-    except FileNotFoundError:
-        print("The file containing keys for MexC broker has not been found")
+    if not api_key or not secret_key:
+        print("MEXC_API_KEY and MEXC_SECRET_KEY must be set in environment variables.")
         return None, None
+
+    return api_key, secret_key
 
 
 api_key, secret_key = get_keys()
