@@ -47,10 +47,13 @@ class SystemManager:
 
             # prepare the necessary parts for injection.
             self.mexc_ws: MexcFutureWebSocket = SystemManager.__construct_mexc_ws()
-            operation_logger.info(f"{__name__} - {self.mexc_ws} has been constructed.")
+            operation_logger.info(f"{__name__} - {self.mexc_ws} has been initialized successfully.")
 
-            self.mexc_sdk: MexcFutureMarket = SystemManager.__construct_mexc_future()
-            operation_logger.info(f"{__name__} - {self.mexc_ws} has been started.")
+            self.mexc_future: MexcFutureMarket = SystemManager.__construct_mexc_future()
+            operation_logger.info(f"{__name__} - {self.mexc_ws} has been initialized successfully.")
+
+            self.binance_future: BinanceFutureMarket = SystemManager.__construct_binance_future()
+            operation_logger.info(f"{__name__} - {self.binance_future} has been initialized successfully.")
 
             self.data_pipeline: DataPipeline = DataPipeline()
             operation_logger.info(f"{self.data_pipeline} has been started.")
@@ -80,7 +83,8 @@ class SystemManager:
             # one more classs: trade_manager -> it will have the FutureMarket SDWK
             self.trade_manager: TradeManager = TradeManager(
                 signal_pipeline_controller = self.signal_pipeline_controller,
-                mexc_future_market_sdk = self.mexc_sdk,
+                mexc_future = self.mexc_future,
+                binanace_future = self.binance_future,
                 delta_mapper = self.mapper,
                 telegram_bot = self.telegram_bot,
             )

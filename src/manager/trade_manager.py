@@ -7,7 +7,8 @@ from typing import List, Dict, Tuple
 # Custom Library
 from custom_telegram.telegram_bot_class import CustomTelegramBot
 from logger.set_logger import operation_logger, trading_logger
-from mexc.future import FutureMarket
+from mexc.future import FutureMarket as MexCFutureMarket
+from binance.future import FutureMarket as BinanceFutureMarket
 from object.score_mapping import ScoreMapper
 from object.signal import Signal, TradeSignal
 from pipeline.signal_pipeline import SignalPipeline
@@ -63,9 +64,12 @@ class TradeManager:
     def __init__(
         self,
         signal_pipeline_controller: PipelineController[Signal],
-        mexc_future_market_sdk: FutureMarket,
+        mexc_future: MexCFutureMarket,  # TODO: Change this to the interface
+        binanace_future: BinanceFutureMarket,  # TODO: Change this to the interface.
         delta_mapper: ScoreMapper,
         telegram_bot: CustomTelegramBot,
+        base_symbol: str = "BTC",
+        ccy_symbol: str = "USDT",
         leverage: int = 20,
         trade_amount: float = 0.1,  # 10% of the total asset
         take_profit_rate: float = 0.15,  # 15%
@@ -77,12 +81,17 @@ class TradeManager:
             - initialize the TradeManager with the given signal generator and REST API caller for MexC.
             - initialize the necessary member variables and start the TradeManager.
         """
+        self.base_symbol: str = base_symbol
+        self.ccy_symbol: str = ccy_symbol
+
         # Set the signal piepline as a member variable
         self.signal_pipeline_controller: PipelineController[Signal] = signal_pipeline_controller
 
         # Set the MexC Future Market SDK as a member variable
         # to send the REST API to the MexC API Gateway.
-        self.mexc_future_market_sdk = mexc_future_market_sdk
+        # TODO: Need to change this to interface. -> FUTURE TODO
+        self.mexc_future_market_sdk = mexc_future
+        self.binance_future_market = binanace_future
 
         self.delta_mapper: ScoreMapper = delta_mapper
 
@@ -131,7 +140,7 @@ class TradeManager:
     """
 
     def start(
-        self,
+        self: "TradeManager",
     ) -> None:
         """
         func start():
@@ -153,6 +162,12 @@ class TradeManager:
 
         return None
 
+    def stop(
+        self: "TradeManager",
+    ) -> None:
+        # TODO: Need to implement it.
+        return
+
     def __initialize_threads(
         self,
     ) -> None:
@@ -166,14 +181,14 @@ class TradeManager:
         """
         # Generate the threads for the function, need to plan it.
         thread_get_signal: threading.Thread = threading.Thread(
-            target=self.__thread_get_signal,
-            name="Thread-Get-Signal",
+            target = self.__thread_get_signal,
+            name = "Thread-Get-Signal",
         )
 
         thread_decide_trade: threading.Thread = threading.Thread(
-            target=self.thread_handle_async_trade_execution,
-            name="Thread-Decide-Trade",
-            args=(self.async_loop,),
+            target = self.thread_handle_async_trade_execution,
+            name = "Thread-Decide-Trade",
+            args = (self.async_loop,),
         )
 
         # initialize the threads for the operations
@@ -249,14 +264,13 @@ class TradeManager:
         """
         while True:
             try:
-                signal: TradeSignal = self.__get_signal(
-                    timestamp_window = timestamp_window,
-                )
+                signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window,)
                 if signal:
                     with self.trade_score_lock:
                         self.trade_score += self.__calculate_signal_score_delta(
-                            signal_data=signal,
+                            signal_data = signal,
                         )
+                        # print(f"now the score is {self.trade_score}")
             except Exception as e:
                 operation_logger.error(
                     f"{__name__} - Error while getting the signal: {e}"
@@ -303,13 +317,7 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         signal_data: Signal = self.signal_pipeline_controller.pop()
-        return (
-            signal_data.signal
-            if TradeManager.verify_signal(
-                signal_data = signal_data, timestamp_window = timestamp_window
-            )
-            else None
-        )
+        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window,) else None
 
     def __decide_trade(
         self,
@@ -327,9 +335,11 @@ class TradeManager:
             - score based on the signal data.
 
         return int:
-            - 1: buy
-            - -1: sell
-            - 0: hold
+            # TODO: Change the state to better FSM
+            - 1: buy -> 001: 1
+            - -1: sell -> 010: 2
+            - 0: hold -> 100: 4
+            -> else just nothing.
         """
         if score > self.score_threshold:
             return 1
@@ -358,11 +368,11 @@ class TradeManager:
                     score: int = self.trade_score
 
                 decision: int = self.__decide_trade(
-                    score=score,
+                    score = score,
                 )
 
                 await self.__execute_trade(
-                    buy_or_sell=decision,
+                    buy_or_sell = decision,
                 )
 
                 if decision != 0:  # can be further improved in the future.
@@ -376,14 +386,14 @@ class TradeManager:
 
             except Exception as e:
                 operation_logger.error(
-                    f"{__name__} - Error while deciding the trade: {e}"
+                    f"{__name__} - Error while deciding the trade: {str(e)}"
                 )
 
         return None
 
     def __get_current_price(
-        self,
-    ) -> float:
+        self: "TradeManager",
+    ) -> float | None:
         """
         func __get_current_price():
             - private method
@@ -395,14 +405,11 @@ class TradeManager:
         return float:
             - current price of the asset
         """
-        price_response: Dict = self.mexc_future_market_sdk.index_price()
-        if price_response.get("success"):
-            return price_response.get("data").get("indexPrice")
-        else:
-            raise Exception(
-                f"{__name__} - Error while getting the current price: {price_response}"
-            )
-        return
+        try:
+            self.binance_future_market.asset_index(symbol = f"{self.base_symbol}{self.ccy_symbol}")
+        except Exception as e:
+            operation_logger.critical(f"{__name__} - Unknown Exception Invoked during fetching the current price ")
+            return None
 
     def __get_target_prices(
         self,
@@ -442,7 +449,7 @@ class TradeManager:
         self,
     ) -> float:
         open_amount_response: dict = self.mexc_future_market_sdk.asset(
-            currency="USDT",
+            currency = "USDT",
         )
 
         if open_amount_response.get("success"):
@@ -475,15 +482,17 @@ class TradeManager:
                 - return False
         """
         try:
-            currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
-            if not len(currently_holding_order.get("data")):
+            # currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
+            currently_holding_order: list = self.binance_future_market.query_all_open_orders()
+
+            if not len(currently_holding_order):
                 # No positions are currently held, so it's okay to make a trade.
                 return True
             else:
                 # A position is already open, so do not make another trade.
                 return False
         except Exception as e:
-            operation_logger.error(f"{__name__} - Error while deciding to make trade: {e}")
+            operation_logger.error(f"{__name__} - {self}.__decide_to_make_trade() - Error while deciding to make trade: {e}")
             return False
 
     async def __execute_trade(
@@ -506,7 +515,10 @@ class TradeManager:
                     buy_or_sell=buy_or_sell,
                     current_price=current_price,
                 )
-                trade_amount: float = self.__get_trade_amount()
+                # TODO: interface implement rather than using the instance by itself.
+                # for mexc, it is USDT.
+                # for binance, it is BTC.
+                trade_amount: float = self.get_base_qty(base_asset_price = current_price,)
                 order_type: int = 0
 
                 if buy_or_sell == 1:
@@ -518,6 +530,12 @@ class TradeManager:
                 # TODO: need to implement order trigger to the mexc api.
                 # order trigger to the telgram bot
                 if self.__decide_to_make_trade():  # make the trade
+                    self.binance_future_market.order(
+                        sl_price = sl_price,
+                        tp_price = tp_price,
+                        symbol_curr_quantity = trade_amount,
+                        side = "BUY" if order_type == 1 else "SELL"
+                    )
                     await self.telegram_bot.send_text(
                         f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
                     )
@@ -533,5 +551,48 @@ class TradeManager:
             operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
         return None
 
-    def calculate_btc_qty(self: "TradeManager",) -> float:
-        return None
+    def get_base_qty(
+        self: "TradeManager",
+        base_asset_price: float,
+    ) -> float | None:
+        '''
+        - func calculate_btc_qty()
+            - calculate the quantity of base crypto:
+                - e.g., for BTC_USDT pair, the function is getting the BTC quantity, not the USDT quantity.
+
+        - need two data:
+            - the current BTC price in USDT.
+            - the margin value in USDT.
+        - The BTC quantity formula would be as follow:
+            - (leverage * USDT) / BTC_price
+        -> what data do we need to fetch?
+            - leverage: the instance field variable.
+            - current amount of USDT
+                - from the broker
+            - weight for the margin value:
+                - predefined by the programmer and saved as the field instance.
+                - e.g., 10% of the entire balance.
+            - The current BTC price.
+                - from the broker
+        '''
+        try:
+            margin_amt: float = self.leverage * self.trade_amount * base_asset_price
+
+            btc_curr_index_price: float = self.binance_future_market.asset_index()
+
+            return (margin_amt) / (btc_curr_index_price)
+        except Exception as e:
+            # TODO: change the logging operation to cover mode details and more exception.
+            operation_logger.critical(f"{__name__} - Unknown Exception for Calculating the BTC Amount: {str(e)}")
+            return None
+
+    def get_available_usdt_amt(self: "TradeManager", ) -> float | None:
+        try:
+            account_balances = self.binance_future_market.future_account_balance()
+
+            for balance in account_balances:
+                if (balance.get("asset") == "USDT"):
+                    return balance.get("availableBalance")
+        except Exception as e:
+            operation_logger.critical(f"{__name__} - {self.binance_future_market} invokes a problem during the user account balance fetch: {str(e)}")
+            return None

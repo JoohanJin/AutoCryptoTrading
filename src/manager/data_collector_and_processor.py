@@ -483,8 +483,8 @@ class DataCollectorAndProcessor:
                 window = tmp_dataframe.tail(period)
                 if len(window) < period:
                     break
-                sma[period * 2] = window.mean()
-                ema[period * 2] = window.ewm(span = period, adjust = False).mean().iloc[-1]
+                sma[period * 2] = float(window.mean())
+                ema[period * 2] = float(window.ewm(span = period, adjust = False).mean().iloc[-1])
 
             timestamp: int = DataCollectorAndProcessor.generate_timestamp()
             smas: Dict[str, float | IndexType | Dict[int, float]] = {
@@ -502,7 +502,7 @@ class DataCollectorAndProcessor:
             price: Dict[str, float | IndexType | Dict[int, float]] = {
                 "data": price,
                 "timestamp": timestamp,
-                "type": IndexType.EMA,
+                "type": IndexType.PRICE,
             }
 
             return smas, emas, price

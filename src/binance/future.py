@@ -2,6 +2,8 @@
 from abc import abstractmethod
 import time
 from typing import Literal, Union
+
+from websocket import recv
 from logger.set_logger import operation_logger, trading_logger
 
 # Custom Library
@@ -728,7 +730,7 @@ class FutureMarket(FutureBase):
             close_position = "true",
             time_in_force = "GTC",
         )
-        # TODO: Logging
+        operation_logger.info(f"{__name__} - The new order has been opened.")
 
         # TAKE PROFIT
         self.__new_order(
@@ -739,7 +741,8 @@ class FutureMarket(FutureBase):
             close_position = "true",
             time_in_force = "GTC",
         )
-        # TODO: Logging
+        operation_logger.info(f"{__name__} - The new order has been opened.")
+
         return
 
     def __new_order(
@@ -775,6 +778,7 @@ class FutureMarket(FutureBase):
             - to provide the SL price and TP price.
             - to provide the USDT Amount to buy or sell. (NOT BTC AMT)
             - to set the leverage, 20 by default.
+
         '''
         params: dict[str, int | float | str] = dict(
             symbol = symbol,
@@ -894,9 +898,23 @@ class FutureMarket(FutureBase):
         raise NotImplementedError
         return
 
-    def query_all_open_orders(self: "FutureMarket",):
-        raise NotImplementedError
-        return
+    def query_all_open_orders(
+        self: "FutureMarket",
+        url: str = "/fapi/v1/openOrders",
+        symbol: str = "BTCUSDT",
+        recv_window: int = 5_000,
+    ) -> dict | None:
+        params: dict[str, int] = dict(
+            symbol = symbol,
+            recv_window = recv_window,
+            timestamp = FutureMarket.generate_timestmap(),
+        )
+
+        return self.call(
+            method = "GET",
+            url = url,
+            params = params,
+        )
 
     def query_account_trades(self: "FutureMarket",):
         raise NotImplementedError
@@ -967,10 +985,12 @@ class FutureMarket(FutureBase):
         self: "FutureMarket",
         url: str = "/fapi/v3/balance",
         recv_window: int = 5_000,
+        asset: str = "USDT",
     ) -> dict | None:
         params: dict[str, int] = dict(
             recvWindow = recv_window,
             timestamp = FutureMarket.generate_timestmap(),
+            asset = asset,
         )
 
         return self.call(
@@ -988,6 +1008,7 @@ class FutureMarket(FutureBase):
             recvWindow = recv_window,
             timestamp = FutureMarket.generate_timestmap(),
         )
+
         return self.call(
             method = "GET",
             params = params,
@@ -998,7 +1019,7 @@ class FutureMarket(FutureBase):
         self: "FutureMarket",
         url: str = "/fapi/v2/account",
         recv_window: int = 5_000,
-    ) -> dict[str, int]:
+    ) -> dict | None:
         params: dict[str, int] = dict(
             recvWindow = recv_window,
             timestamp = FutureMarket.generate_timestmap(),
