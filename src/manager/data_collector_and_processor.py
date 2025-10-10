@@ -487,6 +487,7 @@ class DataCollectorAndProcessor:
                 ema[period * 2] = float(window.ewm(span = period, adjust = False).mean().iloc[-1])
 
             timestamp: int = DataCollectorAndProcessor.generate_timestamp()
+
             smas: Dict[str, float | IndexType | Dict[int, float]] = {
                 "data": sma,
                 "timestamp": timestamp,
