@@ -272,7 +272,11 @@ class TradeManager:
                         self.trade_score += self.__calculate_signal_score_delta(
                             signal_data = signal,
                         )
+<<<<<<< HEAD
                         print(f"now the score is {self.trade_score}")
+=======
+                        # print(f"now the score is {self.trade_score}")
+>>>>>>> stable
             except Exception as e:
                 operation_logger.error(
                     f"{__name__} - Error while getting the signal: {e}"
@@ -408,7 +412,11 @@ class TradeManager:
             - current price of the asset
         """
         try:
+<<<<<<< HEAD
             return float(self.binance_future_market.mark_price(symbol = f"{self.base_symbol}{self.ccy_symbol}").get("indexPrice", 0))
+=======
+            self.binance_future_market.asset_index(symbol = f"{self.base_symbol}{self.ccy_symbol}")
+>>>>>>> stable
         except Exception as e:
             operation_logger.critical(f"{__name__} - Unknown Exception Invoked during fetching the current price ")
             return None
@@ -514,7 +522,10 @@ class TradeManager:
                     buy_or_sell = buy_or_sell,
                     current_price = current_price,
                 )
+<<<<<<< HEAD
 
+=======
+>>>>>>> stable
                 # TODO: interface implement rather than using the instance by itself.
                 # for mexc, it is USDT.
                 # for binance, it is BTC.
@@ -576,9 +587,17 @@ class TradeManager:
                 - from the broker
         '''
         try:
+<<<<<<< HEAD
             margin_amt: float = self.leverage * self.trade_amount * self.get_available_usdt_amt()  # we need the current
 
             return (margin_amt) / (base_asset_price)
+=======
+            margin_amt: float = self.leverage * self.trade_amount * base_asset_price
+
+            btc_curr_index_price: float = self.binance_future_market.asset_index()
+
+            return (margin_amt) / (btc_curr_index_price)
+>>>>>>> stable
         except Exception as e:
             # TODO: change the logging operation to cover mode details and more exception.
             operation_logger.critical(f"{__name__} - Unknown Exception for Calculating the BTC Amount: {str(e)}")
@@ -586,11 +605,19 @@ class TradeManager:
 
     def get_available_usdt_amt(self: "TradeManager", ) -> float | None:
         try:
+<<<<<<< HEAD
             account_balances = self.binance_future_market.future_account_balance_v2()
 
             for balance in account_balances:
                 if (balance.get("asset") == "USDT"):
                     return float(balance.get("availableBalance"))
+=======
+            account_balances = self.binance_future_market.future_account_balance()
+
+            for balance in account_balances:
+                if (balance.get("asset") == "USDT"):
+                    return balance.get("availableBalance")
+>>>>>>> stable
         except Exception as e:
             operation_logger.critical(f"{__name__} - {self.binance_future_market} invokes a problem during the user account balance fetch: {str(e)}")
             return None
