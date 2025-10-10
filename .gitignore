@@ -40,3 +40,5 @@ src/pipeline/__pycache__/
 
 # MacOS Specfiic
 .DS_Store*
+
+*.csv

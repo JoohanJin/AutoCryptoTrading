@@ -632,6 +632,7 @@ class FutureMarket(FutureBase):
         url: str = "/fapi/v1/assetIndex"
         params: dict[str, str] = {
             "symbol": symbol,
+            # "timestamp": FutureMarket.generate_timestmap(),
         }
 
         return self.call(

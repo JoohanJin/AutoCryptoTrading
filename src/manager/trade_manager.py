@@ -74,7 +74,8 @@ class TradeManager:
         trade_amount: float = 0.1,  # 10% of the total asset
         take_profit_rate: float = 0.15,  # 15%
         stop_loss_rate: float = 0.05,  # 5%
-        score_threashold: int = 2_000,
+        score_threashold: int = 2_000,  # 2_000,
+        trend_managing_score: int = 200,  # 200
     ) -> None:
         """
         func __init__():
@@ -98,6 +99,7 @@ class TradeManager:
         self.telegram_bot: CustomTelegramBot = telegram_bot
 
         self.score_threshold: int = score_threashold
+        self.trend_manager_score: int = trend_managing_score
 
         # Set the thread pool as a member function.
         self.threads: List[threading.Thread] = list()
@@ -380,7 +382,7 @@ class TradeManager:
                     #
                     # TODO: need to implement more sophisticated one.
                     with self.trade_score_lock:
-                        self.trade_score = 200 if decision == 1 else -200
+                        self.trade_score = self.trend_manager_score if decision == 1 else -1 * (self.trend_manager_score)
 
                 await asyncio.sleep(0.25)
 
@@ -406,7 +408,7 @@ class TradeManager:
             - current price of the asset
         """
         try:
-            self.binance_future_market.asset_index(symbol = f"{self.base_symbol}{self.ccy_symbol}")
+            return float(self.binance_future_market.mark_price(symbol = f"{self.base_symbol}{self.ccy_symbol}").get("indexPrice", 0))
         except Exception as e:
             operation_logger.critical(f"{__name__} - Unknown Exception Invoked during fetching the current price ")
             return None
@@ -437,13 +439,9 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         if buy_or_sell == 1:  # Long
-            return current_price * (
-                1 + (self.tp_rate / self.leverage)
-            ), current_price * (1 - (self.sl_rate / self.leverage))
+            return current_price * (1 + (self.tp_rate / self.leverage)), current_price * (1 - (self.sl_rate / self.leverage))
         else:  # Short
-            return current_price * (
-                1 - (self.tp_rate / self.leverage)
-            ), current_price * (1 + (self.sl_rate / self.leverage))
+            return current_price * (1 - (self.tp_rate / self.leverage)), current_price * (1 + (self.sl_rate / self.leverage))
 
     def __get_trade_amount(
         self,
@@ -511,10 +509,12 @@ class TradeManager:
         try:
             if buy_or_sell == 1 or buy_or_sell == -1:
                 current_price: float = self.__get_current_price()
+
                 tp_price, sl_price = self.__get_target_prices(
-                    buy_or_sell=buy_or_sell,
-                    current_price=current_price,
+                    buy_or_sell = buy_or_sell,
+                    current_price = current_price,
                 )
+
                 # TODO: interface implement rather than using the instance by itself.
                 # for mexc, it is USDT.
                 # for binance, it is BTC.
@@ -576,11 +576,9 @@ class TradeManager:
                 - from the broker
         '''
         try:
-            margin_amt: float = self.leverage * self.trade_amount * base_asset_price
+            margin_amt: float = self.leverage * self.trade_amount * self.get_available_usdt_amt()  # we need the current
 
-            btc_curr_index_price: float = self.binance_future_market.asset_index()
-
-            return (margin_amt) / (btc_curr_index_price)
+            return (margin_amt) / (base_asset_price)
         except Exception as e:
             # TODO: change the logging operation to cover mode details and more exception.
             operation_logger.critical(f"{__name__} - Unknown Exception for Calculating the BTC Amount: {str(e)}")
@@ -588,11 +586,17 @@ class TradeManager:
 
     def get_available_usdt_amt(self: "TradeManager", ) -> float | None:
         try:
+            account_balances = self.binance_future_market.future_account_balance_v2()
+
+            for balance in account_balances:
+                if (balance.get("asset") == "USDT"):
+                    return float(balance.get("availableBalance"))
             account_balances = self.binance_future_market.future_account_balance()
 
             for balance in account_balances:
                 if (balance.get("asset") == "USDT"):
                     return balance.get("availableBalance")
+
         except Exception as e:
             operation_logger.critical(f"{__name__} - {self.binance_future_market} invokes a problem during the user account balance fetch: {str(e)}")
             return None
