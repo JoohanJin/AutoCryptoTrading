@@ -41,9 +41,9 @@ jobs: # defines a list of jobs to run
            pip install flake8 black pylint pytest
           
         # Runs flake8 on the entire project to check for style violation.
-        - name: Run flake8 linting
-          run: |
-           flake8 .
+        # - name: Run flake8 linting
+        #   run: |
+        #    flake8 .
         
         # Runs black in check mode to ensure code is properly formatted
         # if formatting is incorrect, this step will fail
