@@ -70,7 +70,7 @@ class TradeManager:
         telegram_bot: CustomTelegramBot,
         base_symbol: str = "BTC",
         ccy_symbol: str = "USDT",
-        leverage: int = 20,
+        leverage: int = 10,
         trade_amount: float = 0.1,  # 10% of the total asset
         take_profit_rate: float = 0.15,  # 15%
         stop_loss_rate: float = 0.05,  # 5%
@@ -167,7 +167,7 @@ class TradeManager:
     def stop(
         self: "TradeManager",
     ) -> None:
-        # TODO: Need to implement it.
+        # TODO: Implment the destructor.
         return
 
     def __initialize_threads(
@@ -319,7 +319,7 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         signal_data: Signal = self.signal_pipeline_controller.pop()
-        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window,) else None
+        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
 
     def __decide_trade(
         self,
@@ -343,12 +343,11 @@ class TradeManager:
             - 0: hold -> 100: 4
             -> else just nothing.
         """
-        if score > self.score_threshold:
+        if (score > self.score_threshold):  # BUY
             return 1
-        elif score < (-1 * self.score_threshold):
+        elif (score < (-1 * self.score_threshold)):  # SELL
             return -1
-        # by default it is not doing anything.
-        return 0
+        return 0  # by default it is not doing anything.
 
     async def __thread_decide_trade(
         self,
@@ -410,7 +409,7 @@ class TradeManager:
         try:
             return float(self.binance_future_market.mark_price(symbol = f"{self.base_symbol}{self.ccy_symbol}").get("indexPrice", 0))
         except Exception as e:
-            operation_logger.critical(f"{__name__} - Unknown Exception Invoked during fetching the current price ")
+            operation_logger.critical(f"{__name__} - Unknown Exception Invoked during fetching the current price: {str(e)}")
             return None
 
     def __get_target_prices(
@@ -439,9 +438,9 @@ class TradeManager:
             - if the signal is not valid, then it will return None.
         """
         if buy_or_sell == 1:  # Long
-            return current_price * (1 + (self.tp_rate / self.leverage)), current_price * (1 - (self.sl_rate / self.leverage))
+            return round(current_price * (1 + (self.tp_rate / self.leverage)), 2), round(current_price * (1 - (self.sl_rate / self.leverage)), 2)
         else:  # Short
-            return current_price * (1 - (self.tp_rate / self.leverage)), current_price * (1 + (self.sl_rate / self.leverage))
+            return round(current_price * (1 - (self.tp_rate / self.leverage)), 2), round(current_price * (1 + (self.sl_rate / self.leverage)), 2)
 
     def __get_trade_amount(
         self,
@@ -481,16 +480,16 @@ class TradeManager:
         """
         try:
             # currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
-            currently_holding_order: list = self.binance_future_market.query_all_open_orders()
+            currently_holding_order: list[dict | None] = self.binance_future_market.get_position_information_v2()
 
             if not len(currently_holding_order):
-                # No positions are currently held, so it's okay to make a trade.
+                # No position is currently held, so it's okay to make a trade.
                 return True
             else:
                 # A position is already open, so do not make another trade.
                 return False
         except Exception as e:
-            operation_logger.error(f"{__name__} - {self}.__decide_to_make_trade() - Error while deciding to make trade: {e}")
+            operation_logger.error(f"{__name__} - {self}.__decide_to_make_trade() - Error while deciding to make trade: {str(e)}")
             return False
 
     async def __execute_trade(
@@ -526,14 +525,13 @@ class TradeManager:
                 elif buy_or_sell == -1:
                     order_Type = 3  # Short
 
-                # TODO: trigger the order
-                # TODO: need to implement order trigger to the mexc api.
                 # order trigger to the telgram bot
                 if self.__decide_to_make_trade():  # make the trade
                     self.binance_future_market.order(
                         sl_price = sl_price,
                         tp_price = tp_price,
-                        symbol_curr_quantity = trade_amount,
+                        leverage = self.leverage,
+                        symbol_curr_quantity = max(trade_amount, 0.002),
                         side = "BUY" if order_type == 1 else "SELL"
                     )
                     await self.telegram_bot.send_text(
@@ -548,7 +546,7 @@ class TradeManager:
                     )
 
         except Exception as e:
-            operation_logger.error(f"{__name__} - Error while executing the trade: {e}")
+            operation_logger.error(f"{__name__} - Error while executing the trade: {str(e)}")
         return None
 
     def get_base_qty(
@@ -577,10 +575,8 @@ class TradeManager:
         '''
         try:
             margin_amt: float = self.leverage * self.trade_amount * self.get_available_usdt_amt()  # we need the current
-
             return (margin_amt) / (base_asset_price)
         except Exception as e:
-            # TODO: change the logging operation to cover mode details and more exception.
             operation_logger.critical(f"{__name__} - Unknown Exception for Calculating the BTC Amount: {str(e)}")
             return None
 
