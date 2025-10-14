@@ -42,3 +42,6 @@ src/pipeline/__pycache__/
 .DS_Store*
 
 *.csv
+
+DockerFile
+.dockerignore
