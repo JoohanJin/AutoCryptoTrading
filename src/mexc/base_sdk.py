@@ -110,6 +110,7 @@ class FutureBase(CommonBaseSDK):
                     operation_logger.critical(f"{__name__} - InvalidRequest Error from MexC USDT-M Future API: {str(error_msg)}")
                 else:
                     operation_logger.critical(f"{__name__} - ClientError Error from MexC USDT-M Future API: {str(error_msg)}")
+
                 raise Exception(error_message = error_msg)
 
             return data
