@@ -389,8 +389,8 @@ class TradeManager:
             - limit for the signal generation timestamp for the signal.
             - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
         """
+        curr_timestamp = 0
         while True:
-            curr_timestamp = TradeManager.generate_timestamp()
             try:
                 signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window,)
                 if signal:
@@ -400,6 +400,7 @@ class TradeManager:
                         )
                         if (TradeManager.generate_timestamp() - curr_timestamp > 300_000):
                             operation_logger.info(f"{__name__} - The current score is {self.trade_score}")
+                            curr_timestamp = TradeManager.generate_timestamp()
                         # print(f"now the score is {self.trade_score}")
             except Exception as e:
                 operation_logger.error(
