@@ -75,17 +75,47 @@ class FutureBase(CommonBaseSDK):
                     }
                 )
 
-        request = self.session.request(
-            method = method,
-            url = f"{self.base_url}{url}",
-            params = params,
-            headers = headers,
-            data = data if data is None else json.dumps(data),
-        )
-
         try:
-            return request.json()
+            response = self.session.request(
+                method = method,
+                url = f"{self.base_url}{url}",
+                params = params,
+                headers = headers,
+                data = data if data is None else json.dumps(data),
+            )
+
+            data = response.json() if response.json().get("Content-Type") else {}
+
+            if response.status_code >= 400:
+                status: int = response.status_code
+                error_msg: str = response.json().get("msg")
+
+                if status == 400:
+                    operation_logger.critical(f"{__name__} - BadRequest Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 401:
+                    operation_logger.critical(f"{__name__} - Unauthorized Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 402:
+                    operation_logger.critical(f"{__name__} - ApiKeyExpired Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 406:
+                    operation_logger.critical(f"{__name__} - AccessIPNotInWhiteList Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 500:
+                    operation_logger.critical(f"{__name__} - ServerInternal Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 506:
+                    operation_logger.critical(f"{__name__} - UnknownSourceOfRequest Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 510:
+                    operation_logger.critical(f"{__name__} - ExcessiveFrequencyOfRequest Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 511:
+                    operation_logger.critical(f"{__name__} - EndpointInaccurate Error from MexC USDT-M Future API: {str(error_msg)}")
+                elif status == 513:
+                    operation_logger.critical(f"{__name__} - InvalidRequest Error from MexC USDT-M Future API: {str(error_msg)}")
+                else:
+                    operation_logger.critical(f"{__name__} - ClientError Error from MexC USDT-M Future API: {str(error_msg)}")
+                raise Exception(error_message = error_msg)
+
+            return data
         except ValueError:
-            request.raise_for_status()
+            response.raise_for_status()
+            return None
         except Exception as e:
             operation_logger.critical(f"{__name__} - Unknown Exception: {str(e)}")
+            return None
