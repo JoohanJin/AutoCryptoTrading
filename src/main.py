@@ -11,10 +11,10 @@ def main():
         project_root = Path(__file__).resolve().parents[1]
         load_dotenv(project_root / ".env")
 
-        # main_system_manager: SystemManager = SystemManager()
-        # operation_logger.info(
-        #     f"{main_system_manager} has been started."
-        # )
+        main_system_manager: SystemManager = SystemManager()
+        operation_logger.info(
+            f"{main_system_manager} has been started."
+        )
     except Exception as e:
         operation_logger.critical(
             f"{__name__}: function main() has raised an Unexpected error starting the system: {e}"
