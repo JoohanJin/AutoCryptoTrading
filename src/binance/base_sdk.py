@@ -82,6 +82,7 @@ class FutureBase(CommonBaseSDK):
 
             if response.status_code >= 400:
                 status: int = response.status_code  # Status Code of the response.
+                # TODO: Need to make sure it is a correct error msg returned from mexc.
                 error_msg: str = response.json().get("msg")  # Error Msg
 
                 if status == 400:
