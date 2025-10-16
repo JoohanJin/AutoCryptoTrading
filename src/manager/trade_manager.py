@@ -72,7 +72,7 @@ class TradeManager:
         trade_amount: float = 0.1,  # 10% of the total asset
         take_profit_rate: float = 0.15,  # 15%
         stop_loss_rate: float = 0.05,  # 5%
-        score_threashold: int = 2_000,  # 2_000,
+        score_threashold: int = 1_000,  # 1_000,
         trend_managing_score: int = 200,  # 200
     ) -> None:
         """
