@@ -78,8 +78,36 @@ class FutureBase(CommonBaseSDK):
                 data = request_data,
             )
 
-            return response.json()
+            data = response.json() if response.json().get("Content-Type", "").startswith("application/json") else {}
+
+            if response.status_code >= 400:
+                status: int = response.status_code  # Status Code of the response.
+                # TODO: Need to make sure it is a correct error msg returned from mexc.
+                error_msg: str = response.json().get("msg")  # Error Msg
+
+                if status == 400:
+                    operation_logger.critical(f"{__name__} - BadRequest Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif status == 401:
+                    operation_logger.critical(f"{__name__} - Unauthorized Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif status == 403:
+                    operation_logger.critical(f"{__name__} - Forbidden Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif status == 404:
+                    operation_logger.critical(f"{__name__} - NotFound Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif status == 418:
+                    operation_logger.critical(f"{__name__} - RateLimitBan Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif status == 429:
+                    operation_logger.critical(f"{__name__} - ToomanyRequests Error from Binance USDT-M Future API: {str(error_msg)}")
+                elif 500 <= status < 600:
+                    operation_logger.critical(f"{__name__} - Server Error from Binance USDT-M Future API: {str(error_msg)}")
+                else:
+                    operation_logger.critical(f"{__name__} - ClientError Error from Binance USDT-M Future API: {str(error_msg)}")
+
+                raise Exception(error_message = error_msg)
+
+            return data
         except ValueError:
             response.raise_for_status()
+            return None
         except Exception as e:
             operation_logger.critical(f"{__name__} - Unknown Exception: {str(e)}")
+            return None

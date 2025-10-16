@@ -21,7 +21,6 @@ class TradeManager:
     #                                               Static Method                                                        #
     ######################################################################################################################
     """
-
     @staticmethod
     def generate_timestamp() -> int:
         """
@@ -54,7 +53,6 @@ class TradeManager:
         return (
             TradeManager.generate_timestamp() - signal_data.timestamp < timestamp_window
         )
-
     """
     ######################################################################################################################
     #                                                Class Method                                                        #
@@ -74,7 +72,7 @@ class TradeManager:
         trade_amount: float = 0.1,  # 10% of the total asset
         take_profit_rate: float = 0.15,  # 15%
         stop_loss_rate: float = 0.05,  # 5%
-        score_threashold: int = 2_000,  # 2_000,
+        score_threashold: int = 1_000,  # 1_000,
         trend_managing_score: int = 200,  # 200
     ) -> None:
         """
@@ -241,113 +239,11 @@ class TradeManager:
     #                                             Signal Management Method                                               #
     ######################################################################################################################
     """
-
     def thread_handle_async_trade_execution(self, loop) -> None:
         """ """
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.__thread_decide_trade())
         return
-
-    def __thread_get_signal(
-        self,
-        timestamp_window: int = 5000,
-    ) -> None:
-        """
-        func __thread_get_signal():
-            - A private method
-            - It gets the signal from the signal pipeline
-            - This function should be run by other thread which is monitoring the system.
-
-        param self:
-            - TradeManager object
-        param timestamp_window: int
-            - limit for the signal generation timestamp for the signal.
-            - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
-        """
-        while True:
-            try:
-                signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window,)
-                if signal:
-                    with self.trade_score_lock:
-                        self.trade_score += self.__calculate_signal_score_delta(
-                            signal_data = signal,
-                        )
-                        # print(f"now the score is {self.trade_score}")
-            except Exception as e:
-                operation_logger.error(
-                    f"{__name__} - Error while getting the signal: {e}"
-                )
-        return None
-
-    def __calculate_signal_score_delta(
-        self,
-        signal_data: TradeSignal,
-    ) -> int:
-        """
-        func __calculate_delta():
-            - private method
-            - calculate the delta based on the signal data.
-            - It will return the delta value based on the signal data.
-
-        param self:
-            - TradeManager object
-        param signal_data: TradeSignal
-            - signal data which is passed from the signal pipeline.
-
-        return int:
-            - delta value based on the signal data.
-        """
-        return self.delta_mapper.map(
-            signal = signal_data
-        )
-
-    def __get_signal(
-        self,
-        timestamp_window: int = 5000,
-    ) -> TradeSignal | None:
-        """
-        func __get_signal(): private method
-            - get the signal from the signal pipeline
-            - This function should be run by other thread which is monitoring the system.
-
-        param self:
-            - TradeManager object
-
-        return TradeSignal:
-            - it will return the parameter signal and decide the action based on the signal.
-        return None
-            - if the signal is not valid, then it will return None.
-        """
-        signal_data: Signal = self.signal_pipeline_controller.pop()
-        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
-
-    def __decide_trade(
-        self,
-        score: int,
-    ) -> int:
-        """
-        func __decide_trade():
-            - private method
-            - decide the trade based on the score.
-            - It will return the decision based on the score.
-
-        param self:
-            - TradeManager object
-        param score: int
-            - score based on the signal data.
-
-        return int:
-            # TODO: Change the state to better FSM
-            - 1: buy -> 001: 1
-            - -1: sell -> 010: 2
-            - 0: hold -> 100: 4
-            -> else just nothing.
-        """
-        if (score > self.score_threshold):  # BUY
-            return 1
-        elif (score < (-1 * self.score_threshold)):  # SELL
-            return -1
-        return 0  # by default it is not doing anything.
 
     async def __thread_decide_trade(
         self,
@@ -392,6 +288,171 @@ class TradeManager:
 
         return None
 
+    def __decide_trade(
+        self,
+        score: int,
+    ) -> int:
+        """
+        func __decide_trade():
+            - private method
+            - decide the trade based on the score.
+            - It will return the decision based on the score.
+
+        param self:
+            - TradeManager object
+        param score: int
+            - score based on the signal data.
+
+        return int:
+            # TODO: Change the state to better FSM
+            - 1: buy -> 001: 1
+            - -1: sell -> 010: 2
+            - 0: hold -> 100: 4
+            -> else just nothing.
+        """
+        if (score > self.score_threshold):  # BUY
+            return 1
+        elif (score < (-1 * self.score_threshold)):  # SELL
+            return -1
+        return 0  # by default it is not doing anything.
+
+    async def __execute_trade(
+        self,
+        buy_or_sell: int,
+    ) -> None:
+        """
+        func __execute_trade():
+            - private method
+            - execute the trade based on the signal.
+            - This function should be run by the other function which is monitoring some schema.
+
+        param self:
+            - TradeManager object
+        """
+        try:
+            if buy_or_sell == 1 or buy_or_sell == -1:
+                current_price: float = self.__get_current_price()
+
+                tp_price, sl_price = self.__get_target_prices(
+                    buy_or_sell = buy_or_sell,
+                    current_price = current_price,
+                )
+
+                # TODO: interface implement rather than using the instance by itself.
+                # for mexc, it is USDT.
+                # for binance, it is BTC.
+                trade_amount: float = self.get_base_qty(base_asset_price = current_price,)
+                order_type: int = 0
+
+                if buy_or_sell == 1:
+                    order_type = 1  # Long
+                elif buy_or_sell == -1:
+                    order_Type = 3  # Short
+
+                # order trigger to the telgram bot
+                if self.__decide_to_make_trade():  # make the trade
+                    self.binance_future_market.order(
+                        sl_price = sl_price,
+                        tp_price = tp_price,
+                        leverage = self.leverage,
+                        symbol_curr_quantity = max(trade_amount, 0.002),
+                        side = "BUY" if order_type == 1 else "SELL"
+                    )
+                    await self.telegram_bot.send_text(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                    )
+                    trading_logger.info(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
+                    )
+                else:
+                    trading_logger.info(
+                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured."
+                    )
+
+        except Exception as e:
+            operation_logger.error(f"{__name__} - Error while executing the trade: {str(e)}")
+        return None
+
+    def __thread_get_signal(
+        self,
+        timestamp_window: int = 5000,
+    ) -> None:
+        """
+        func __thread_get_signal():
+            - A private method
+            - It gets the signal from the signal pipeline
+            - This function should be run by other thread which is monitoring the system.
+
+        param self:
+            - TradeManager object
+        param timestamp_window: int
+            - limit for the signal generation timestamp for the signal.
+            - If the difference between the current timestamp and signal timestamp is greater than the timestamp_window, then it will be ignored.
+        """
+        curr_timestamp = 0
+        while True:
+            try:
+                signal: TradeSignal = self.__get_signal(timestamp_window = timestamp_window,)
+                if signal:
+                    with self.trade_score_lock:
+                        self.trade_score += self.__calculate_signal_score_delta(
+                            signal_data = signal,
+                        )
+                        if (TradeManager.generate_timestamp() - curr_timestamp > 300_000):
+                            operation_logger.info(f"{__name__} - The current score is {self.trade_score}")
+                            curr_timestamp = TradeManager.generate_timestamp()
+                        # print(f"now the score is {self.trade_score}")
+            except Exception as e:
+                operation_logger.error(
+                    f"{__name__} - Error while getting the signal: {e}"
+                )
+        return None
+
+    def __get_signal(
+        self,
+        timestamp_window: int = 5000,
+    ) -> TradeSignal | None:
+        """
+        func __get_signal(): private method
+            - get the signal from the signal pipeline
+            - This function should be run by other thread which is monitoring the system.
+
+        param self:
+            - TradeManager object
+
+        return TradeSignal:
+            - it will return the parameter signal and decide the action based on the signal.
+        return None
+            - if the signal is not valid, then it will return None.
+        """
+        signal_data: Signal = self.signal_pipeline_controller.pop()
+        return signal_data.signal if TradeManager.verify_signal(signal_data = signal_data, timestamp_window = timestamp_window) else None
+
+    def __calculate_signal_score_delta(
+        self,
+        signal_data: TradeSignal,
+    ) -> int:
+        """
+        func __calculate_delta():
+            - private method
+            - calculate the delta based on the signal data.
+            - It will return the delta value based on the signal data.
+
+        param self:
+            - TradeManager object
+        param signal_data: TradeSignal
+            - signal data which is passed from the signal pipeline.
+
+        return int:
+            - delta value based on the signal data.
+        """
+        return self.delta_mapper.map(
+            signal = signal_data
+        )
+
+    '''
+    - Execute Trade Utility Function
+    '''
     def __get_current_price(
         self: "TradeManager",
     ) -> float | None:
@@ -491,63 +552,6 @@ class TradeManager:
         except Exception as e:
             operation_logger.error(f"{__name__} - {self}.__decide_to_make_trade() - Error while deciding to make trade: {str(e)}")
             return False
-
-    async def __execute_trade(
-        self,
-        buy_or_sell: int,
-    ) -> None:
-        """
-        func __execute_trade():
-            - private method
-            - execute the trade based on the signal.
-            - This function should be run by the other function which is monitoring some schema.
-
-        param self:
-            - TradeManager object
-        """
-        try:
-            if buy_or_sell == 1 or buy_or_sell == -1:
-                current_price: float = self.__get_current_price()
-
-                tp_price, sl_price = self.__get_target_prices(
-                    buy_or_sell = buy_or_sell,
-                    current_price = current_price,
-                )
-
-                # TODO: interface implement rather than using the instance by itself.
-                # for mexc, it is USDT.
-                # for binance, it is BTC.
-                trade_amount: float = self.get_base_qty(base_asset_price = current_price,)
-                order_type: int = 0
-
-                if buy_or_sell == 1:
-                    order_type = 1  # Long
-                elif buy_or_sell == -1:
-                    order_Type = 3  # Short
-
-                # order trigger to the telgram bot
-                if self.__decide_to_make_trade():  # make the trade
-                    self.binance_future_market.order(
-                        sl_price = sl_price,
-                        tp_price = tp_price,
-                        leverage = self.leverage,
-                        symbol_curr_quantity = max(trade_amount, 0.002),
-                        side = "BUY" if order_type == 1 else "SELL"
-                    )
-                    await self.telegram_bot.send_text(
-                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
-                    )
-                    trading_logger.info(
-                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}"
-                    )
-                else:
-                    trading_logger.info(
-                        f"Trade Signal: {'Buy' if order_type == 1 else 'Sell'}\nEntry Price: {current_price}\nAmount: {trade_amount}\nTake Profit: {tp_price}\nStop Loss: {sl_price}\nHowever, the trade has not been occured."
-                    )
-
-        except Exception as e:
-            operation_logger.error(f"{__name__} - Error while executing the trade: {str(e)}")
-        return None
 
     def get_base_qty(
         self: "TradeManager",
