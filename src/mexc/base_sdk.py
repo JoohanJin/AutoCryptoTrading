@@ -84,7 +84,7 @@ class FutureBase(CommonBaseSDK):
                 data = data if data is None else json.dumps(data),
             )
 
-            data = response.json() if response.json().get("Content-Type") else {}
+            data = response.json() if response.json().get("Content-Type", "") else {}
 
             if response.status_code >= 400:
                 status: int = response.status_code
