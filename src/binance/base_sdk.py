@@ -78,7 +78,7 @@ class FutureBase(CommonBaseSDK):
                 data = request_data,
             )
 
-            data = response.json() if response.get("Content-Type", "").startswith("application/json") else {}
+            data = response.json() if response.json().get("Content-Type", "").startswith("application/json") else {}
 
             if response.status_code >= 400:
                 status: int = response.status_code  # Status Code of the response.
