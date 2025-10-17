@@ -103,6 +103,7 @@ class FutureBase(CommonBaseSDK):
 
                 raise Exception(error_message = error_msg)
 
+            # TODO: return the value based on the type of response -> sometimes it is a list.
             return response.json()
         except ValueError:
             response.raise_for_status()
