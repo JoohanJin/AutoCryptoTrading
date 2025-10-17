@@ -8,19 +8,30 @@ import hashlib
 import hmac
 import json
 import websocket
+from abc import ABC
 
 # get the Logger
 from logger.set_logger import operation_logger
 
 
-class __BasicWebSocketManager:
+class __BasicWebSocketManager(ABC):
+    '''
+    # Static Method
+    '''
+    @staticmethod
+    def generate_timestamp() -> int:
+        return int(time.time() * 1000)
+
+    '''
+    # Class Method
+    '''
     def __init__(
-        self,
+        self: "__BasicWebSocketManager",
         api_key: str | None = None,
         secret_key: str | None = None,
         ws_name: str = "BaseWebSocketManager",
-        ping_interval: int = 5,
-        connection_interval: int = 10,
+        ping_interval: int = 5,  # Second
+        connection_interval: int = 10,  # ?
         ping_timeout: int = 10,
         conn_timeout: int = 30,
         default_callback: Callable | None = None,
@@ -50,8 +61,7 @@ class __BasicWebSocketManager:
             # get the websocket name
             self.ws_name = ws_name
 
-            # Set API key
-            # do we need to login for this WebSocketManager?
+            # Set API key and Secret Key
             self.api_key = api_key
             self.secret_key = secret_key
 
@@ -62,37 +72,38 @@ class __BasicWebSocketManager:
             # default callback
             self.callback_function: Callable | None = default_callback
 
-            # Connection interval
+            # Connection and timeout interval
             self.conn_interval: int = connection_interval
-
-            # connection timeout interval
             self.conn_timeout: int = conn_timeout
 
             # to save the list of subcriptions and the function for each subcription
-            self.callback_dictionary: dict = {}
-
             # setup the directory as follow:
             """
             {
                 <subscription-type>: <callback-function>
             }
             """
+            self.callback_dictionary: dict = {}
 
             # record the subscription made
-            self.subscriptions = []
+            # will store the query for ethe specific topic. -> self.ws.send(json.dumps(query))
+            self.subscriptions = list()
 
             # has the Websocket been authroized by the API? -> false initially
             # if api_key and secret_key are given, then it should be authentication needed.
-            self.auth = (
-                False if (self.api_key is None or self.secret_key is None) else True
-            )
+            self.auth = False if (self.api_key is None or self.secret_key is None) else True
+
+            self._connection_url: str | None = None
+            self._closing: bool = False
         except Exception as e:
             operation_logger.error(f"{__name__} - func __init__(): {e}")
-            raise e
 
         return None
 
-    def _connect(self, url) -> None:
+    def _connect(
+        self: "__BasicWebSocketManager",
+        url: str,
+    ) -> None:
         """
         func connect():
             - connect WebSocketApp to the API endpoint
@@ -108,33 +119,37 @@ class __BasicWebSocketManager:
         infinite_reconnect: bool = True
 
         # will make the WebSocketApp and will try to connect to the host
+        self._connection_url = url
+        self._closing = False
         self.ws: websocket.WebSocketApp = websocket.WebSocketApp(
             url = url,
             on_message = self.__on_message,
             on_open = self.__on_open,
-            on_close = self.__on_close,  # TODO:
-            on_error = self.__on_error,  # TODO:
+            on_close = self.__on_close,  # TODO: retry
+            on_error = self.__on_error,  # TODO: retry
         )
 
         # thread for connection
         self.wst: threading.Thread = threading.Thread(
             name = "Connection thread",
             target = lambda: self.ws.run_forever(
-                ping_interval = self.conn_interval,  # default 10 sec
+                # ping_interval = self.conn_interval,  # default 10 sec
+                ping_interval = 0,  # since we do have the explicit ping thread.
             ),
             daemon = True,  # set this as the background program where it tries to connect
         )
         self.wst.start()  # start the thread for making a connection
 
         # thread for ping
-        self.wsp: threading.Thread = threading.Thread(
-            name = "Ping thread",
-            target = lambda: self._ping_loop(
-                ping_interval = self.ping_interval,  # default 10 sec
-            ),
-            daemon = True,  # set this as the background program where it sends the ping to the host every 10 sec.
-        )
-        self.wsp.start()  # start the thread for ping
+        if not hasattr(self, "wsp") or not self.wsp.is_alive():
+            self.wsp = threading.Thread(
+                name = "Ping thread",
+                target = lambda: self._ping_loop(
+                    ping_interval = self.ping_interval,  # default 10 sec
+                ),
+                daemon = True,  # set this as the background program where it sends the ping to the host every <self.ping_interval> second, default is 10 seconds by the Class Setting.
+            )
+            self.wsp.start()  # start the thread for ping
 
         # wait until the websocket is connected to the host.
         while (infinite_reconnect or self.conn_timeout) and not self._is_connected():
@@ -162,7 +177,7 @@ class __BasicWebSocketManager:
 
         return None
 
-    def _authenticate(self) -> None:
+    def _authenticate(self: "__BasicWebSocketManager",) -> None:
         """
         func authenticate():
             - authenticate the WebSocket connection to the API endpoint
@@ -174,7 +189,7 @@ class __BasicWebSocketManager:
         return None
         """
         # create the timestamp
-        timestamp: str = str(int(time.time() * 1000))
+        timestamp: str = str(__BasicWebSocketManager.generate_timestamp())
 
         # hmac using sha256
         signature = self._generate_signature(timestamp=timestamp)
@@ -182,12 +197,12 @@ class __BasicWebSocketManager:
         # make the parameter dictionary into json string
         header = json.dumps(
             dict(
-                subscribe=False,
-                method="login",
-                param=dict(
-                    apiKey=self.api_key,
-                    reqTime=timestamp,
-                    signature=signature,
+                subscribe = False,
+                method = "login",
+                param = dict(
+                    apiKey = self.api_key,
+                    reqTime = timestamp,
+                    signature = signature,
                 ),
             )
         )
@@ -195,7 +210,7 @@ class __BasicWebSocketManager:
         return None
 
     def _generate_signature(
-        self,
+        self: "__BasicWebSocketManager",
         timestamp: str | None = None,
     ) -> str | None:
         """
@@ -216,7 +231,7 @@ class __BasicWebSocketManager:
 
         return
 
-    def _are_connections_connected(self, connections: list) -> bool:
+    def _are_connections_connected(self: "__BasicWebSocketManager", connections: list) -> bool:
         """
         func _are_connections_connected():
             - check if the connection is connected to the endpoint or not
@@ -234,7 +249,7 @@ class __BasicWebSocketManager:
         return True
 
     def _set_callback(
-        self,
+        self: "__BasicWebSocketManager",
         topic: str,
         callback_function: Callable | None = None,
     ) -> None:
@@ -256,7 +271,7 @@ class __BasicWebSocketManager:
 
     # get the callback function according to the topic
     def _get_callback(
-        self,
+        self: "__BasicWebSocketManager",
         topic: str,
     ) -> Callable | None:
         """
@@ -274,7 +289,9 @@ class __BasicWebSocketManager:
         """
         return self.callback_dictionary.get(topic)
 
-    def _is_connected(self):
+    def _is_connected(
+        self: "__BasicWebSocketManager",
+    ):
         """
         # method: _is_connected()
             # check if the socket is connected to the endpoint or not
@@ -308,7 +325,7 @@ class __BasicWebSocketManager:
 
         return
 
-    def __on_error(self, wsa, exception):
+    def __on_error(self: "__BasicWebSocketManager", wsa, exception):
         """
         # when there is an error
             # Exit and raise errors OR
@@ -320,40 +337,51 @@ class __BasicWebSocketManager:
         sys.exit()
         return
 
-    def __on_open(self, wsa):
+    def __on_open(self: "__BasicWebSocketManager", wsa):
         """
         # when the websocket is open
         """
         operation_logger.info(f"{__name__} - WebSocket has been opened")
         return
 
-    def __on_close(self, wsa, status_code, close_msg):
+    def __on_close(self: "__BasicWebSocketManager", wsa, status_code, close_msg):
         """
         # websocket close
         # logging the status code and the msg into the operation_logger
         """
         operation_logger.warning(
-            f"{__name__} - the websocket has been closed. Need to reconnect"
+            f"{__name__} - the websocket has been closed. Need to reconnect: {status_code} - {close_msg}"
         )
-        # TODO: need to implement the function for reconnect.
-        sys.exit()
+        # TODO: need to verify if this is correct.
+        for query in self.subscriptions:
+            try:
+                header = json.dumps(query)
+                self.ws.send(header)  # Reconnect
+            except Exception as e:
+                operation_logger.critical(
+                    f"{__name__} - {self.ws_name} could not reconnect the query: {query} with the following error msg: {str(e)}"
+                )
         return
 
     def _ping_loop(
-        self,
-        ping_interval: int,
+        self: "__BasicWebSocketManager",
+        ping_interval: int,  # Second
         ping_payload: str = '{"method":"ping"}',
     ) -> None:
         """
         # method: _ping_loop
         # for the ping thread of WebSocketApp
         """
-        time.sleep(ping_interval)
+        curr_timestamp: int = 0
         while True:
-            self.ws.send(ping_payload)
-            time.sleep(ping_interval)
+            if (__BasicWebSocketManager.generate_timestamp() - curr_timestamp > (ping_interval * 1_000)):
+                self.ws.send(ping_payload)
+                curr_timestamp = __BasicWebSocketManager.generate_timestamp()
+        return None
 
-    def _reset(self):
+    def _reset(
+        self: "__BasicWebSocketManager",
+    ):
         """
         # _reset the WebSocket when reset signal incurred
             # e.g., when there is error and we need to reset the entire program
@@ -365,7 +393,9 @@ class __BasicWebSocketManager:
         operation_logger.info(f"{__name__} - WebSocket {self.ws_name} has been reset.")
         return
 
-    def exit(self):
+    def exit(
+        self: "__BasicWebSocketManager",
+    ):
         """
         close the websocket
         """
@@ -384,9 +414,24 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
     def __init__(
         self: "_FutureWebSocketManager",
         ws_name: str = "FutureWebSocketV1",
-        **kwargs: dict,
+        api_key: str | None = None,
+        secret_key: str | None = None,
+        ping_interval: int = 5,  # Second
+        connection_interval: int = 10,  # ?
+        ping_timeout: int = 10,
+        conn_timeout: int = 30,
+        default_callback: Callable | None = None,
     ):
-        super().__init__(ws_name = ws_name, **kwargs)
+        super().__init__(
+            ws_name = ws_name,
+            api_key = api_key,
+            secret_key = secret_key,
+            ping_interval = ping_interval,
+            connection_interval = connection_interval,
+            ping_timeout = ping_timeout,
+            conn_timeout = conn_timeout,
+            default_callback = default_callback,
+        )
 
         # if there is no default function.
         self.callback_function = self._deal_with_response
@@ -395,8 +440,8 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
     def subscribe(
         self: "_FutureWebSocketManager",
-        method: Optional[str] = "sub.ticker",
-        callback_function=None,
+        method: str = "sub.ticker",
+        callback_function: Callable = None,
         param: dict | None = None,  # do not modify the param
     ):
         if (param is None):
@@ -435,25 +480,35 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             # pong
         """
 
+        '''
+        # Message Classification Sub-Function.
+        '''
+        # Authententication ack or nack
         def is_auth_response():
             if msg.get("channel") == "rs.login":
                 return True
             return False
 
+        # SUbscription ack or nack
         def is_sub_response():
             if str(msg.get("channel", "")).startswith("rs.sub."):
                 return True
             return False
 
+        # ping-pong for connection maintainining
         def is_pong_msg():
             if msg.get("channel", "") == "pong":
                 return True
             return False
 
+        # error message
         def is_error_msg():
             if msg.get("channel", "") == "rs.error":
                 return True
             return False
+        '''
+        # END of Message Classification Sub-Function.
+        '''
 
         if is_auth_response():
             self._deal_with_auth_msg(msg = msg)
@@ -463,7 +518,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             operation_logger.info(
                 f"{__name__} - func _deal_with_response(): The error has been received from the host: {msg}"
             )
-        elif is_pong_msg():
+        elif is_pong_msg():  # Do Nothing
             pass
         else:
             self._deal_with_normal_msg(msg = msg)
@@ -524,6 +579,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
                 raise Exception
 
 
+# TODO: remove inheritance -> at least check it -> not sure why inhertiance is needed at this point.
 class _FutureWebSocket(_FutureWebSocketManager):
     def __init__(self, ws_name: str = "FutureMarketWebSocketV1", **kwargs):
         """ """
