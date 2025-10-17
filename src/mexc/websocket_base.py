@@ -29,6 +29,7 @@ class __BasicWebSocketManager(ABC):
         self: "__BasicWebSocketManager",
         api_key: str | None = None,
         secret_key: str | None = None,
+        endpoint: str | None = None,
         ws_name: str = "BaseWebSocketManager",
         ping_interval: int = 5,  # Second
         connection_interval: int = 10,  # ?
@@ -61,6 +62,8 @@ class __BasicWebSocketManager(ABC):
             # get the websocket name
             self.ws_name = ws_name
 
+            self.endpoint: str = endpoint
+
             # Set API key and Secret Key
             self.api_key = api_key
             self.secret_key = secret_key
@@ -92,9 +95,6 @@ class __BasicWebSocketManager(ABC):
             # has the Websocket been authroized by the API? -> false initially
             # if api_key and secret_key are given, then it should be authentication needed.
             self.auth = False if (self.api_key is None or self.secret_key is None) else True
-
-            self._connection_url: str | None = None
-            self._closing: bool = False
         except Exception as e:
             operation_logger.error(f"{__name__} - func __init__(): {e}")
 
@@ -102,7 +102,6 @@ class __BasicWebSocketManager(ABC):
 
     def _connect(
         self: "__BasicWebSocketManager",
-        url: str,
     ) -> None:
         """
         func connect():
@@ -119,10 +118,9 @@ class __BasicWebSocketManager(ABC):
         infinite_reconnect: bool = True
 
         # will make the WebSocketApp and will try to connect to the host
-        self._connection_url = url
         self._closing = False
         self.ws: websocket.WebSocketApp = websocket.WebSocketApp(
-            url = url,
+            url = self.endpoint,
             on_message = self.__on_message,
             on_open = self.__on_open,
             on_close = self.__on_close,  # TODO: retry
@@ -350,16 +348,59 @@ class __BasicWebSocketManager(ABC):
         # logging the status code and the msg into the operation_logger
         """
         operation_logger.warning(
-            f"{__name__} - the websocket has been closed. Need to reconnect: {status_code} - {close_msg}"
+            f"{__name__} - the websocket has been closed: {status_code} - {close_msg}. {self.ws_name} will try to reconnect."
         )
-        # TODO: need to verify if this is correct.
+
+        # if there is no pre-defined endpoint, then it will raise RuntimeError
+        if not self.endpoint:
+            operation_logger.error(
+                f"{__name__} - {self.ws_name} lost connection but no previous URL recorded; manual restart required."
+            )
+            raise RuntimeError(f"{__name__} - {self.ws_name} lost connection but no previous URL recorded; manual restart required.")
+
+        # try to construct the channel again.
+        for attempt, delay in enumerate((0, 0.5, 1.0), start = 1):
+            if delay:
+                time.sleep(delay)
+            try:
+                operation_logger.info(
+                    f"{__name__} - Attempting to reconnect ({attempt}) to {self.endpoint}"
+                )
+                self._connect(self.endpoint)
+                operation_logger.info(
+                    f"{__name__} - {self.ws_name} reconnected successfully."
+                )
+                break
+            except Exception as e:
+                operation_logger.error(
+                    f"{__name__} - {self.ws_name} reconnect attempt {attempt} failed: {str(e)}"
+                )
+        else:
+            operation_logger.critical(
+                f"{__name__} - {self.ws_name} could not re-establish the websocket connection."
+            )
+            raise RuntimeError(f"{__name__} - {self.ws_name} could not re-establish the websocket connection; manual restart is needed.")
+
+        self._resubscribe()
+        return
+
+    def _resubscribe(self: "__BasicWebSocketManager") -> None:
+        """
+        Resend cached subscriptions after the connection has been re-established.
+        """
+        if not self.subscriptions:
+            raise RuntimeError(f"{__name__} - {self.ws_name} could not re-establish the websocket connection; manual restart is needed.")
+
         for query in self.subscriptions:
             try:
                 header = json.dumps(query)
-                self.ws.send(header)  # Reconnect
+                self.ws.send(header)
+                operation_logger.info(
+                    f"{__name__} - {self.ws_name} resubscribed with header: {header}"
+                )
             except Exception as e:
                 operation_logger.critical(
-                    f"{__name__} - {self.ws_name} could not reconnect the query: {query} with the following error msg: {str(e)}"
+                    f"{__name__} - {self.ws_name} could not resubscribe the query: {query} with the following error msg: {str(e)}"
                 )
         return
 
@@ -416,6 +457,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
         ws_name: str = "FutureWebSocketV1",
         api_key: str | None = None,
         secret_key: str | None = None,
+        endpoint: str | None = None,
         ping_interval: int = 5,  # Second
         connection_interval: int = 10,  # ?
         ping_timeout: int = 10,
@@ -426,6 +468,7 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
             ws_name = ws_name,
             api_key = api_key,
             secret_key = secret_key,
+            endpoint = endpoint,
             ping_interval = ping_interval,
             connection_interval = connection_interval,
             ping_timeout = ping_timeout,
@@ -581,14 +624,34 @@ class _FutureWebSocketManager(__BasicWebSocketManager):
 
 # TODO: remove inheritance -> at least check it -> not sure why inhertiance is needed at this point.
 class _FutureWebSocket(_FutureWebSocketManager):
-    def __init__(self, ws_name: str = "FutureMarketWebSocketV1", **kwargs):
+    def __init__(
+        self: "_FutureWebSocket",
+        endpoint: str = "wss://contract.mexc.com/edge",
+        ws_name: str = "FutureMarketWebSocketV1",
+        api_key: str | None = None,
+        secret_key: str | None = None,
+        ping_interval: int = 5,  # Second
+        connection_interval: int = 10,  # ?
+        ping_timeout: int = 10,
+        conn_timeout: int = 30,
+        default_callback: Callable | None = None,
+    ):
         """ """
         self.ws_name = ws_name
         self.endpoint = "wss://contract.mexc.com/edge"
 
         self.active_connections = []
 
-        super().__init__(**kwargs)
+        super().__init__(
+            api_key = api_key,
+            secret_key = secret_key,
+            endpoint = endpoint,
+            ping_interval = ping_interval,
+            connection_interval = connection_interval,
+            ping_timeout = ping_timeout,
+            conn_timeout = conn_timeout,
+            default_callback = default_callback,
+        )
 
         self.private_topics = [
             "personal.order",
