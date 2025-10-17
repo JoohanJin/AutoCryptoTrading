@@ -1,6 +1,7 @@
 # Standard Module
 import time
 from typing import Any, Dict, Tuple
+from h11 import Data
 import pandas as pd
 import numpy as np
 import threading
@@ -548,25 +549,32 @@ class DataCollectorAndProcessor:
 
         return None
         """
+        curr_timestamp = DataCollectorAndProcessor.generate_timestamp()
         while True:
             data = None
             try:
-                with self.df_lock:
-                    if self.priceData.shape[0] > self._df_size_limit:
-                        data = self.priceData.iloc[: -self._df_size_limit]
-                        self.priceData = self.priceData.iloc[-self._df_size_limit :]
-                    else:
-                        operation_logger.info(
-                            f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}"
-                        )
+                if (DataCollectorAndProcessor.generate_timestamp() - curr_timestamp > (300 * 1_000)):
+                    with self.df_lock:
+                        if self.priceData.shape[0] > self._df_size_limit:
+                            data = self.priceData.iloc[: -self._df_size_limit]
+                            self.priceData = self.priceData.iloc[-self._df_size_limit :]
+                            operation_logger.info(
+                                f"{__name__} - Data Saver has resized the price DataFrame to {self.priceData.shape[0]} rows and {self.priceData.shape[1]} columns."
+                            )
+                        else:
+                            operation_logger.info(
+                                f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}"
+                            )
 
-                if data is not None:
-                    self._memory_saver.write(data)
-                    operation_logger.info(
-                        f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns"
-                    )
+                    # TODO: add the proper database.
+                    # Disable the .csv generation for now.
+                    # if data is not None:
+                    #     self._memory_saver.write(data)
+                    #     operation_logger.info(
+                    #         f"{__name__} - Data Saver has stored the recent price data: size: {data.shape[0]} rows and {data.shape[1]} columns"
+                    #     )
 
-                time.sleep(300)  # let the cpu to sleep for 5 minutes
+                    curr_timestamp = DataCollectorAndProcessor.generate_timestamp()
             except Exception as e:
                 operation_logger.warning(
                     f"{__name__} - func _resize_df(): Exception caused: {str(e)}"
