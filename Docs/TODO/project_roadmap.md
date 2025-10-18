@@ -56,6 +56,14 @@ This document captures the outstanding TODO items from the master list and adds 
   - Standardise response parsing and typing so callers receive predictable data structures.  
   - Optional: introduce pydantic/dataclasses for validation.
 
+## DBMS integraion for the .csv data
+- Current implementaiton is using .csv for the historical data while it has its own overhead, i.e., storage and writing.
+- Also, the usability of such data is highly limited where it does not have any method to use except keep them for historical data keeping purpose.
+- Need to integrate a light-weight DBMS for the follwings:
+  - To reduce the writing overhead
+  - To decouple the data writing logic and the main computation.
+  - To implement an asynchronous data page storage to the secondary stroage. (right now it is synchronous implementation.)
+
 ## Deployment / Ops Completed Items
 - [v] Submit address proof to Binance.  
   - [v] Verify Windows laptop IP is cleared to send trading orders (observe live order placement).
