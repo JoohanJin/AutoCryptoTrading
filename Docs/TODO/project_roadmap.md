@@ -57,11 +57,11 @@ This document captures the outstanding TODO items from the master list and adds 
   - Optional: introduce pydantic/dataclasses for validation.
 
 ## Deployment / Ops Completed Items
-- ✅ Submit address proof to Binance.  
-  - ☐ Verify Windows laptop IP is cleared to send trading orders (observe live order placement).  
-  - ☐ Confirm open-order polling continues to work post-IP validation.
-- ✅ Deploy v1_0_0 → v1_0_2.  
-  - ✅ Linux/Windows servers provisioned.  
-  - ✅ Feature set implemented.  
-  - ✅ Docker container prepared.  
-  - Optional follow-up: automate GHCR push + server rollout (see overall DevOps plan).
+- [v] Submit address proof to Binance.  
+  - [v] Verify Windows laptop IP is cleared to send trading orders (observe live order placement).
+  - [] Confirm open-order polling continues to work post-IP validation.
+- [] Deploy v1_0_0 → v1_0_2.  
+  - [] Linux/Windows servers provisioned.  
+  - [] Feature set implemented.  
+  - [] Docker container prepared.  
+  - [] Optional follow-up: automate GHCR push + server rollout (see overall DevOps plan).
