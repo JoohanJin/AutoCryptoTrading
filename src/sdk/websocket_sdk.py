@@ -122,9 +122,11 @@ class BasicWebSocketManager(ABC):
             url = self.endpoint,
             on_message = self.__on_message,
             on_open = self.__on_open,
-            on_close = self.__on_close,  # TODO: retry
+            on_close = self.__on_close,
             on_error = self.__on_error,  # TODO: retry
         )
+
+        time.sleep(1)
 
         # thread for connection
         self.wst: threading.Thread = threading.Thread(
@@ -137,16 +139,17 @@ class BasicWebSocketManager(ABC):
         )
         self.wst.start()  # start the thread for making a connection
 
+        time.sleep(1)
+
         # thread for ping
-        if not hasattr(self, "wsp") or not self.wsp.is_alive():
-            self.wsp = threading.Thread(
-                name = "Ping thread",
-                target = lambda: self._ping_loop(
-                    ping_interval = self.ping_interval,  # default 10 sec
-                ),
-                daemon = True,  # set this as the background program where it sends the ping to the host every <self.ping_interval> second, default is 10 seconds by the Class Setting.
-            )
-            self.wsp.start()  # start the thread for ping
+        self.wsp = threading.Thread(
+            name = "Ping thread",
+            target = lambda: self._ping_loop(
+                ping_interval = self.ping_interval,  # default 10 sec
+            ),
+            daemon = True,  # set this as the background program where it sends the ping to the host every <self.ping_interval> second, default is 10 seconds by the Class Setting.
+        )
+        self.wsp.start()  # start the thread for ping
 
         # wait until the websocket is connected to the host.
         while (infinite_reconnect or self.conn_timeout) and not self._is_connected():

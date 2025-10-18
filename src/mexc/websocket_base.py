@@ -20,7 +20,7 @@ class _FutureWebSocketManager(BasicWebSocketManager):
         ws_name: str = "FutureWebSocketV1",
         api_key: str | None = None,
         secret_key: str | None = None,
-        endpoint: str | None = None,
+        endpoint: str | None = "wss://contract.mexc.com/edge",
         ping_interval: int = 5,  # Second
         connection_interval: int = 10,  # ?
         ping_timeout: int = 10,
@@ -240,7 +240,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
                 api_key = self.api_key,
                 secret_key = self.secret_key,
             )
-            self.ws._connect(self.endpoint)
+            self.ws._connect()
         except Exception as e:
             operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
             print(f"{__name__} - func initialize_websocket(): {e}")

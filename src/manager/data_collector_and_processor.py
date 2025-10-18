@@ -137,7 +137,7 @@ class DataCollectorAndProcessor:
         self.df_lock = threading.Lock()
 
         # default dataframe with the given columns
-        self.priceData: pd.DataFrame = pd.DataFrame(
+        self.price_data: pd.DataFrame = pd.DataFrame(
             columns=[
                 "symbol",
                 "lastPrice",
@@ -161,7 +161,7 @@ class DataCollectorAndProcessor:
             ],
             index = [DataCollectorAndProcessor.generate_timestamp()],  # ! use the static method for timestamp generation
         )
-        self.priceData.index.name = "timestamp"  # force the index name
+        self.price_data.index.name = "timestamp"  # force the index name
 
         # ! start the operation in the initialization process.
         self.start()
@@ -345,7 +345,7 @@ class DataCollectorAndProcessor:
 
                     # merge the new dataframe to the existing dataframe.
                     with self.df_lock:
-                        self.priceData = pd.concat([self.priceData, tmp], axis = 0)
+                        self.price_data = pd.concat([self.price_data, tmp], axis = 0)
 
             except Exception as e:
                 operation_logger.critical(
@@ -393,8 +393,8 @@ class DataCollectorAndProcessor:
             )
 
             with self.df_lock:
-                self.priceData = pd.concat(
-                    [self.priceData, tmp],
+                self.price_data = pd.concat(
+                    [self.price_data, tmp],
                     axis = 0,
                 )
 
@@ -471,9 +471,9 @@ class DataCollectorAndProcessor:
         """
         try:
             with self.df_lock:
-                if self.priceData.shape[0] == 0:
+                if self.price_data.shape[0] == 0:
                     return None
-                tmp_dataframe = self.priceData[-periods[-1] :]["fairPrice"].copy()
+                tmp_dataframe = self.price_data[-periods[-1] :]["fairPrice"].copy()
 
             sma:   Dict[int, float] = dict()  # oh.. make the dictionary object and put it.
             ema:   Dict[int, float] = dict()
@@ -553,17 +553,17 @@ class DataCollectorAndProcessor:
         while True:
             data = None
             try:
-                if (DataCollectorAndProcessor.generate_timestamp() - curr_timestamp > (300 * 1_000)):
+                if (DataCollectorAndProcessor.generate_timestamp() - curr_timestamp > (300 * 1_000)):  # Five minutes
                     with self.df_lock:
-                        if self.priceData.shape[0] > self._df_size_limit:
-                            data = self.priceData.iloc[: -self._df_size_limit]
-                            self.priceData = self.priceData.iloc[-self._df_size_limit :]
+                        if self.price_data.shape[0] > self._df_size_limit:
+                            data = self.price_data.iloc[: -self._df_size_limit]
+                            self.price_data = self.price_data.iloc[-self._df_size_limit :]
                             operation_logger.info(
-                                f"{__name__} - Data Saver has resized the price DataFrame to {self.priceData.shape[0]} rows and {self.priceData.shape[1]} columns."
+                                f"{__name__} - Data Saver has resized the price DataFrame to {self.price_data.shape[0]} rows and {self.price_data.shape[1]} columns."
                             )
                         else:
                             operation_logger.info(
-                                f"{__name__} - Data Saver has not stored the recent price data, since the data size is below the threshold: {self.priceData.shape[0]}"
+                                f"{__name__} - Data Saver has not cleaned up the self.price_data, since the data size is below the threshold: {self.price_data.shape[0]}"
                             )
 
                     # TODO: add the proper database.
