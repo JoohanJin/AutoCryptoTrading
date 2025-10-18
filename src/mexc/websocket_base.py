@@ -46,7 +46,7 @@ class _FutureWebSocketManager(BasicWebSocketManager):
 
     def subscribe(
         self: "_FutureWebSocketManager",
-        method: str = "sub.ticker",
+        method: str,
         callback_function: Callable = None,
         param: dict | None = None,  # do not modify the param
     ):
@@ -201,7 +201,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
     ):
         """ """
         self.ws_name = ws_name
-        self.endpoint = "wss://contract.mexc.com/edge"
+        self.endpoint = endpoint
 
         self.active_connections = []
 
@@ -240,6 +240,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
                 api_key = self.api_key,
                 secret_key = self.secret_key,
             )
+
             self.ws._connect()
         except Exception as e:
             operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
