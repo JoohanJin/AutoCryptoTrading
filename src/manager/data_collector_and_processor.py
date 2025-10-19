@@ -559,7 +559,7 @@ class DataCollectorAndProcessor:
                             data = self.price_data.iloc[: -self._df_size_limit]
                             self.price_data = self.price_data.iloc[-self._df_size_limit :]
                             operation_logger.info(
-                                f"{__name__} - Data Saver has resized the price DataFrame to {self.price_data.shape[0]} rows and {self.price_data.shape[1]} columns."
+                                f"{__name__} - Data Saver has resized the price DataFrame to {self.price_data.shape[0]} rows and {self.price_data.shape[1]} columns - cleaned up {data.shape[0]} rows and {data.shape[1]} columns"
                             )
                         else:
                             operation_logger.info(
