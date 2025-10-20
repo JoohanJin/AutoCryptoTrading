@@ -78,12 +78,15 @@ class FutureBase(CommonBaseSDK):
                 data = request_data,
             )
 
-            data = response.json() if response.json().get("Content-Type", "").startswith("application/json") else {}
+            payload = FutureBase.parse_response(response)
 
             if response.status_code >= 400:
                 status: int = response.status_code  # Status Code of the response.
-                # TODO: Need to make sure it is a correct error msg returned from mexc.
-                error_msg: str = response.json().get("msg")  # Error Msg
+                error_msg: str = (
+                    payload.get("msg")  # type: ignore[union-attr]
+                    if isinstance(payload, dict)
+                    else str(payload)
+                )
 
                 if status == 400:
                     operation_logger.critical(f"{__name__} - BadRequest Error from Binance USDT-M Future API: {str(error_msg)}")
@@ -104,7 +107,7 @@ class FutureBase(CommonBaseSDK):
 
                 raise Exception(error_message = error_msg)
 
-            return data
+            return payload
         except ValueError:
             response.raise_for_status()
             return None

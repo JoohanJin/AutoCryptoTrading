@@ -84,11 +84,15 @@ class FutureBase(CommonBaseSDK):
                 data = data if data is None else json.dumps(data),
             )
 
-            data = response.json() if response.json().get("Content-Type", "") else {}
+            payload = FutureBase.parse_response(response)
 
             if response.status_code >= 400:
                 status: int = response.status_code
-                error_msg: str = response.json().get("msg")
+                error_msg: str = (
+                    payload.get("msg")  # type: ignore[union-attr]
+                    if isinstance(payload, dict)
+                    else str(payload)
+                )
 
                 if status == 400:
                     operation_logger.critical(f"{__name__} - BadRequest Error from MexC USDT-M Future API: {str(error_msg)}")
@@ -113,7 +117,7 @@ class FutureBase(CommonBaseSDK):
 
                 raise Exception(error_message = error_msg)
 
-            return data
+            return payload
         except ValueError:
             response.raise_for_status()
             return None
