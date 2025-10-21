@@ -128,6 +128,7 @@ class DataCollectorAndProcessor:
         time.sleep(1)
 
         # used as buffer for data fetching from the MEXC Endpoint
+        self.price_fetch_buffer_lock = threading.Lock()
         self.price_fetch_buffer = Queue()
 
         # subsribe to the ticker data from the MexC data
@@ -297,11 +298,13 @@ class DataCollectorAndProcessor:
         return None
         """
         try:
-            self.price_fetch_buffer.put(
-                msg.get("data"),
-                block = False,
-                timeout = None,
-            )
+            with self.price_fetch_buffer_lock:
+                self.price_fetch_buffer.put(
+                    msg.get("data"),
+                    block = False,
+                    timeout = None,
+                )
+            return
         except Exception as e:
             operation_logger.critical(
                 f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}"
@@ -364,9 +367,8 @@ class DataCollectorAndProcessor:
         """
         try:
             # price_fetch_buffer is a queue.
-            result = self.price_fetch_buffer.get(block = True)
-
-            self.price_fetch_buffer.task_done()
+            with self.price_fetch_buffer_lock:
+                result = self.price_fetch_buffer.get(block = False)
 
             return result
         except Exception as e:
@@ -458,8 +460,9 @@ class DataCollectorAndProcessor:
         periods: Tuple[int, ...] = MA_WRITE_PERIODS,  # this will be just used. -> just default input.
     ) -> tuple[dict[str, float | int | IndexType]] | None:
         """
+        # TODO: make a separate class fo this.
         func __calculate_ema_sma_price():
-            - It calculate the simple moving average (SMA) of the lastPrice
+            - It calculate the Simple Moving Average (SMA) and Exponential Moving Average (EMA) of the lastPrice.
 
         params self: DataCollectorAndProcessor
             - class object
@@ -479,7 +482,7 @@ class DataCollectorAndProcessor:
             ema:   Dict[int, float] = dict()
             price: float = tmp_dataframe.iloc[-1]  # just last price data.
 
-            # ! TODO: this should be fast enough, but can be optimized further.
+            # TODO: this should be fast enough, but can be optimized further.
             for period in periods:
                 window = tmp_dataframe.tail(period)
                 if len(window) < period:

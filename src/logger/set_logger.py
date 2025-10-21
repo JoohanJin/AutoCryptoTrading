@@ -26,7 +26,7 @@ operation_logger_formatter: logging.Formatter = logging.Formatter(
 
 # Operation logger - File Handler
 operation_logger_file_handler: TimedRotatingFileHandler = TimedRotatingFileHandler(
-    filenae = _LOG_DIR / "system-logging.log",
+    filename = _LOG_DIR / "system-logging.log",
     when = "midnight",  # rotate at midnight
     interval = 1,  # Rotate every day
     backupCount = 14,  # keep 14 days of logs

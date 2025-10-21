@@ -368,7 +368,7 @@ class BasicWebSocketManager(ABC):
                 operation_logger.info(
                     f"{__name__} - Attempting to reconnect ({attempt}) to {self.endpoint}"
                 )
-                self._connect(self.endpoint)
+                self._connect()
                 operation_logger.info(
                     f"{__name__} - {self.ws_name} reconnected successfully."
                 )
@@ -395,15 +395,41 @@ class BasicWebSocketManager(ABC):
 
         for query in self.subscriptions:
             try:
-                header = json.dumps(query)
-                self.ws.send(header)
-                operation_logger.info(
-                    f"{__name__} - {self.ws_name} resubscribed with header: {header}"
+                method: str = query.get("method")
+                self._method_subscribe(
+                    method = method,
+                    param = query.get("param"),
+                    callback = self.callback_dictionary.get(method.replace("sub.", "")),
+                    is_retry = True,
                 )
             except Exception as e:
                 operation_logger.critical(
                     f"{__name__} - {self.ws_name} could not resubscribe the query: {query} with the following error msg: {str(e)}"
                 )
+        return
+
+    def _method_subscribe(self, method, callback, param: dict = {}, is_retry: bool = False,):
+        """ """
+        if not self.is_connected():
+            # if there is no websocket object that has been established.
+            self.__initialize_websocket()
+
+        if (not is_retry):
+            params: dict = dict(
+                method = method,
+                param = param,
+            )
+            self.subscriptions.append(
+                params
+            )
+
+            self.callback_dictionary[method.replace("push.", "").replace("sub.", "")] = callback
+
+        self.subscribe(
+            method = method,
+            callback_function = callback,
+            param = param,
+        )
         return
 
     def _ping_loop(
