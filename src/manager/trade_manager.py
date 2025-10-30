@@ -27,7 +27,7 @@ class TradeManager:
         func generate_timestamp(): staticmethod
             - return the timestamp based on the current time in ms
         """
-        return int(time.time() * 1000)
+        return int(time.time() * 1_000)
 
     @staticmethod
     def verify_signal(
@@ -166,6 +166,8 @@ class TradeManager:
         self: "TradeManager",
     ) -> None:
         # TODO: Implment the destructor.
+        for thread in self.threads:
+            thread.stop()
         return
 
     def __initialize_threads(
@@ -268,13 +270,13 @@ class TradeManager:
                     score = score,
                 )
 
-                await self.__execute_trade(
-                    buy_or_sell = decision,
-                )
-
                 if decision != 0:  # can be further improved in the future.
+                    # Trade
+                    await self.__execute_trade(
+                        buy_or_sell = decision,
+                    )
+
                     # reset the score, but based on the trend
-                    #
                     # TODO: need to implement more sophisticated one.
                     with self.trade_score_lock:
                         self.trade_score = self.trend_manager_score if decision == 1 else -1 * (self.trend_manager_score)
@@ -347,7 +349,7 @@ class TradeManager:
                 if buy_or_sell == 1:
                     order_type = 1  # Long
                 elif buy_or_sell == -1:
-                    order_Type = 3  # Short
+                    order_type = 3  # Short
 
                 # order trigger to the telgram bot
                 if self.__decide_to_make_trade():  # make the trade
@@ -543,7 +545,7 @@ class TradeManager:
             # currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
             currently_holding_order: list[dict | None] = self.binance_future_market.get_position_information_v2()
 
-            if not len(currently_holding_order):
+            if len(currently_holding_order) <= 2:
                 # No position is currently held, so it's okay to make a trade.
                 return True
             else:

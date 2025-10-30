@@ -255,27 +255,3 @@ class _FutureWebSocket(_FutureWebSocketManager):
     def is_connected(self):
         """ """
         return self._are_connections_connected(self.active_connections)
-
-    def _method_subscribe(self, method, callback, param: dict = {}, is_retry: bool = False,):
-        """ """
-        if not self.is_connected():
-            # if there is no websocket object that has been established.
-            self.__initialize_websocket()
-
-        if (not is_retry):
-            params: dict = dict(
-                method = method,
-                param = param,
-            )
-            self.subscriptions.append(
-                params
-            )
-
-            self.callback_dictionary[method.replace("push.", "").replace("sub.", "")] = callback
-
-        self.subscribe(
-            method = method,
-            callback_function = callback,
-            param = param,
-        )
-        return

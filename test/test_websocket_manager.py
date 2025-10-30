@@ -124,22 +124,22 @@ class TestWebSocket(FutureWebSocket):
 
         return None
 
-    # def _ping_loop(
-    #     self: "TestWebSocket",
-    #     ping_interval: int,  # Second
-    #     ping_payload: str = '{"method":"ping"}',
-    # ) -> None:
-    #     """
-    #     # method: _ping_loop
-    #     # for the ping thread of WebSocketApp
-    #     """
-    #     curr_timestamp: int = 0
-    #     while True:
-    #         if (TestWebSocket.generate_timestamp() - curr_timestamp > (ping_interval * 100_000)):
-    #             self.ws.send(ping_payload)
-    #             print(f"\nsent: {ping_payload}\n")
-    #             curr_timestamp = TestWebSocket.generate_timestamp()
-    #     return None
+    def _ping_loop(
+        self: "TestWebSocket",
+        ping_interval: int,  # Second
+        ping_payload: str = '{"method":"ping"}',
+    ) -> None:
+        """
+        # method: _ping_loop
+        # for the ping thread of WebSocketApp
+        """
+        curr_timestamp: int = 0
+        while True:
+            if (TestWebSocket.generate_timestamp() - curr_timestamp > (ping_interval * 100_000)):
+                self.ws.send(ping_payload)
+                print(f"\nsent: {ping_payload}\n")
+                curr_timestamp = TestWebSocket.generate_timestamp()
+        return None
 
 
 def main() -> None:

@@ -128,7 +128,6 @@ class DataCollectorAndProcessor:
         time.sleep(1)
 
         # used as buffer for data fetching from the MEXC Endpoint
-        self.price_fetch_buffer_lock = threading.Lock()
         self.price_fetch_buffer = Queue()
 
         # subsribe to the ticker data from the MexC data
@@ -298,12 +297,11 @@ class DataCollectorAndProcessor:
         return None
         """
         try:
-            with self.price_fetch_buffer_lock:
-                self.price_fetch_buffer.put(
-                    msg.get("data"),
-                    block = False,
-                    timeout = None,
-                )
+            self.price_fetch_buffer.put(
+                msg.get("data"),
+                block = False,
+                timeout = None,
+            )
             return
         except Exception as e:
             operation_logger.critical(
@@ -367,8 +365,7 @@ class DataCollectorAndProcessor:
         """
         try:
             # price_fetch_buffer is a queue.
-            with self.price_fetch_buffer_lock:
-                result = self.price_fetch_buffer.get(block = False)
+            result = self.price_fetch_buffer.get(block = True)
 
             return result
         except Exception as e:
