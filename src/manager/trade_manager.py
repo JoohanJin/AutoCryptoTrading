@@ -545,8 +545,9 @@ class TradeManager:
             # currently_holding_order: Dict = self.mexc_future_market_sdk.current_position()
             currently_holding_order: list[dict | None] = self.binance_future_market.get_position_information_v2()
 
-            if len(currently_holding_order) <= 2:
+            if len(currently_holding_order) <= 1:
                 # No position is currently held, so it's okay to make a trade.
+                # By default, there is one position in Binance to indicate current isolation mode and leverage with 0 margin in it.
                 return True
             else:
                 # A position is already open, so do not make another trade.
