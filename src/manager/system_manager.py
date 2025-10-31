@@ -2,7 +2,6 @@
 import os
 import time
 import sys
-from dotenv import load_dotenv
 import threading
 
 # CUSTOM LIBRARY

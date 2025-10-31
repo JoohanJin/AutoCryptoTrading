@@ -27,7 +27,8 @@ class _FutureWebSocketManager(BasicWebSocketManager):
         conn_timeout: int = 30,
         default_callback: Callable | None = None,
     ):
-        super().__init__(
+        # BasicWebSocketManager.init()
+        kwargs: dict = dict(
             ws_name = ws_name,
             api_key = api_key,
             secret_key = secret_key,
@@ -38,6 +39,8 @@ class _FutureWebSocketManager(BasicWebSocketManager):
             conn_timeout = conn_timeout,
             default_callback = default_callback,
         )
+
+        super().__init__(**kwargs)
 
         # if there is no default function.
         self.callback_function = self._deal_with_response
@@ -63,7 +66,6 @@ class _FutureWebSocketManager(BasicWebSocketManager):
         # make dict into json, so that it can be on the header of the HTTP Socket.
         header = json.dumps(query)
         self.ws.send(header)
-        self.subscriptions.append(query)
 
         # set the callback function for specific topic
         # if there is no given callback function, we just put _print_normal_msg as a callback function
@@ -205,7 +207,7 @@ class _FutureWebSocket(_FutureWebSocketManager):
 
         self.active_connections = []
 
-        super().__init__(
+        kwargs = dict(
             api_key = api_key,
             secret_key = secret_key,
             endpoint = endpoint,
@@ -215,6 +217,8 @@ class _FutureWebSocket(_FutureWebSocketManager):
             conn_timeout = conn_timeout,
             default_callback = default_callback,
         )
+
+        super().__init__(**kwargs)
 
         self.private_topics = [
             "personal.order",
@@ -235,13 +239,12 @@ class _FutureWebSocket(_FutureWebSocketManager):
     ):
         """ """
         try:
-            self.ws = _FutureWebSocketManager(
-                self.ws_name,
-                api_key = self.api_key,
-                secret_key = self.secret_key,
-            )
-
-            self.ws._connect()
+            # self.ws = _FutureWebSocketManager(
+            #     self.ws_name,
+            #     api_key = self.api_key,
+            #     secret_key = self.secret_key,
+            # )
+            self._connect()
         except Exception as e:
             operation_logger.error(f"{__name__} - func initialize_websocket(): {e}")
             print(f"{__name__} - func initialize_websocket(): {e}")
@@ -252,16 +255,3 @@ class _FutureWebSocket(_FutureWebSocketManager):
     def is_connected(self):
         """ """
         return self._are_connections_connected(self.active_connections)
-
-    def _method_subscribe(self, method, callback, param: dict = {}):
-        """ """
-        if not self.ws:
-            # if there is no websocket object that has been established.
-            self.__initialize_websocket()
-
-        self.ws.subscribe(
-            method = method,
-            callback_function = callback,
-            param = param,
-        )
-        return

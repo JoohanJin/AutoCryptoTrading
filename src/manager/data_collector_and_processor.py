@@ -302,6 +302,7 @@ class DataCollectorAndProcessor:
                 block = False,
                 timeout = None,
             )
+            return
         except Exception as e:
             operation_logger.critical(
                 f"{__name__}: Error in class {self.__class__.__name__} in method _put_ticker_data(): {e}"
@@ -365,8 +366,6 @@ class DataCollectorAndProcessor:
         try:
             # price_fetch_buffer is a queue.
             result = self.price_fetch_buffer.get(block = True)
-
-            self.price_fetch_buffer.task_done()
 
             return result
         except Exception as e:
@@ -458,8 +457,9 @@ class DataCollectorAndProcessor:
         periods: Tuple[int, ...] = MA_WRITE_PERIODS,  # this will be just used. -> just default input.
     ) -> tuple[dict[str, float | int | IndexType]] | None:
         """
+        # TODO: make a separate class fo this.
         func __calculate_ema_sma_price():
-            - It calculate the simple moving average (SMA) of the lastPrice
+            - It calculate the Simple Moving Average (SMA) and Exponential Moving Average (EMA) of the lastPrice.
 
         params self: DataCollectorAndProcessor
             - class object
@@ -479,7 +479,7 @@ class DataCollectorAndProcessor:
             ema:   Dict[int, float] = dict()
             price: float = tmp_dataframe.iloc[-1]  # just last price data.
 
-            # ! TODO: this should be fast enough, but can be optimized further.
+            # TODO: this should be fast enough, but can be optimized further.
             for period in periods:
                 window = tmp_dataframe.tail(period)
                 if len(window) < period:
@@ -559,7 +559,7 @@ class DataCollectorAndProcessor:
                             data = self.price_data.iloc[: -self._df_size_limit]
                             self.price_data = self.price_data.iloc[-self._df_size_limit :]
                             operation_logger.info(
-                                f"{__name__} - Data Saver has resized the price DataFrame to {self.price_data.shape[0]} rows and {self.price_data.shape[1]} columns."
+                                f"{__name__} - Data Saver has resized the price DataFrame to {self.price_data.shape[0]} rows and {self.price_data.shape[1]} columns - cleaned up {data.shape[0]} rows and {data.shape[1]} columns"
                             )
                         else:
                             operation_logger.info(

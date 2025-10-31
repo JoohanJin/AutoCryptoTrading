@@ -803,6 +803,7 @@ class FutureWebSocket(_FutureWebSocket):
     def __init__(
         self: "FutureWebSocket",
         ws_name: str | None = None,
+        endpoint: str = "wss://contract.mexc.com/edge",
         api_key: str | None = None,
         secret_key: str | None = None,
         ping_interval: int | None = 20,  # as it is recommended
@@ -817,6 +818,7 @@ class FutureWebSocket(_FutureWebSocket):
             ping_interval = ping_interval,
             ping_timeout = ping_timeout,
             conn_timeout = conn_timeout,
+            endpoint = endpoint
         )
 
         super().__init__(**kwargs)

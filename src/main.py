@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -15,11 +16,16 @@ def main():
         operation_logger.info(
             f"{main_system_manager} has been started."
         )
+    except RuntimeError as e:
+        operation_logger.critical(
+            f"{__name__}: function main() has raised an RuntimeError: {str(e)}"
+        )
+        sys.exit(1)
     except Exception as e:
         operation_logger.critical(
-            f"{__name__}: function main() has raised an Unexpected error starting the system: {e}"
+            f"{__name__}: function main() has raised an Unexpected error starting the system: {str(e)}"
         )
-        return
+        sys.exit(1)
 
 
 if __name__ == "__main__":
